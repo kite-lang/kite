@@ -1,0 +1,32 @@
+import lib/StdLib;
+import Math;
+import IO;
+
+# this is a comment
+
+#-
+    this is a multiline
+    comment
+-#
+
+String () message = String () {
+    return "Hello, World!";
+};
+
+# types parameters
+Int (Int) a = Int (Int a) {
+    return a + 5;
+};
+
+# types parameters
+Int (Int) a = Int (Int a) {
+    return a + 5;
+};
+
+IO.print (message (););
+
+# Types
+String s = "Hej med dig";
+Int i = 2;
+Float f = 2.0;
+[Int] l = [1;, 2;];

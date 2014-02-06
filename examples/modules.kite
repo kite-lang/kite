@@ -1,0 +1,7 @@
+include stdlib;
+
+Math = require Math;
+
+print ("helllo";);
+
+Math.sqrt (4;);
