@@ -2,6 +2,8 @@
 
 Kite is language with a strong emphasis on functional development. It is statically and strongly typed.
 
+We use [alex](https://github.com/simonmar/alex) for lexical analyzing, [happy](https://github.com/simonmar/happy) for parsing, and lastly, [LLVM](http://llvm.org/) for code generation.
+
 ## Semantics
 ### Types
 There are five basic types, namely `Int`, `Float`, `String`, `List` and `Function`.
