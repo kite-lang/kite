@@ -1,5 +1,5 @@
 {
-module KiteLexer where
+module Lexer where
 }
 
 %wrapper "basic"
@@ -43,8 +43,4 @@ data Token = Symbol Char
            | Keyword String
            | Operator String
            deriving (Eq,Show)
-
-main = do
-  s <- getContents
-  print (alexScanTokens s)
 } 
