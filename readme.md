@@ -4,15 +4,20 @@ Kite is language with a strong emphasis on functional development. It is statica
 
 We use [alex](https://github.com/simonmar/alex) for lexical analyzing, [happy](https://github.com/simonmar/happy) for parsing, and lastly, [LLVM](http://llvm.org/) for code generation.
 
+
 ## Semantics
+
 ### Types
 There are five basic types, namely `Int`, `Float`, `String`, `List` and `Function`.
+
 
 ### Recursion
 Recursion is supported.
 
+
 ## Syntax
 Kite uses mandatory semicolons to mark the end of an expression.
+
 
 ### Variable definitions
 The basic variable definition is defined as follows
@@ -55,20 +60,24 @@ Kite supports higher-order functions:
 
 The above expressions creates a function, bound to variable `foo`, that takes a function of type `() -> Int` as it's only argument, and returns another function of type `(Int) -> Int`.
 
+
 ### Comments
 Comments are marked by `#` and go to end of line. Comment blocks (possibly multiline) are enclosed by `#-` and `-#`.
 
-    # this is one thousand
+    # This is a single line comment
 
-    #- This is a block -#
+    #- This is a block comment -#
 
     #-
-        This is a comment
-        on multiple lines
+        This is a
+        multi line
+        comment.
     -#
+
 
 ### Importing code files
 Use the `import` keyword to include one file in another.
 
-### FFI
-Kite has a foreign function interface which lets you call Haskell
+
+### Foreign Function Interface
+Kite has a FFI which lets you call native Haskell functions.
