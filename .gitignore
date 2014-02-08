@@ -13,3 +13,6 @@ cabal.config
 
 # emacs
 *.#*
+
+# generated files
+src/Lexer.hs
