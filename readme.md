@@ -1,5 +1,7 @@
 # The Kite Programming Language
 
+[![Build Status](https://travis-ci.org/altschuler/kite.png?branch=master)](https://travis-ci.org/altschuler/kite)
+
 Kite is language with a strong emphasis on functional development. It is statically and strongly typed.
 
 We use [alex](https://github.com/simonmar/alex) for lexical analyzing, [happy](https://github.com/simonmar/happy) for parsing, and lastly, [LLVM](http://llvm.org/) for code generation.
