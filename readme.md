@@ -10,7 +10,7 @@ We use [alex](https://github.com/simonmar/alex) for lexical analyzing, [happy](h
 ## Semantics
 
 ### Types
-There are five basic types, namely `Int`, `Float`, `String`, `List` and `Function`.
+There are five basic types, namely `Boolean`, `Int`, `Float`, `String`, `List` and `Function`.
 
 
 ### Recursion
@@ -30,6 +30,7 @@ All types are capitalized to make it easy to differentiate between types and ide
 
     Int one = 1;
     Float two = 2.0;
+    Bool truth = True;
 
 Strings are enclosed in *double* quotes. Single quotes are valid identifiers.
 
