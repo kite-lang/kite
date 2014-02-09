@@ -3,10 +3,20 @@ module Test where
 import Test.HUnit
 import Lexer
 
-lexTest desc prog expected = TestCase (assertEqual desc (alexScanTokens prog) expected)
+tst prog expected = TestCase (alexScanTokens prog @?= expected)
 
-test1 = lexTest "Simple int" "2" [Integer 2]
+tests = [
+  ("1",
+   [Integer 1]),
+  ("1.0",
+   [Float 1.0]),
+  ("\"foobar\"",
+   [String "foobar"]),
+  ("(1)",
+   [Symbol '(', Integer 1, Symbol ')']),
+  ("return foo",
+   [Keyword "return", Identifier "foo"]),
+  ("(Int) -> Float",
+   [Symbol '(', Type "Int", Symbol ')', Operator "->", Type "Float"])]
 
-tests = TestList [TestLabel "Test int" test1]
-
-main = runTestTT tests
+main = runTestTT $ test $ map (uncurry tst) tests
