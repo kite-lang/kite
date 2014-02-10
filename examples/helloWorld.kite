@@ -2,12 +2,13 @@ import StdLib;
 import Math;
 import IO;
 
-#- this is a comment -#
+-- this is a comment --
 
-#-
+{--
     this is a multiline
     comment
--#
+--}
+
 
 () -> String message = () -> String {
     return "Hello, World!";
@@ -17,12 +18,12 @@ import IO;
     return a > 5;
 };
 
-#- types parameters -#
+-- types parameters
 (Int) -> Int bar = (Int a) -> Int {
     return a + 5;
 };
 
-#- types -#
+-- types
 Boolean truth = True;
 Int i = 2;
 Float f = 2.0;

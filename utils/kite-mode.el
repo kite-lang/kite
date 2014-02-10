@@ -1,33 +1,52 @@
 ;;; kite-mode.el --- Minor mode for editing kite source code
-;; Version: 0.0.1
+;; Version: 0.1.2
 ;;
 ;;; Commentary:
-;; Provides the 'kite-mode' mode which does syntax highlighting for the kite programming language
+;; Provides the 'kite-mode' mode which does syntax
+;; highlighting for the kite programming language
 ;;
 ;;; Code:
 
-;; Syntax highlighting
+;; keywords
 (defvar kite-keywords
   '(("return\\|import\\|if\\|then\\|else" . font-lock-keyword-face)
     ("False\\|True\\|[0-9]\\(\\.[0-9]*\\)?" . font-lock-constant-face)
     ("->" . font-lock-function-name-face)
-    ("#.*" . font-lock-comment-face)
     ("[A-Z][a-zA-Z0-9_']*" . font-lock-type-face)
     ("[a-z][a-zA-Z0-9_']*" . font-lock-variable-name-face)))
 
-;; Syntax table
-(defvar kite-syntax-table (make-syntax-table) "Syntax table for `kite-mode'.")
+;; syntax table
+(defvar kite-syntax-table nil "Syntax table for `kite-mode'.")
+(setq kite-syntax-table
+      (let ((syntax-table (make-syntax-table)))
 
-; multiline comment
-(modify-syntax-entry ?\# ". 14" kite-syntax-table)
-(modify-syntax-entry ?- ". 23" kite-syntax-table)
+        ;; singleline comments
+        (modify-syntax-entry ?\{  "(}1nb" syntax-table)
+        (modify-syntax-entry ?\}  "){4nb" syntax-table)
+        (modify-syntax-entry ?-  "_ 123" syntax-table)
+        (modify-syntax-entry ?\n ">" syntax-table)
 
+        syntax-table))
+
+;; comment/uncomment text
+(defun kite-comment-dwim (arg)
+  "Comment or uncomment current line or region.
+For detail, see `comment-dwim'."
+  (interactive "*P")
+  (require 'newcomment)
+  (let ((comment-start "--") (comment-end ""))
+    (comment-dwim arg)))
+
+;; define mode
 (define-derived-mode kite-mode fundamental-mode
   "Major mode for editing Kite source code"
   :syntax-table kite-syntax-table
 
   (setq font-lock-defaults '(kite-keywords))
-  (setq mode-name "kite"))
+  (setq mode-name "kite")
+
+  (define-key kite-mode-map [remap comment-dwim] 'kite-comment-dwim))
+
 
 (provide 'kite-mode)
 

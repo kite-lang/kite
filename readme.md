@@ -65,17 +65,17 @@ The above expressions creates a function, bound to variable `foo`, that takes a 
 
 
 ### Comments
-Comments are marked by `#` and go to end of line. Comment blocks (possibly multiline) are enclosed by `#-` and `-#`.
+Comments are marked by `--` and go to end of line. Comment blocks (possibly multiline) are enclosed by `{-` and `-}`.
 
-    # This is a single line comment
+    -- This is a single line comment
 
-    #- This is a block comment -#
+    {- This is a block comment -}
 
-    #-
+    {-
         This is a
         multi line
         comment.
-    -#
+    -}
 
 
 ### Importing code files
