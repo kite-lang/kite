@@ -10,8 +10,6 @@ tests = [
    [Integer 1]),
   ("1.0",
    [Float 1.0]),
-  ("\"foobar\"",
-   [String "foobar"]),
   ("(1)",
    [Symbol '(', Integer 1, Symbol ')']),
   ("return foo",
