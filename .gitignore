@@ -16,3 +16,5 @@ cabal.config
 
 # generated files
 src/Lexer.hs
+src/Parser.hs
+src/Parser.info

@@ -1,4 +1,7 @@
 import System.Environment
 import Lexer
+import Parser
 
-main = getArgs >>= (\prog -> putStrLn (show $ alexScanTokens (prog !! 0)))
+main = getArgs >>= \(t:prog:_) -> if t == "l"
+                                  then (print . alexScanTokens) prog
+                                  else (print . kiteparser . alexScanTokens) prog
