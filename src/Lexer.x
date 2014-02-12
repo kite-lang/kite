@@ -16,8 +16,8 @@ $symbols		= [\=\+\-\*\/\(\)\>\{\}\;\s]
 @string                 = \" ($white | .)* \"
 @identifier		= $downcase [$alphaNum \_ \' \! \?]*
 @type			= $upcase [$alphaNum]*
-@comment		=  \#.*
-@multilineComment	= \#\-($white | .)*\-\#
+@comment		= "--".*
+@multilineComment	= "{-"($white | .)*"-}"
 
 kite :-
   $white+		;
