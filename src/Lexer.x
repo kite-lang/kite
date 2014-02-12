@@ -9,7 +9,7 @@ $upcase			= A-Z
 $digit			= 0-9
 $alpha			= [$downcase $upcase]
 $alphaNum		= [$alpha $digit]
-$symbols		= [\=\+\-\*\/\(\)\>\{\}\;]
+$symbols		= [\=\+\-\*\/\(\)\>\{\}\;\s]
 
 @keywords		= return | import | if | then | else | yolo
 @operators		= "->"|"="
