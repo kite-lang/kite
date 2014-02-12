@@ -13,8 +13,9 @@ $symbols		= [\=\+\-\*\/\(\)\>\{\}\;\s]
 
 @keywords		= return | import | if | then | else | yolo
 @operators		= "->"|"="
-@identifier		= $downcase [$alphaNum \_ \']*
-@type			= $upcase [$alphaNum \_ \']*
+@string                 = \" ($white | .)* \"
+@identifier		= $downcase [$alphaNum \_ \' \! \?]*
+@type			= $upcase [$alphaNum]*
 @comment		=  \#.*
 @multilineComment	= \#\-($white | .)*\-\#
 
@@ -30,8 +31,10 @@ kite :-
   $digit+		{ \s -> Integer (read s) }
   $symbols		{ \s -> Symbol (head s) }
   
+  @string               { \s -> String $ (tail . init) s }
   @identifier		{ \s -> Identifier s }
   @type			{ \s -> Type s }
+  
 
 {
 data Token = Symbol Char
