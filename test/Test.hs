@@ -17,9 +17,7 @@ tests = [
   ("(Int) -> Float",
    [Symbol '(', Type "Int", Symbol ')', Operator "->", Type "Float"]),
   ("\"swag\"",
-   [String "swag"]),
-  ("\"swagFEJL\"",
    [String "swag"])
-]
+  ]
 
 main = runTestTT $ test $ map (uncurry tst) tests
