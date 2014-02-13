@@ -11,6 +11,9 @@ cabal-dev
 cabal.sandbox.config
 cabal.config
 
+# symlink
+kite
+
 # emacs
 *.#*
 

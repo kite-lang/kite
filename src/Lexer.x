@@ -9,15 +9,15 @@ $upcase			= A-Z
 $digit			= 0-9
 $alpha			= [$downcase $upcase]
 $alphaNum		= [$alpha $digit]
-$symbols		= [\=\+\-\*\/\(\)\>\{\}\;\s]
+$symbols		= [\(\)\{\}\[\]\;\,]
 
 @keywords		= return | import | if | then | else | yolo
-@operators		= "->"|"="
+@operators		= "=" | "+" | "-" | "/" | "*" | "->"
 @string                 = \" ($white | .)* \"
 @identifier		= $downcase [$alphaNum \_ \' \! \?]*
 @type			= $upcase [$alphaNum]*
-@comment		= "--".*
-@multilineComment	= "{-"($white | .)*"-}"
+@comment		= "--" .*
+@multilineComment	= "{-" ($white | .)* "-}"
 
 kite :-
   $white+		;
@@ -30,11 +30,11 @@ kite :-
   $digit+\.$digit+	{ \s -> Float (read s) }
   $digit+		{ \s -> Integer (read s) }
   $symbols		{ \s -> Symbol (head s) }
-  
+
   @string               { \s -> String $ (tail . init) s }
   @identifier		{ \s -> Identifier s }
   @type			{ \s -> Type s }
-  
+
 
 {
 data Token = Symbol Char
@@ -46,4 +46,4 @@ data Token = Symbol Char
            | Keyword String
            | Operator String
            deriving (Eq,Show)
-} 
+}
