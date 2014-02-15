@@ -12,7 +12,8 @@ $alphaNum		= [$alpha $digit]
 $symbols		= [\(\)\{\}\[\]\;\,]
 
 @keywords		= return | import | if | then | else | yolo
-@operators		= "=" | "+" | "-" | "/" | "*" | "->"
+@binops		    = "+" | "-" | "/" | "*"
+@operators		= "=" | "->"
 @string                 = \" ($white | .)* \"
 @identifier		= $downcase [$alphaNum \_ \' \! \?]*
 @type			= $upcase [$alphaNum]*
@@ -26,6 +27,7 @@ kite :-
 
   @keywords		{ \s -> Keyword s }
   @operators		{ \s -> Operator s }
+  @binops		{ \s -> BinOp s }
 
   $digit+\.$digit+	{ \s -> Float (read s) }
   $digit+		{ \s -> Integer (read s) }
@@ -45,5 +47,6 @@ data Token = Symbol Char
            | String String
            | Keyword String
            | Operator String
+           | BinOp String
            deriving (Eq,Show)
 }

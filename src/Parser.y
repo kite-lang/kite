@@ -13,7 +13,7 @@ import Lexer
         string             { String $$ }
         primType           { Type $$ }
         id                 { Identifier $$ }
-        '+'                { Operator "+" }
+        binop              { BinOp $$ }
         '='                { Operator "=" }
         '->'               { Operator "->" }
         '('                { Symbol '(' }
@@ -39,6 +39,7 @@ Expr    : BinOp            { $1 }
         | Assign           { $1 }
         | Func             { $1 }
         | Term             { PTerm $1 }
+        | '(' Expr ')'     { PGroup $2 }
 
 Exprs   : {- nothing -}    { [] }
         | Expr             { [$1] }
@@ -51,9 +52,9 @@ Block   : '{' Stmts '}'    { PBlock $2 }
 
 List    : '[' Exprs ']'    { PList $2 }
 
-BinOp   : Expr '+' Expr    { PBinOp '+' $1 $3 }
+BinOp   : Expr binop Expr  { PBinOp $2 $1 $3 }
 
-Func    : FuncDef Block { PFunc $1 $2 }
+Func    : FuncDef Block    { PFunc $1 $2 }
 
 Type    : primType         { PPrimType $1 }
         | '[' primType ']' { PListType $2 }
@@ -88,12 +89,13 @@ Term    : int              { PInteger $1 }
 parseError :: [Token] -> a
 parseError _ = error "Parse error"
 
-data Expr = PBinOp Char Expr Expr -- Operator!
+data Expr = PBinOp String Expr Expr -- Operator!
           | PTerm PTerm
           | PList [Expr]
           | PBlock [Expr]
           | PAssign PTerm Expr -- PIdentifier!
           | PFunc Type Expr -- PFuncType!
+          | PGroup Expr -- PFuncType!
           deriving Show
 
 data Type = PListType String
