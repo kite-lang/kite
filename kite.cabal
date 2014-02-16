@@ -9,4 +9,5 @@ executable kite
   hs-source-dirs:    src
   build-tools:       alex, happy
   build-depends:     base ==4.6.*,
-                     array ==0.4.*
+                     array ==0.4.*,
+                     cmdargs ==0.10.*
