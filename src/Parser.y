@@ -14,6 +14,7 @@ import Lexer
         primType           { Type $$ }
         id                 { Identifier $$ }
         binop              { BinOp $$ }
+        return             { Keyword "return" }
         '='                { Operator "=" }
         '->'               { Operator "->" }
         '('                { Symbol '(' }
@@ -46,7 +47,7 @@ Exprs   : {- nothing -}    { [] }
         | Expr ',' Exprs   { $1 : $3 }
 
 -- Expression rules
-Assign  : id '=' Expr      { PAssign (PIndentifier $1) $3 }
+Assign  : Type id '=' Expr      { PAssign $1 (PIndentifier $2) $4 }
 
 Block   : '{' Stmts '}'    { PBlock $2 }
 
@@ -93,7 +94,7 @@ data Expr = PBinOp String Expr Expr -- Operator!
           | PTerm PTerm
           | PList [Expr]
           | PBlock [Expr]
-          | PAssign PTerm Expr -- PIdentifier!
+          | PAssign Type PTerm Expr -- PIdentifier!
           | PFunc Type Expr -- PFuncType!
           | PGroup Expr -- PFuncType!
           deriving Show
