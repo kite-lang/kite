@@ -10,4 +10,5 @@ exec 1>&2
 cd "$(git rev-parse --show-toplevel)"
 
 # lint work tree
-hlint -c src
+find . -path ./dist -prune -o -name "*\.hs" | grep -v -e Parser.hs -e Lexer.hs | xargs hlint -c
+
