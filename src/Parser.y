@@ -13,7 +13,18 @@ import Lexer
         string             { String $$ }
         primType           { Type $$ }
         id                 { Identifier $$ }
-        binop              { BinOp $$ }
+        '+'                { BinOp "+" }
+        '-'                { BinOp "-" }
+        '*'                { BinOp "*" }
+        '/'                { BinOp "/" }
+        '%'                { BinOp "%" }
+        '=='               { BinOp "==" }
+        '<'                { BinOp "<" }
+        '<='               { BinOp "<=" }
+        '>'                { BinOp ">" }
+        '>='               { BinOp ">=" }
+        '!='               { BinOp "!=" }
+
         return             { Keyword "return" }
         '='                { Operator "=" }
         '->'               { Operator "->" }
@@ -25,6 +36,12 @@ import Lexer
         '}'                { Symbol '}' }
         ','                { Symbol ',' }
         ';'                { Symbol ';' }
+
+%right in
+%nonassoc '==' '<' '<=' '>' '>=' '!='
+%left '+' '-'
+%left '*' '/' '%'
+
 
 %%
 
@@ -53,7 +70,18 @@ Block   : '{' Stmts '}'    { PBlock $2 }
 
 List    : '[' Exprs ']'    { PList $2 }
 
-BinOp   : Expr binop Expr  { PBinOp $2 $1 $3 }
+BinOp   : Expr '+' Expr  { PBinOp "+" $1 $3 }
+        | Expr '-' Expr  { PBinOp "-" $1 $3 }
+        | Expr '*' Expr  { PBinOp "*" $1 $3 }
+        | Expr '/' Expr  { PBinOp "/" $1 $3 }
+        | Expr '%' Expr  { PBinOp "%" $1 $3 }
+        | Expr '==' Expr { PBinOp "==" $1 $3 }
+        | Expr '<' Expr  { PBinOp "<" $1 $3 }
+        | Expr '<=' Expr { PBinOp "<=" $1 $3 }
+        | Expr '>' Expr  { PBinOp ">" $1 $3 }
+        | Expr '>=' Expr { PBinOp ">=" $1 $3 }
+        | Expr '!=' Expr { PBinOp "!=" $1 $3 }
+
 
 Func    : FuncDef Block    { PFunc $1 $2 }
 
