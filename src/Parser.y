@@ -53,6 +53,7 @@ import Lexer
 %%
 
 Stmt    : Expr             { $1 }
+        | return Expr      { PReturn $2 }
 
 Stmts   : {- nothing -}    { [] }
         | Stmt             { [$1] }
@@ -63,6 +64,7 @@ Expr    : BinOp            { $1 }
         | Block            { $1 }
         | Assign           { $1 }
         | Func             { $1 }
+        | Call             { $1 }
         | If               { $1 }
         | Term             { PTerm $1 }
         | '(' Expr ')'     { PGroup $2 }
@@ -72,7 +74,9 @@ Exprs   : {- nothing -}    { [] }
         | Expr ',' Exprs   { $1 : $3 }
 
 -- Expression rules
-Assign  : Type id '=' Expr      { PAssign $1 (PIndentifier $2) $4 }
+Call    : id '(' Exprs ')'    { PCall (PIdentifier $1) $3 }
+
+Assign  : Type id '=' Expr      { PAssign $1 (PIdentifier $2) $4 }
 
 Block   : '{' Stmts '}'    { PBlock $2 }
 
@@ -97,7 +101,7 @@ Type    : primType         { PPrimType $1 }
         | '[' primType ']' { PListType $2 }
         | FuncType         { $1 }
 
-TypeArg : Type id          { PTypeArg $1 (PIndentifier $2) }
+TypeArg : Type id          { PTypeArg $1 (PIdentifier $2) }
 
 -- support both single expr and blocks
 If    : if Expr then Expr else Expr    { PIf $2 (PBlock [$4]) (PBlock [$6]) }
@@ -123,7 +127,7 @@ TypeList: {- nothing -}    { [] }
 Term    : int              { PInteger $1 }
         | float            { PFloat $1 }
         | string           { PString $1 }
-        | id               { PIndentifier $1 }
+        | id               { PIdentifier $1 }
 
 {
 
@@ -138,6 +142,8 @@ data Expr = PBinOp String Expr Expr -- Operator!
           | PAssign Type PTerm Expr -- PIdentifier!
           | PFunc Type Expr -- PFuncType!
           | PGroup Expr -- PFuncType!
+          | PCall PTerm [Expr] -- PIdentifier!
+          | PReturn Expr
           deriving Show
 
 data Type = PListType String
@@ -149,6 +155,6 @@ data Type = PListType String
 data PTerm = PInteger Int
            | PFloat Float
            | PString String
-           | PIndentifier String
+           | PIdentifier String
           deriving Show
 }
