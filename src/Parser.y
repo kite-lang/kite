@@ -13,6 +13,7 @@ import Lexer
         string             { String $$ }
         primType           { Type $$ }
         id                 { Identifier $$ }
+
         '+'                { BinOp "+" }
         '-'                { BinOp "-" }
         '*'                { BinOp "*" }
@@ -26,8 +27,14 @@ import Lexer
         '!='               { BinOp "!=" }
 
         return             { Keyword "return" }
+        if                 { Keyword "if" }
+        then               { Keyword "then" }
+        else               { Keyword "else" }
+        yolo               { Keyword "yolo" }
+
         '='                { Operator "=" }
         '->'               { Operator "->" }
+
         '('                { Symbol '(' }
         ')'                { Symbol ')' }
         '['                { Symbol '[' }
@@ -56,6 +63,7 @@ Expr    : BinOp            { $1 }
         | Block            { $1 }
         | Assign           { $1 }
         | Func             { $1 }
+        | If               { $1 }
         | Term             { PTerm $1 }
         | '(' Expr ')'     { PGroup $2 }
 
@@ -91,6 +99,10 @@ Type    : primType         { PPrimType $1 }
 
 TypeArg : Type id          { PTypeArg $1 (PIndentifier $2) }
 
+-- support both single expr and blocks
+If    : if Expr then Expr else Expr    { PIf $2 (PBlock [$4]) (PBlock [$6]) }
+      | if Expr then Block else Block  { PIf $2 $4 $6 }
+
 -- func literal
 FuncDef : '(' ArgList ')' '->' Type { PFuncType $2 $5 }
 
@@ -122,6 +134,7 @@ data Expr = PBinOp String Expr Expr -- Operator!
           | PTerm PTerm
           | PList [Expr]
           | PBlock [Expr]
+          | PIf Expr Expr Expr
           | PAssign Type PTerm Expr -- PIdentifier!
           | PFunc Type Expr -- PFuncType!
           | PGroup Expr -- PFuncType!
