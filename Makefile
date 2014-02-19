@@ -1,19 +1,29 @@
-.PHONY: clean generate build test
+# kite - the kite programming language
+
+GEN = src/Lexer.hs src/Parser.hs
 
 all: clean generate build test
 
 clean:
-	-rm src/Lexer.hs
-	-rm src/Parser.hs
+	@echo Cleaning...
+	@rm -f ${GEN}
+	@echo
 
 generate:
-	alex src/Lexer.x -o src/Lexer.hs
-	happy src/Parser.y -o src/Parser.hs
+	@echo Generating...
+	@alex src/Lexer.x -o src/Lexer.hs
+	@happy src/Parser.y -o src/Parser.hs
+	@echo
 
 build: clean generate
-	cabal configure
-	cabal build
+	@echo Building...
+	@cabal configure --enable-tests
+	@cabal build
+	@echo
 
 test:
-	cd src; \
-	runhaskell ../test/Test.hs
+	@echo Testing...
+	@cabal test
+	@echo
+
+.PHONY: all clean generate build test

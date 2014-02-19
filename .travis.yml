@@ -1,7 +1,7 @@
 language: haskell
 
 install:
-  cabal install HUnit alex happy cmdargs
+  cabal install alex happy cmdargs tasty tasty-hunit
 
 script:
   make
