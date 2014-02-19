@@ -12,12 +12,12 @@ cabal.sandbox.config
 cabal.config
 
 # symlink
-kite
+./kite
 
 # emacs
 *.#*
 
 # generated files
-src/Lexer.hs
-src/Parser.hs
-src/Parser.info
+Lexer.hs
+Parser.hs
+Parser.info

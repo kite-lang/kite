@@ -13,6 +13,9 @@ lexerTests = testGroup "Lexer"
   , testCase "Float" $
       alexScanTokens "1.0" @?= [Float 1]
 
+  , testCase "String" $
+      alexScanTokens "\"swag\"" @?= [String "swag"]
+
   , testCase "Symbol" $
       alexScanTokens "(1)" @?= [Symbol '(', Integer 1, Symbol ')']
 
@@ -22,13 +25,10 @@ lexerTests = testGroup "Lexer"
   , testCase "Function" $
       alexScanTokens "(Int) -> Float" @?= [Symbol '(', Type "Int", Symbol ')', Operator "->", Type "Float"]
 
-  , testCase "String" $
-      alexScanTokens "\"swag\"" @?= [String "swag"]
-
   , testCase "Comment infix" $
       alexScanTokens "2 {- -}; foo" @?= [Integer 2, Symbol ';', Identifier "foo"]
 
-  , testCase "Comment Multi-line" $
+  , testCase "Comment block" $
       alexScanTokens "{- \
 \test\
 \ more test-}" @?= []
