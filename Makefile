@@ -1,6 +1,6 @@
 # kite - the kite programming language
 
-GEN = src/Lexer.hs src/Parser.hs
+GEN = src/Kite/Lexer.hs src/Kite/Parser.hs
 
 all: clean generate build test
 
@@ -11,8 +11,8 @@ clean:
 
 generate:
 	@echo Generating...
-	@alex src/Lexer.x -o src/Lexer.hs
-	@happy src/Parser.y -o src/Parser.hs
+	@alex src/Kite/Lexer.x -o src/Kite/Lexer.hs
+	@happy src/Kite/Parser.y -o src/Kite/Parser.hs
 	@echo
 
 build: clean generate

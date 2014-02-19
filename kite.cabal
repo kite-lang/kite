@@ -8,12 +8,10 @@ source-repository    head
   location:          https://github.com/altschuler/kite
 
 executable           kite
-  main-is:           Main.hs
+  main-is:           Kite/Main.hs
   hs-source-dirs:    src
   build-tools:       alex, happy
-  build-depends:     base ==4.6.*,
-                     array ==0.4.*,
-                     cmdargs ==0.10.*
+  build-depends:     base, array, cmdargs
 
 test-suite           test
   type:              exitcode-stdio-1.0
