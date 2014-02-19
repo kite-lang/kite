@@ -33,6 +33,7 @@ import Lexer
         yolo               { Keyword "yolo" }
 
         '='                { Operator "=" }
+        '#'                { Operator "#" }
         '->'               { Operator "->" }
 
         '('                { Symbol '(' }
@@ -66,6 +67,7 @@ Expr    : BinOp            { $1 }
         | Func             { $1 }
         | Call             { $1 }
         | If               { $1 }
+        | Index            { $1 }
         | Term             { PTerm $1 }
         | '(' Expr ')'     { PGroup $2 }
 
@@ -75,6 +77,8 @@ Exprs   : {- nothing -}    { [] }
 
 -- Expression rules
 Call    : id '(' Exprs ')'    { PCall (PIdentifier $1) $3 }
+
+Index   : Expr '#' Expr     { PIndex $1 $3 }
 
 Assign  : Type id '=' Expr      { PAssign $1 (PIdentifier $2) $4 }
 
@@ -144,6 +148,7 @@ data Expr = PBinOp String Expr Expr -- Operator!
           | PGroup Expr -- PFuncType!
           | PCall PTerm [Expr] -- PIdentifier!
           | PReturn Expr
+          | PIndex Expr Expr
           deriving Show
 
 data Type = PListType String
