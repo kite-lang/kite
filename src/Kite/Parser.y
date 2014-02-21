@@ -5,51 +5,49 @@ import Kite.Lexer
 
 %name kiteparser
 %tokentype { Token }
-%error { parseError }
 
 %token
-        int                { Integer $$ }
-        float              { Float $$ }
-        string             { String $$ }
-        primType           { Type $$ }
-        id                 { Identifier $$ }
+        int                { Integer _ $$ }
+        float              { Float _ $$ }
+        string             { String _ $$ }
+        primType           { Type _ $$ }
+        id                 { Identifier _ $$ }
 
-        '+'                { BinOp "+" }
-        '-'                { BinOp "-" }
-        '*'                { BinOp "*" }
-        '/'                { BinOp "/" }
-        '%'                { BinOp "%" }
-        '=='               { BinOp "==" }
-        '<'                { BinOp "<" }
-        '<='               { BinOp "<=" }
-        '>'                { BinOp ">" }
-        '>='               { BinOp ">=" }
-        '!='               { BinOp "!=" }
+        '+'                { BinOp _ "+" }
+        '-'                { BinOp _ "-" }
+        '*'                { BinOp _ "*" }
+        '/'                { BinOp _ "/" }
+        '%'                { BinOp _ "%" }
+        '=='               { BinOp _ "==" }
+        '<'                { BinOp _ "<" }
+        '<='               { BinOp _ "<=" }
+        '>'                { BinOp _ ">" }
+        '>='               { BinOp _ ">=" }
+        '!='               { BinOp _ "!=" }
 
-        return             { Keyword "return" }
-        if                 { Keyword "if" }
-        then               { Keyword "then" }
-        else               { Keyword "else" }
-        yolo               { Keyword "yolo" }
+        return             { Keyword _ "return" }
+        if                 { Keyword _ "if" }
+        then               { Keyword _ "then" }
+        else               { Keyword _ "else" }
+        yolo               { Keyword _ "yolo" }
 
-        '='                { Operator "=" }
-        '#'                { Operator "#" }
-        '->'               { Operator "->" }
+        '='                { Operator _ "=" }
+        '#'                { Operator _ "#" }
+        '->'               { Operator _ "->" }
 
-        '('                { Symbol '(' }
-        ')'                { Symbol ')' }
-        '['                { Symbol '[' }
-        ']'                { Symbol ']' }
-        '{'                { Symbol '{' }
-        '}'                { Symbol '}' }
-        ','                { Symbol ',' }
-        ';'                { Symbol ';' }
+        '('                { Symbol _ '(' }
+        ')'                { Symbol _ ')' }
+        '['                { Symbol _ '[' }
+        ']'                { Symbol _ ']' }
+        '{'                { Symbol _ '{' }
+        '}'                { Symbol _ '}' }
+        ','                { Symbol _ ',' }
+        ';'                { Symbol _ ';' }
 
 %right in
 %nonassoc '==' '<' '<=' '>' '>=' '!='
 %left '+' '-'
 %left '*' '/' '%'
-
 
 %%
 
@@ -135,8 +133,10 @@ Term    : int              { PInteger $1 }
 
 {
 
-parseError :: [Token] -> a
-parseError _ = error "Parse error"
+-- error handling
+happyError (x:xs) = error $ "Parse error: " ++ (show . posn2str . tok2posn) x
+
+posn2str (AlexPn _ line col) = "line " ++ show line ++ ", column " ++ show col
 
 data Expr = PBinOp String Expr Expr -- Operator!
           | PTerm PTerm
