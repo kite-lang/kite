@@ -2,7 +2,7 @@
 
 GEN = src/Kite/Lexer.hs src/Kite/Parser.hs
 
-all: clean generate build test
+all: clean generate build
 
 clean:
 	@echo Cleaning...
@@ -17,12 +17,14 @@ generate:
 
 build: clean generate
 	@echo Building...
-	@cabal configure --enable-tests
+	@cabal configure
 	@cabal build
 	@echo
 
 test:
 	@echo Testing...
+	@cabal configure --enable-tests
+	@cabal build
 	@cabal test
 	@echo
 

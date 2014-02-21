@@ -2,6 +2,7 @@ language: haskell
 
 install:
   cabal install alex happy cmdargs tasty tasty-hunit
+  make
 
 script:
-  make
+  make test
