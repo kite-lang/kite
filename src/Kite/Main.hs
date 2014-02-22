@@ -5,6 +5,7 @@ import Kite.Lexer
 import Kite.Parser
 import System.Console.CmdArgs
 import Control.Monad
+import Text.Show.Pretty
 
 klex = alexScanTokens
 kpar = kiteparser
@@ -26,5 +27,5 @@ kiteArgs = cmdArgsMode $ KiteArgs {
 main = do
   KiteArgs {..} <- cmdArgsRun kiteArgs
   inp <- if eval then return input else readFile input
-  when lexOutput $ (print . alexScanTokens) inp
-  when parOutput $ (print . kiteparser . alexScanTokens) inp
+  when lexOutput $ (putStrLn . ppShow . alexScanTokens) inp
+  when parOutput $ (putStrLn . ppShow . kiteparser . alexScanTokens) inp
