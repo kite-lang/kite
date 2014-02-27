@@ -2,7 +2,13 @@ language: haskell
 
 install:
   cabal install alex happy cmdargs tasty tasty-hunit pretty-show
-  make
 
 script:
-  make test
+  make
+
+notifications:
+  hipchat:
+    rooms:
+      - c04O0FufpToEuV8A8WUeK1pGcCx1NeQjuTDFnhme@PinkPony
+    template:
+      - '%{repository}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}'
