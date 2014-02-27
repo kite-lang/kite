@@ -16,6 +16,7 @@ $symbols		= [\(\)\{\}\[\]\;\,]
 @operators		= "=" | "#" | "->"
 @string                 = \" ($white | .)* \"
 @identifier		= $downcase [$alphaNum \_ \' \! \?]*
+@bool			= "True" | "False"
 @type			= $upcase [$alphaNum]*
 @comment		= "--" .*
 @multilineComment	= "{-" ($white | .)* "-}"
@@ -31,6 +32,7 @@ kite :-
 
   $digit+\.$digit+	{ tok (\p s -> Float p (read s)) }
   $digit+		{ tok (\p s -> Integer p (read s)) }
+  @bool		        { tok (\p s -> Bool p (read s)) }
   $symbols		{ tok (\p s -> Symbol p (head s)) }
 
   @string               { tok (\p s -> String p $ (tail . init) s) }
@@ -49,6 +51,7 @@ data Token = Symbol     AlexPosn Char
            | Type       AlexPosn String
            | Integer    AlexPosn Int
            | Float      AlexPosn Float
+           | Bool       AlexPosn Bool
            | String     AlexPosn String
            | Keyword    AlexPosn String
            | Operator   AlexPosn String
@@ -63,6 +66,7 @@ tok2posn (Type       p _) = p
 tok2posn (Integer    p _) = p
 tok2posn (Float      p _) = p
 tok2posn (String     p _) = p
+tok2posn (Bool       p _) = p
 tok2posn (Keyword    p _) = p
 tok2posn (Operator   p _) = p
 tok2posn (BinOp      p _) = p

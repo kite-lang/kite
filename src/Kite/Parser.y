@@ -10,7 +10,12 @@ import Kite.Lexer
         int                { Integer _ $$ }
         float              { Float _ $$ }
         string             { String _ $$ }
-        primType           { Type _ $$ }
+        bool               { Bool _ $$ }
+
+        intTy              { Type _ "Int" }
+        floatTy            { Type _ "Float" }
+        stringTy           { Type _ "String" }
+        boolTy             { Type _ "Bool" }
         id                 { Identifier _ $$ }
 
         '+'                { BinOp _ "+" }
@@ -99,8 +104,11 @@ BinOp   : Expr '+' Expr  { PBinOp "+" $1 $3 }
 
 Func    : FuncDef Block    { PFunc $1 $2 }
 
-Type    : primType         { PPrimType $1 }
-        | '[' primType ']' { PListType $2 }
+Type    : boolTy           { PBoolType }
+        | intTy            { PIntegerType }
+        | floatTy          { PFloatType }
+        | stringTy         { PStringType }
+        | '[' Type ']'     { PListType $2 }
         | FuncType         { $1 }
 
 TypeArg : Type id          { PTypeArg $1 (PIdentifier $2) }
@@ -127,6 +135,7 @@ TypeList: {- nothing -}    { [] }
 
 -- primitive types
 Term    : int              { PInteger $1 }
+        | bool             { PBool $1 }
         | float            { PFloat $1 }
         | string           { PString $1 }
         | id               { PIdentifier $1 }
@@ -151,14 +160,19 @@ data Expr = PBinOp String Expr Expr -- Operator!
           | PIndex Expr Expr
           deriving (Show, Eq)
 
-data Type = PListType String
+data Type = PListType Type
           | PFuncType [Type] Type
-          | PPrimType String
+          | PBoolType
+          | PIntegerType
+          | PFloatType
+          | PStringType
+          | PFailType
           | PTypeArg Type Term -- PIdentifier!
           deriving (Show, Eq)
 
 data Term = PInteger Int
           | PFloat Float
+          | PBool Bool
           | PString String
           | PIdentifier String
           deriving (Show, Eq)
