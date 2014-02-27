@@ -139,14 +139,14 @@ happyError (x:xs) = error $ "Parse error: " ++ (show . posn2str . tok2posn) x
 posn2str (AlexPn _ line col) = "line " ++ show line ++ ", column " ++ show col
 
 data Expr = PBinOp String Expr Expr -- Operator!
-          | PTerm PTerm
+          | PTerm Term
           | PList [Expr]
           | PBlock [Expr]
           | PIf Expr Expr Expr
-          | PAssign Type PTerm Expr -- PIdentifier!
+          | PAssign Type Term Expr -- PIdentifier!
           | PFunc Type Expr -- PFuncType!
           | PGroup Expr -- PFuncType!
-          | PCall PTerm [Expr] -- PIdentifier!
+          | PCall Term [Expr] -- PIdentifier!
           | PReturn Expr
           | PIndex Expr Expr
           deriving (Show, Eq)
@@ -154,12 +154,12 @@ data Expr = PBinOp String Expr Expr -- Operator!
 data Type = PListType String
           | PFuncType [Type] Type
           | PPrimType String
-          | PTypeArg Type PTerm -- PIdentifier!
+          | PTypeArg Type Term -- PIdentifier!
           deriving (Show, Eq)
 
-data PTerm = PInteger Int
-           | PFloat Float
-           | PString String
-           | PIdentifier String
+data Term = PInteger Int
+          | PFloat Float
+          | PString String
+          | PIdentifier String
           deriving (Show, Eq)
 }
