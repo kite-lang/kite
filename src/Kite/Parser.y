@@ -114,7 +114,7 @@ Type    : boolTy           { PBoolType }
 TypeArg : Type id          { PTypeArg $1 (PIdentifier $2) }
 
 -- support both single expr and blocks
-If    : if Expr then Expr else Expr    { PIf $2 (PBlock [$4]) (PBlock [$6]) }
+If    : if Expr then Expr else Expr    { PIf $2 $4 $6 }
       | if Expr then Block else Block  { PIf $2 $4 $6 }
 
 -- func literal
@@ -166,7 +166,6 @@ data Type = PListType Type
           | PIntegerType
           | PFloatType
           | PStringType
-          | PFailType
           | PTypeArg Type Term -- PIdentifier!
           deriving (Show, Eq)
 

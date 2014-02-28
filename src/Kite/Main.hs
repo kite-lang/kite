@@ -3,12 +3,11 @@ module Main where
 
 import Kite.Lexer
 import Kite.Parser
+import Kite.TypeCheck
+
 import System.Console.CmdArgs
 import Control.Monad
 import Text.Show.Pretty
-
-klex = alexScanTokens
-kpar = kiteparser
 
 data KiteArgs = KiteArgs {
   input :: String,
@@ -28,4 +27,9 @@ main = do
   KiteArgs {..} <- cmdArgsRun kiteArgs
   inp <- if eval then return input else readFile input
   when lexOutput $ (putStrLn . ppShow . alexScanTokens) inp
-  when parOutput $ (putStrLn . ppShow . kiteparser . alexScanTokens) inp
+  when parOutput $ do
+    let ast = (kiteparser . alexScanTokens) inp
+    (putStrLn . ppShow) ast
+    case typeOf ast of
+      Right _ -> print "Type check passed"
+      Left err -> putStrLn $ "Type error: " ++ (show err)
