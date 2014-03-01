@@ -90,10 +90,19 @@ typeOf ss (PBlock exprs) =
   let f ss' expr = typeOf ss' expr >>= (\(_, ss') -> return ss')
   in foldM f ss exprs >>= \ssLast -> return $ (PBoolType, ssLast)
 
--- look up ide in symbol table, check arg types, then return type
--- typeOf PCall ide (x:xs) =
+typeOf ss (PCall ide args) = do
+  (tyFunc, _) <- typeOf ss (PTerm ide)
+  case tyFunc of
+    PFuncType params retTy -> do
+      valid <- foldM (\acc (arg, tyParam) -> do
+                         (tyArg, _) <- typeOf ss arg
+                         return $ tyArg == tyParam
+                     ) True (zip args params)
+      if valid
+        then return (retTy, ss)
+        else throwTE ("wrong type of argument(s)")
+    _ -> throwTE (show ide ++ " is not a function")
 
--- use symbol table
 typeOf ss (PTerm (PIdentifier ide)) =
   case Map.lookup ide (topFrame ss) of
     Just ty -> return (ty, ss)
