@@ -1,4 +1,4 @@
-module Kite.TypeCheck where
+module Kite.TypeCheck (typeCheck) where
 
 import Kite.Parser
 import Control.Monad.Error
@@ -25,6 +25,9 @@ topFrame (x:xs) = x
 
 insertIde (x:xs) ide ty = Map.insert ide ty x : xs
 
+-- operators that return bool
+boolOps = ["==", ">", ">=", "<", "<=", "!="]
+
 -- shortcuts
 throwTE = throwError . GenericTE
 -- throw if not equal
@@ -32,6 +35,7 @@ tine ty1 ty2 ss msg = if ty1 == ty2
                       then return (ty1, ss)
                       else throwTE msg
 
+-- main interface
 typeCheck :: Expr -> TypeCheckMonad (Type, SymStack)
 typeCheck = typeOf [Map.empty]
 
@@ -56,7 +60,10 @@ typeOf ss (PFunc (PFuncType args retTy) body) = do
 typeOf ss (PBinOp op lhs rhs) = do
   (tyLhs, _) <- typeOf ss lhs
   (tyRhs, _) <- typeOf ss rhs
-  tine tyRhs tyLhs ss "binary operand types do not match"
+  let retTy = if op `elem` boolOps then PBoolType else tyRhs
+  if tyLhs == tyRhs
+    then return (retTy, ss)
+    else throwTE "binary operand types do not match"
 
 typeOf ss (PList (x:xs)) = do
   (tyHead, _) <- typeOf ss x
