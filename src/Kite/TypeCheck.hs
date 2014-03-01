@@ -47,8 +47,10 @@ typeOf ss (PTerm (PBool _)) = return (PBoolType, ss)
 -- compound types
 typeOf ss (PFunc (PFuncType args retTy) body) = do
   let ar = map (\(PTypeArg ty _) -> ty) args
+  let frame = Map.fromList $ map (\(PTypeArg ty (PIdentifier ide)) -> (ide, ty)) args
+  let ss' = pushFrame ss frame
   -- insert arguments into a new symframe, push it to stack, check type and return types
-  typeOf ss body
+  typeOf ss' body
   return (PFuncType ar retTy, ss)
 
 typeOf ss (PBinOp op lhs rhs) = do
