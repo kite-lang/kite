@@ -4,9 +4,7 @@ import Kite.Parser
 import Control.Monad.Error
 import qualified Data.Map as Map
 
-type Frame = Map.Map Term Type
-type SymbolTable = [[Frame]]
-
+-- error handling
 data TypeError = GenericTE String
                | UnkownTE
                deriving (Show)
@@ -15,74 +13,91 @@ instance Error TypeError where
   noMsg = GenericTE "Unknown type error"
   strMsg = GenericTE
 
-type TypeErrorMonad = Either TypeError
+type TypeCheckMonad = Either TypeError
 
+-- symbol table
+type SymFrame = Map.Map String Type
+type SymStack = [SymFrame]
+
+pushFrame stack frame = frame:stack
+popFrame (x:xs) = xs
+topFrame (x:xs) = x
+
+insertIde (x:xs) ide ty = (Map.insert ide ty x):xs
+
+-- shortcuts
 throwTE = throwError . GenericTE
-
 -- throw if not equal
-tine ty1 ty2 msg = if ty1 == ty2 then return ty1 else throwTE msg
+tine ty1 ty2 ss msg = if ty1 == ty2
+                      then return (ty1, ss)
+                      else throwTE msg
+
+typeCheck :: Expr -> TypeCheckMonad (Type, SymStack)
+typeCheck expr = typeOf [Map.empty] expr
 
 -- check the type of an expression
-typeOf :: Expr -> TypeErrorMonad Type
+typeOf :: SymStack -> Expr -> TypeCheckMonad (Type, SymStack)
 
 -- base cases
-typeOf (PTerm (PInteger _)) = return PIntegerType
-typeOf (PTerm (PFloat _)) = return PFloatType
-typeOf (PTerm (PString _)) = return PStringType
-typeOf (PTerm (PBool _)) = return PBoolType
+typeOf ss (PTerm (PInteger _)) = return (PIntegerType, ss)
+typeOf ss (PTerm (PFloat _)) = return (PFloatType, ss)
+typeOf ss (PTerm (PString _)) = return (PStringType, ss)
+typeOf ss (PTerm (PBool _)) = return (PBoolType, ss)
 
 -- compound types
-typeOf (PFunc (PFuncType args retTy) _) = do
+typeOf ss (PFunc (PFuncType args retTy) body) = do
   let ar = map (\(PTypeArg ty _) -> ty) args
-  return $ PFuncType ar retTy
-  
-typeOf (PBinOp op lhs rhs) = do
-  tyLhs <- typeOf lhs
-  tyRhs <- typeOf rhs
-  tine tyRhs tyLhs "binary operand types do not match"
 
-typeOf (PList (x:xs)) = do
-  tyHead <- typeOf x
-  let f acc i = typeOf i >>= (\t -> return $ acc && t == tyHead)
+  return $ (PFuncType ar retTy, ss)
+
+typeOf ss (PBinOp op lhs rhs) = do
+  (tyLhs, _) <- typeOf ss lhs
+  (tyRhs, _) <- typeOf ss rhs
+  tine tyRhs tyLhs ss "binary operand types do not match"
+
+typeOf ss (PList (x:xs)) = do
+  (tyHead, _) <- typeOf ss x
+  let f acc i = typeOf ss i >>= (\(t, _) -> return $ acc && t == tyHead)
   valid <- foldM f True xs
   if valid
-    then return (PListType tyHead)
+    then return (PListType tyHead, ss)
     else throwTE "varying types in list"
 
-typeOf (PIf cond conseq alt) = do
-  tyCond <- typeOf cond
+typeOf ss (PIf cond conseq alt) = do
+  (tyCond, _) <- typeOf ss cond
   if (not . (==PBoolType)) tyCond
     then throwTE ("expected if-condition to be of type Bool, saw " ++ show tyCond)
     else do
-      tyConseq <- typeOf conseq
-      tyAlt <- typeOf alt
-      tine tyConseq tyAlt "consequence and alternative in if-expression do not match"
+      (tyConseq, ss) <- typeOf ss conseq
+      (tyAlt, ss) <- typeOf ss alt
+      tine tyConseq tyAlt ss "consequence and alternative in if-expression do not match"
 
-typeOf (PAssign ty ide val) = do
-  -- identifier of type (typeOf val) to symtable
-  tyVal <- typeOf val
-  tine ty tyVal "type mismatch during assignment"
+typeOf ss (PAssign ty (PIdentifier ide) val) = do
+  let newSS = insertIde ss ide ty
+  (tyVal, ss) <- typeOf newSS val
+  tine ty tyVal newSS "type mismatch during assignment"
 
-typeOf (PIndex arr idx) = do
-  tyArr <- typeOf arr
-  tyIdx <- typeOf idx
+typeOf ss (PIndex arr idx) = do
+  (tyArr, _) <- typeOf ss arr
+  (tyIdx, _) <- typeOf ss idx
   case tyArr of
-    PListType _ -> tine PIntegerType tyIdx ("invalid index type, expected Int, saw " ++ show tyIdx)
+    PListType _ -> tine PIntegerType tyIdx ss ("invalid index type, expected Int, saw " ++ show tyIdx)
     _ -> throwTE "the index operator is only defined for \"<List>ls # <Int>idx\""
 
-typeOf (PGroup body) = typeOf body
-    
--- check return type
--- typeOf PFunc ty (PBlock (x:xs)) =
+typeOf ss (PGroup body) = typeOf ss body
 
--- does these make any sense to check?
--- typeOf PReturn val =
+typeOf ss (PBlock exprs) =
+  let f ss' expr = typeOf ss' expr >>= (\(_, ss') -> return ss')
+  in foldM f ss exprs >>= \ssLast -> return $ (PBoolType, ssLast)
 
--- look up ide in symbol table
+-- look up ide in symbol table, check arg types, then return type
 -- typeOf PCall ide (x:xs) =
-  
+
 -- use symbol table
--- typeOf PTerm (PIdentifier _) = PIntegerType
+typeOf ss (PTerm (PIdentifier ide)) =
+  case Map.lookup ide (topFrame ss) of
+    Just ty -> return (ty, ss)
+    Nothing -> throwTE ("reference to undefined variable " ++ ide)
 
 -- catch all
-typeOf _ = throwError $ GenericTE "Unknown type error"
+typeOf _ _ = throwError $ GenericTE "Unknown type error"

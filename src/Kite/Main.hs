@@ -30,6 +30,6 @@ main = do
   when parOutput $ do
     let ast = (kiteparser . alexScanTokens) inp
     (putStrLn . ppShow) ast
-    case typeOf ast of
+    case typeCheck ast of
       Right _ -> print "Type check passed"
       Left err -> putStrLn $ "Type error: " ++ (show err)
