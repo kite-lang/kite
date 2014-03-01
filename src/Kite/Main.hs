@@ -31,4 +31,4 @@ main = do
   when parOutput $ (putStrLn . ppShow) ast
   case typeCheck ast of
     Right _ -> print "Type check passed"
-    Left err -> putStrLn $ "Type error: " ++ (show err)
+    Left err -> putStrLn $ "Type error: " ++ show err

@@ -23,7 +23,7 @@ pushFrame stack frame = frame:stack
 popFrame (x:xs) = xs
 topFrame (x:xs) = x
 
-insertIde (x:xs) ide ty = (Map.insert ide ty x):xs
+insertIde (x:xs) ide ty = Map.insert ide ty x : xs
 
 -- shortcuts
 throwTE = throwError . GenericTE
@@ -33,7 +33,7 @@ tine ty1 ty2 ss msg = if ty1 == ty2
                       else throwTE msg
 
 typeCheck :: Expr -> TypeCheckMonad (Type, SymStack)
-typeCheck expr = typeOf [Map.empty] expr
+typeCheck = typeOf [Map.empty]
 
 -- check the type of an expression
 typeOf :: SymStack -> Expr -> TypeCheckMonad (Type, SymStack)
@@ -47,8 +47,9 @@ typeOf ss (PTerm (PBool _)) = return (PBoolType, ss)
 -- compound types
 typeOf ss (PFunc (PFuncType args retTy) body) = do
   let ar = map (\(PTypeArg ty _) -> ty) args
-
-  return $ (PFuncType ar retTy, ss)
+  -- insert arguments into a new symframe, push it to stack, check type and return types
+  typeOf ss body
+  return (PFuncType ar retTy, ss)
 
 typeOf ss (PBinOp op lhs rhs) = do
   (tyLhs, _) <- typeOf ss lhs
@@ -75,7 +76,7 @@ typeOf ss (PIf cond conseq alt) = do
 typeOf ss (PAssign (PIdentifier ide) val) = do
   (tyVal, _) <- typeOf ss val
   let newSS = insertIde ss ide tyVal
-  return $ (tyVal, newSS)
+  return (tyVal, newSS)
 
 typeOf ss (PIndex arr idx) = do
   (tyArr, _) <- typeOf ss arr
@@ -88,7 +89,7 @@ typeOf ss (PGroup body) = typeOf ss body
 
 typeOf ss (PBlock exprs) =
   let f ss' expr = typeOf ss' expr >>= (\(_, ss') -> return ss')
-  in foldM f ss exprs >>= \ssLast -> return $ (PBoolType, ssLast)
+  in foldM f ss exprs >>= \ssLast -> return (PBoolType, ssLast)
 
 typeOf ss (PCall ide args) = do
   (tyFunc, _) <- typeOf ss (PTerm ide)
@@ -100,7 +101,7 @@ typeOf ss (PCall ide args) = do
                      ) True (zip args params)
       if valid
         then return (retTy, ss)
-        else throwTE ("wrong type of argument(s)")
+        else throwTE "wrong type of argument(s)"
     _ -> throwTE (show ide ++ " is not a function")
 
 typeOf ss (PTerm (PIdentifier ide)) =
