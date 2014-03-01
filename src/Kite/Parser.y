@@ -83,7 +83,7 @@ Call    : id '(' Exprs ')'    { PCall (PIdentifier $1) $3 }
 
 Index   : Expr '#' Expr     { PIndex $1 $3 }
 
-Assign  : Type id '=' Expr      { PAssign $1 (PIdentifier $2) $4 }
+Assign  : id '=' Expr      { PAssign (PIdentifier $1) $3 }
 
 Block   : '{' Stmts '}'    { PBlock $2 }
 
@@ -152,7 +152,7 @@ data Expr = PBinOp String Expr Expr -- Operator!
           | PList [Expr]
           | PBlock [Expr]
           | PIf Expr Expr Expr
-          | PAssign Type Term Expr -- PIdentifier!
+          | PAssign Term Expr -- PIdentifier!
           | PFunc Type Expr -- PFuncType!
           | PGroup Expr -- PFuncType!
           | PCall Term [Expr] -- PIdentifier!

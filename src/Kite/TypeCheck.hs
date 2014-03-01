@@ -72,10 +72,10 @@ typeOf ss (PIf cond conseq alt) = do
       (tyAlt, ss) <- typeOf ss alt
       tine tyConseq tyAlt ss "consequence and alternative in if-expression do not match"
 
-typeOf ss (PAssign ty (PIdentifier ide) val) = do
-  let newSS = insertIde ss ide ty
-  (tyVal, ss) <- typeOf newSS val
-  tine ty tyVal newSS "type mismatch during assignment"
+typeOf ss (PAssign (PIdentifier ide) val) = do
+  (tyVal, _) <- typeOf ss val
+  let newSS = insertIde ss ide tyVal
+  return $ (tyVal, newSS)
 
 typeOf ss (PIndex arr idx) = do
   (tyArr, _) <- typeOf ss arr
