@@ -106,10 +106,12 @@ typeOf ss (PCall ide args) = do
         else throwTE "wrong type of argument(s)"
     _ -> throwTE (show ide ++ " is not a function")
 
-typeOf ss (PTerm (PIdentifier ide)) =
-  case Map.lookup ide (topFrame ss) of
+typeOf ss ident@(PTerm (PIdentifier ide)) =
+  if length ss == 0
+     then throwTE ("reference to undefined variable " ++ ide)
+  else case Map.lookup ide (topFrame ss) of
     Just ty -> return (ty, ss)
-    Nothing -> throwTE ("reference to undefined variable " ++ ide)
+    Nothing -> typeOf (popFrame ss) ident
 
 -- catch all
 typeOf _ _ = throwError $ GenericTE "Unknown type error"
