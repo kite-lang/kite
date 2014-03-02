@@ -3,6 +3,7 @@ module Kite.TypeCheck (typeCheck) where
 import Kite.Parser
 import Control.Monad.Error
 import qualified Data.Map as Map
+import Text.Printf
 
 -- error handling
 data TypeError = GenericTE String
@@ -50,12 +51,11 @@ typeOf ss (PTerm (PBool _)) = return (PBoolType, ss)
 
 -- compound types
 typeOf ss (PFunc (PFuncType args retTy) body) = do
-  let ar = map (\(PTypeArg ty _) -> ty) args
+  let argTypes = map (\(PTypeArg ty _) -> ty) args
   let frame = Map.fromList $ map (\(PTypeArg ty (PIdentifier ide)) -> (ide, ty)) args
   let ss' = pushFrame ss frame
-  -- insert arguments into a new symframe, push it to stack, check type and return types
-  typeOf ss' body
-  return (PFuncType ar retTy, ss)
+  _ <- typeOf ss' body
+  return (PFuncType argTypes retTy, ss)
 
 typeOf ss (PBinOp op lhs rhs) = do
   (tyLhs, _) <- typeOf ss lhs
@@ -102,11 +102,15 @@ typeOf ss (PBlock exprs) =
 
 typeOf ss (PCall ide args) = do
   (tyFunc, _) <- typeOf ss (PTerm ide)
+  let (PFuncType funcArgs _) = tyFunc
+  let arityCheck cond msg = when (cond (length funcArgs) (length args)) $ throwTE $ printf "too %s arguments given, expected %d, got %d" msg (length funcArgs) (length args)
+  arityCheck (>) "few"
+  arityCheck (<) "many"
   case tyFunc of
     PFuncType params retTy -> do
       valid <- foldM (\acc (arg, tyParam) -> do
                          (tyArg, _) <- typeOf ss arg
-                         return $ tyArg == tyParam
+                         return $ acc && tyArg == tyParam
                      ) True (zip args params)
       if valid
         then return (retTy, ss)
@@ -114,7 +118,7 @@ typeOf ss (PCall ide args) = do
     _ -> throwTE (show ide ++ " is not a function")
 
 typeOf ss ident@(PTerm (PIdentifier ide)) =
-  if length ss == 0
+  if null ss
      then throwTE ("reference to undefined variable " ++ ide)
   else case Map.lookup ide (topFrame ss) of
     Just ty -> return (ty, ss)
