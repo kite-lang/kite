@@ -50,12 +50,13 @@ typeOf ss (PTerm (PString _)) = return (PStringType, ss)
 typeOf ss (PTerm (PBool _)) = return (PBoolType, ss)
 
 -- compound types
-typeOf ss (PFunc (PFuncType args retTy) body) = do
+typeOf ss (PFunc (PFuncType args retType) body) = do
   let argTypes = map (\(PTypeArg ty _) -> ty) args
   let frame = Map.fromList $ map (\(PTypeArg ty (PIdentifier ide)) -> (ide, ty)) args
   let ss' = pushFrame ss frame
-  _ <- typeOf ss' body
-  return (PFuncType argTypes retTy, ss)
+  (bodyRetType, _) <- typeOf ss' body
+  when (bodyRetType /= retType) (throwTE "return type does not match annotated one")
+  return (PFuncType argTypes retType, ss)
 
 typeOf ss (PBinOp op lhs rhs) = do
   (tyLhs, _) <- typeOf ss lhs
@@ -97,8 +98,18 @@ typeOf ss (PIndex arr idx) = do
 typeOf ss (PGroup body) = typeOf ss body
 
 typeOf ss (PBlock exprs) =
-  let f ss' expr = typeOf ss' expr >>= (\(_, ss') -> return ss')
-  in foldM f ss exprs >>= \ssLast -> return (PBoolType, ssLast)
+  let f (ss', rets) expr = do
+        (ty, ss') <- typeOf ss' expr
+        let updatedRets = case expr of
+              PReturn _ -> ty : rets
+              _ -> rets
+        return (ss', updatedRets)
+  in do
+    (ssLast, rets) <- foldM f (ss, []) exprs
+    when (null rets) (throwTE "missing return statement")
+    let valid = foldl (\acc ty -> acc && ty == head rets) True rets
+    unless valid (throwTE "return types do not match")
+    return (head rets, ssLast)
 
 typeOf ss (PCall ide args) = do
   (tyFunc, _) <- typeOf ss (PTerm ide)
@@ -123,6 +134,8 @@ typeOf ss ident@(PTerm (PIdentifier ide)) =
   else case Map.lookup ide (topFrame ss) of
     Just ty -> return (ty, ss)
     Nothing -> typeOf (popFrame ss) ident
+
+typeOf ss (PReturn expr) = typeOf ss expr
 
 -- catch all
 typeOf _ _ = throwError $ GenericTE "Unknown type error"
