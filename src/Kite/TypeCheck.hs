@@ -92,8 +92,10 @@ typeOf ss (PIndex arr idx) = do
   (tyArr, _) <- typeOf ss arr
   (tyIdx, _) <- typeOf ss idx
   case tyArr of
-    PListType _ -> tine PIntegerType tyIdx ss ("invalid index type, expected Int, saw " ++ show tyIdx)
-    _ -> throwTE "the index operator is only defined for \"<List>ls # <Int>idx\""
+    PListType itemTy -> if PIntegerType /= tyIdx
+                     then throwTE ("invalid index type, expected Int, saw " ++ show tyIdx)
+                     else return (itemTy, ss)
+    _ -> throwTE "the index operator is only defined for List # Int"
 
 typeOf ss (PGroup body) = typeOf ss body
 
