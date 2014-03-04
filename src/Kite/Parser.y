@@ -57,6 +57,7 @@ import Kite.Lexer
 %%
 
 Stmt    : Expr             { $1 }
+        | StandardBlock    { $1 }
         | return Expr      { PReturn $2 }
 
 Stmts   : {- nothing -}    { [] }
@@ -66,7 +67,6 @@ Stmts   : {- nothing -}    { [] }
 
 Expr    : BinOp            { $1 }
         | List             { $1 }
-        | Block            { $1 }
         | Assign           { $1 }
         | Func             { $1 }
         | Call             { $1 }
@@ -79,14 +79,17 @@ Exprs   : {- nothing -}    { [] }
         | Expr             { [$1] }
         | Expr ',' Exprs   { $1 : $3 }
 
--- Expression rules
+-- expression rules
 Call    : id '(' Exprs ')'    { PCall (PIdentifier $1) $3 }
 
 Index   : Expr '#' Expr     { PIndex $1 $3 }
 
 Assign  : id '=' Expr      { PAssign (PIdentifier $1) $3 }
 
-Block   : '{' Stmts '}'    { PBlock $2 }
+-- differentiate between standard and function blocks
+StandardBlock : '{' Stmts '}'    { PBlock StandardBlock $2 }
+
+FuncBlock : '{' Stmts '}'    { PBlock FuncBlock $2 }
 
 List    : '[' Exprs ']'    { PList $2 }
 
@@ -103,7 +106,7 @@ BinOp   : Expr '+' Expr  { PBinOp "+" $1 $3 }
         | Expr '!=' Expr { PBinOp "!=" $1 $3 }
 
 
-Func    : FuncDef Block    { PFunc $1 $2 }
+Func    : FuncDef FuncBlock    { PFunc $1 $2 }
 
 Type    : boolTy           { PBoolType }
         | intTy            { PIntegerType }
@@ -116,7 +119,7 @@ TypeArg : Type id          { PTypeArg $1 (PIdentifier $2) }
 
 -- support both single expr and blocks
 If    : if Expr then Expr else Expr    { PIf $2 $4 $6 }
-      | if Expr then Block else Block  { PIf $2 $4 $6 }
+      | if Expr then StandardBlock else StandardBlock  { PIf $2 $4 $6 }
 
 -- func literal
 FuncDef : '(' ArgList ')' '->' Type { PFuncType $2 $5 }
@@ -148,10 +151,14 @@ happyError (x:xs) = error $ "Parse error: " ++ (show . posn2str . tok2posn) x
 
 posn2str (AlexPn _ line col) = "line " ++ show line ++ ", column " ++ show col
 
+data BlockType = StandardBlock
+               | FuncBlock
+               deriving (Show, Eq)
+
 data Expr = PBinOp String Expr Expr -- Operator!
           | PTerm Term
           | PList [Expr]
-          | PBlock [Expr]
+          | PBlock BlockType [Expr]
           | PIf Expr Expr Expr
           | PAssign Term Expr -- PIdentifier!
           | PFunc Type Expr -- PFuncType!

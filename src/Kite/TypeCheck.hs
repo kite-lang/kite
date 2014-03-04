@@ -29,16 +29,23 @@ insertIde (x:xs) ide ty = Map.insert ide ty x : xs
 -- operators that return bool
 boolOps = ["==", ">", ">=", "<", "<=", "!="]
 
--- shortcuts
+-- main interface
+typeCheck :: Expr -> TypeCheckMonad (Type, SymStack)
+typeCheck = typeOf [Map.empty]
+
+-- helpers
+retFold (ss', rets) expr = do
+  (ty, ss') <- typeOf ss' expr
+  let updatedRets = case expr of
+        PReturn _ -> ty : rets
+        _ -> rets
+  return (ss', updatedRets)
+
 throwTE = throwError . GenericTE
 -- throw if not equal
 tine ty1 ty2 ss msg = if ty1 == ty2
                       then return (ty1, ss)
                       else throwTE msg
-
--- main interface
-typeCheck :: Expr -> TypeCheckMonad (Type, SymStack)
-typeCheck = typeOf [Map.empty]
 
 -- check the type of an expression
 typeOf :: SymStack -> Expr -> TypeCheckMonad (Type, SymStack)
@@ -79,8 +86,9 @@ typeOf ss (PIf cond conseq alt) = do
   if (not . (==PBoolType)) tyCond
     then throwTE ("expected if-condition to be of type Bool, saw " ++ show tyCond)
     else do
-      (tyConseq, ss) <- typeOf ss conseq
-      (tyAlt, ss) <- typeOf ss alt
+      let ss' = pushFrame ss Map.empty
+      (tyConseq, ss') <- typeOf ss conseq
+      (tyAlt, ss') <- typeOf ss alt
       tine tyConseq tyAlt ss "consequence and alternative in if-expression do not match"
 
 typeOf ss (PAssign (PIdentifier ide) val) = do
@@ -99,19 +107,18 @@ typeOf ss (PIndex arr idx) = do
 
 typeOf ss (PGroup body) = typeOf ss body
 
-typeOf ss (PBlock exprs) =
-  let f (ss', rets) expr = do
-        (ty, ss') <- typeOf ss' expr
-        let updatedRets = case expr of
-              PReturn _ -> ty : rets
-              _ -> rets
-        return (ss', updatedRets)
-  in do
-    (ssLast, rets) <- foldM f (ss, []) exprs
-    when (null rets) (throwTE "missing return statement")
-    let valid = foldl (\acc ty -> acc && ty == head rets) True rets
-    unless valid (throwTE "return types do not match")
-    return (head rets, ssLast)
+typeOf ss (PBlock StandardBlock exprs) = do
+  (ssLast, rets) <- foldM retFold (ss, []) exprs
+  --let valid = foldl (\acc ty -> acc && ty == head rets) True rets
+  return (PBoolType, ssLast)
+
+-- DRY this up with above
+typeOf ss (PBlock FuncBlock exprs) = do
+  (ssLast, rets) <- foldM retFold (ss, []) exprs
+  when (null rets) (throwTE "missing return statement")
+  let valid = foldl (\acc ty -> acc && ty == head rets) True rets
+  unless valid (throwTE "return types do not match")
+  return (head rets, ssLast)
 
 typeOf ss (PCall ide args) = do
   (tyFunc, _) <- typeOf ss (PTerm ide)
