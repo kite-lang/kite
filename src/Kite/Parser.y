@@ -61,6 +61,7 @@ Stmt    : Expr             { $1 }
 
 Stmts   : {- nothing -}    { [] }
         | Stmt             { [$1] }
+        | Stmt Stmts       { $1 : $2 }
         | Stmt ';' Stmts   { $1 : $3 }
 
 Expr    : BinOp            { $1 }
