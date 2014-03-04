@@ -6,6 +6,7 @@ Kite is language with a strong emphasis on functional development. It is statica
 
 We use [alex](https://github.com/simonmar/alex) for lexical analyzing, [happy](https://github.com/simonmar/happy) for parsing, and lastly, [LLVM](http://llvm.org/) for code generation.
 
+![Compiler's workflow](report/images/flow.png)
 
 ## Semantics
 
