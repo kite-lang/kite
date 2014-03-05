@@ -120,6 +120,19 @@ typeOf ss (PBlock FuncBlock exprs) = do
   unless valid (throwTE "return types do not match")
   return (head rets, ssLast)
 
+typeOf ss (PImmCall (PFunc (PFuncType params retType) body) args) = do
+  let arityCheck cond msg = when (cond (length params) (length args)) $ throwTE $ printf "too %s arguments given, expected %d, got %d" msg (length params) (length args)
+  arityCheck (>) "few"
+  arityCheck (<) "many"
+  valid <- foldM (\acc (arg, param) -> do
+                     let (PTypeArg tyParam _) = param
+                     (tyArg, _) <- typeOf ss arg
+                     return $ acc && tyArg == tyParam
+                 ) True (zip args params)
+  if valid
+   then return (retType, ss)
+   else throwTE "wrong type of argument(s)"
+
 typeOf ss (PCall ide args) = do
   (tyFunc, _) <- typeOf ss (PTerm ide)
   let (PFuncType funcArgs _) = tyFunc
