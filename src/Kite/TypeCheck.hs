@@ -20,9 +20,9 @@ type TypeCheckMonad = Either TypeError
 type SymFrame = Map.Map String Type
 type SymStack = [SymFrame]
 
-pushFrame stack frame = frame:stack
-popFrame (x:xs) = xs
-topFrame (x:xs) = x
+pushFrame stack frame = frame : stack
+popFrame = tail
+topFrame = head
 
 insertIde (x:xs) ide ty = Map.insert ide ty x : xs
 
@@ -90,6 +90,12 @@ typeOf ss (PIf cond conseq alt) = do
       (tyConseq, ss') <- typeOf ss conseq
       (tyAlt, ss') <- typeOf ss alt
       tine tyConseq tyAlt ss "consequence and alternative in if-expression do not match"
+
+typeOf ss (PAssign (PIdentifier ide) func@(PFunc tyFunc@(PFuncType params retType) body)) = do
+  let tyParams = map (\(PTypeArg ty _) -> ty) params
+  let ss' = insertIde ss ide (PFuncType tyParams retType)
+  typeOf ss' func
+  return (tyFunc, ss')
 
 typeOf ss (PAssign (PIdentifier ide) val) = do
   (tyVal, _) <- typeOf ss val
