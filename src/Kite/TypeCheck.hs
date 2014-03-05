@@ -1,4 +1,4 @@
-module Kite.TypeCheck (typeCheck) where
+module Kite.TypeCheck where
 
 import Kite.Parser
 import Control.Monad.Error
@@ -10,7 +10,7 @@ data TypeError = TypeError String
                | ReferenceError String
                | ArityError String
                | UnknownError
-               deriving (Show)
+               deriving (Show, Eq)
 
 instance Error TypeError where
   noMsg = UnknownError

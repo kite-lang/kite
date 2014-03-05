@@ -3,8 +3,9 @@ module Main where
 import Test.Tasty
 import Test.Tasty.HUnit
 
-import LexerTest
-import ParserTest
+-- import LexerTest
+-- import ParserTest
+import TypeCheckTest
 
 
 main :: IO ()
@@ -13,8 +14,9 @@ main = defaultMain tests
 tests = testGroup "Tests"
         [
           --truthTest,
-          lexerTests,
-          parserTests
+          --lexerTests,
+          --parserTests,
+          typeCheckTests
         ]
 
 truthTest = testCase "Truth" $

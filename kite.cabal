@@ -17,4 +17,4 @@ test-suite           test
   type:              exitcode-stdio-1.0
   main-is:           Main.hs
   hs-source-dirs:    tests, src
-  build-depends:     base, array, cmdargs, tasty, tasty-hunit
+  build-depends:     base, array, cmdargs, pretty-show, containers, mtl, tasty, tasty-hunit
