@@ -105,19 +105,15 @@ typeOf ss (PBinOp op lhs rhs) = do
   (tyLhs, _) <- typeOf ss lhs
   (tyRhs, _) <- typeOf ss rhs
   let retTy = if op `elem` boolOps then PBoolType else tyRhs
-  if (retTy,op,retTy) `elem` binOpLookup || 
-     retTy `elem` [PIntegerType,PFloatType] || -- All binary ops are allowed for Int and Float
-     op `elem` boolOps -- All boolean ops are allowed for all types 
-  then
-      if tyLhs == tyRhs
-      then return (retTy, ss)
-      else if (tyLhs,op,tyRhs) `elem` binOpLookup 
-           then return (retTy, ss)
-           else throwTE $ printf "Binary operand types do not match (%s %s %s)"
-               (show tyLhs) op (show tyRhs)
-  else  throwTE $ printf "Binary operator '%s' is not allowed for types '%s' and '%s'"
-                op (show tyRhs) (show tyLhs)
-
+  unless ((retTy,op,retTy) `elem` binOpLookup ||
+          retTy `elem` [PIntegerType,PFloatType] || -- All binary ops are allowed for Int and Float
+          op `elem` boolOps) -- All boolean ops are allowed for all types
+    $ throwTE $ printf "Binary operator '%s' is not allowed for types '%s' and '%s'."
+    op (show tyRhs) (show tyLhs)
+  unless (tyLhs == tyRhs || (tyLhs,op,tyRhs) `elem` binOpLookup) $ throwTE $ printf
+    "Binary operand types do not match (%s %s %s)."
+    (show tyLhs) op (show tyRhs)
+  return (retTy, ss)
 
 typeOf ss (PList (x:xs)) = do
   (tyHead, _) <- typeOf ss x
