@@ -1,6 +1,7 @@
 {
 module Kite.Parser where
 import Kite.Lexer
+import Text.Printf
 }
 
 %name kiteparser
@@ -177,7 +178,7 @@ data Type = PListType Type
           | PFloatType
           | PStringType
           | PTypeArg Type Term -- PIdentifier!
-          deriving (Show, Eq)
+          deriving (Eq)
 
 data Term = PInteger Int
           | PFloat Float
@@ -185,4 +186,14 @@ data Term = PInteger Int
           | PString String
           | PIdentifier String
           deriving (Show, Eq)
+
+instance Show Type where
+  show (PListType ty)        = printf "List %s" $ show ty
+  show (PFuncType [] ty)     = printf "Func [] %s" $ show ty
+  show (PFuncType (x:xs) ty) = printf "Func [%s] %s" (show x) (show ty)
+  show PBoolType             = "Bool"
+  show PIntegerType          = "Int"
+  show PFloatType            = "Float"
+  show PStringType           = "String"
+  show (PTypeArg ty te)      = printf "TypeArg %s %s" (show ty) (show te)
 }

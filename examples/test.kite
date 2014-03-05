@@ -11,9 +11,6 @@ foo = (Int a) -> Int {
     return a + one
 }
 
-g = 2
-g = "kat"
-
 foo (2)
 
 -- parameterless func
