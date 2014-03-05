@@ -6,6 +6,10 @@ half = 0.5
 str  = "foo"
 lst  = [1, 2, 3, 4, 5]
 
+-- binops
+s = "str" + "ing"
+l = [1, 2] + 3
+
 -- simple func
 foo = (Int a) -> Int {
     return a + one

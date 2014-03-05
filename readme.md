@@ -19,48 +19,49 @@ Recursion is supported.
 
 
 ## Syntax
-Kite uses mandatory semicolons to mark the end of an expression.
+Kite uses *optional* semicolons to mark the end of an expression.
 
 
 ### Variable definitions
 The basic variable definition is defined as follows
 
-    <Type> identifier = <Expression>;
+    identifier = <Expression>
 
 All types are capitalized to make it easy to differentiate between types and identifiers.
 
-    Int one = 1;
-    Float two = 2.0;
-    Bool truth = True;
+    one = 1
+    two = 2.0
+    truth = True
 
 Strings are enclosed in *double* quotes. Single quotes are valid identifiers.
 
-    String foo = "Hello, world!";
-    String bar = "It's \"funny\"";
+    foo = "Hello, world!"
+    bar = "It's \"funny\""
 
-Function signatures are defined by the `->` operator, where `(a) -> b` defines a function that maps type `a` to `b`. The argument list can be empty.
+Kite supports various uses for binary operators, depending on the type.
 
-    ([<ArgType>, ...]) -> <ReturnType>
+    lst = [1, 2] + 3 -- -> [1, 2, 3]
+    str = "str" + "ing" -- -> "string"
 
-Function literals (or expressions) are the corresponding implementations matching a function signature
+Functions are declared with normal identifiers assigned to the following expression format
 
-    ([<ArgType> <ArgName>, ...]) -> <ReturnType>
+    foo = ([<ArgType> <ArgName>, ...]) -> <ReturnType> { ... }
 
-Thus, the only difference between the signature and the literal is the addition of named arguments. The following are all valid function definitions:
+Here are some examples:
 
-    () -> Int one = () -> Int { return 1; };
+    one = () -> Int { return 1 }
 
-    (String, String) -> String fullName = (String first, String, last) -> String {
-        return first + " " + last;
-    };
+    fullName = (String first, String last) -> String {
+        return first + " " + last
+    }
 
 Kite supports higher-order functions:
 
-    (() -> Int) -> ((Int) -> Int) foo = (() -> Int bar) -> ((Int) -> Int) {
+    foo = (() -> Int bar) -> ((Int) -> Int) {
         return (Int baz) -> Int {
             bar () + baz;
-        };
-    };
+        }
+    }
 
 The above expressions creates a function, bound to variable `foo`, that takes a function of type `() -> Int` as it's only argument, and returns another function of type `(Int) -> Int`.
 
