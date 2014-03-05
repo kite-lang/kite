@@ -31,6 +31,26 @@ insertIde (x:xs) ide ty = Map.insert ide ty x : xs
 -- operators that return bool
 boolOps = ["==", ">", ">=", "<", "<=", "!="]
 
+-- arithmic operations look-up
+binOpLookup = [(PStringType, "+",PStringType),
+               (PListType PStringType,"+",PListType PStringType),
+               (PListType PIntegerType,"+",PListType PIntegerType),
+               (PListType PFloatType,"+",PListType PFloatType),
+               (PListType PBoolType,"+",PListType PBoolType),
+               (PListType PStringType,"+",PStringType),
+               (PListType PIntegerType,"+", PIntegerType),
+               (PListType PFloatType,"+", PFloatType),
+               (PListType PBoolType,"+", PBoolType),
+               (PStringType,"+",PListType PStringType),
+               (PIntegerType,"+",PListType PIntegerType),
+               (PFloatType,"+",PListType PFloatType),
+               (PBoolType,"+",PListType PBoolType)]
+{-
+  for floats and integers, all binary operators are allowed
+  for booleans only the boolOps are allowed
+-}
+
+
 -- main interface
 typeCheck :: Expr -> TypeCheckMonad (Type, SymStack)
 typeCheck = typeOf [Map.empty]
@@ -84,11 +104,20 @@ typeOf ss (PFunc (PFuncType args retType) body) = do
 typeOf ss (PBinOp op lhs rhs) = do
   (tyLhs, _) <- typeOf ss lhs
   (tyRhs, _) <- typeOf ss rhs
-  let tyRet = if op `elem` boolOps then PBoolType else tyRhs
-  when (tyLhs /= tyRhs) $ throwTE $ printf
-    "Binary operand types do not match (%s %s %s)."
-    (show tyLhs) op (show tyRhs)
-  return (tyRet, ss)
+  let retTy = if op `elem` boolOps then PBoolType else tyRhs
+  if (retTy,op,retTy) `elem` binOpLookup || 
+     retTy `elem` [PIntegerType,PFloatType] || -- All binary ops are allowed for Int and Float
+     op `elem` boolOps -- All boolean ops are allowed for all types 
+  then
+      if tyLhs == tyRhs
+      then return (retTy, ss)
+      else if (tyLhs,op,tyRhs) `elem` binOpLookup 
+           then return (retTy, ss)
+           else throwTE $ printf "Binary operand types do not match (%s %s %s)"
+               (show tyLhs) op (show tyRhs)
+  else  throwTE $ printf "Binary operator '%s' is not allowed for types '%s' and '%s'"
+                op (show tyRhs) (show tyLhs)
+
 
 typeOf ss (PList (x:xs)) = do
   (tyHead, _) <- typeOf ss x
