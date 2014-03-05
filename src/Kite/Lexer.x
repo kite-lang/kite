@@ -14,7 +14,7 @@ $symbols		= [\(\)\{\}\[\]\;\,]
 @keywords		= return | import | if | then | else | yolo
 @binops	                = "+" | "-" | "/" | "*" | "%" | "==" | "<" | "<=" | ">" | ">=" | "!="
 @operators		= "=" | "#" | "->"
-@string                 = \" ($white | $alphaNum | $symbols)* \"
+@string                 = \" (. # \")* \"
 @identifier		= $downcase [$alphaNum \_ \' \! \?]*
 @bool			= "True" | "False"
 @type			= $upcase [$alphaNum]*
