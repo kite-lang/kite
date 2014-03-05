@@ -97,10 +97,13 @@ typeOf ss (PAssign (PIdentifier ide) func@(PFunc tyFunc@(PFuncType params retTyp
   typeOf ss' func
   return (tyFunc, ss')
 
-typeOf ss (PAssign (PIdentifier ide) val) = do
+typeOf ss (PAssign ident@(PIdentifier ide) val) = do
   (tyVal, _) <- typeOf ss val
-  let newSS = insertIde ss ide tyVal
-  return (tyVal, newSS)
+  case typeOfIdentifier ss (PTerm ident) of
+    Just existingTy -> if existingTy /= tyVal
+                       then throwTE (printf "reassigning variable %s with different type" ide)
+                       else return (tyVal, insertIde ss ide tyVal) -- UPDATE
+    Nothing -> return (tyVal, insertIde ss ide tyVal)
 
 typeOf ss (PIndex arr idx) = do
   (tyArr, _) <- typeOf ss arr
@@ -157,13 +160,18 @@ typeOf ss (PCall ide args) = do
     _ -> throwTE (show ide ++ " is not a function")
 
 typeOf ss ident@(PTerm (PIdentifier ide)) =
-  if null ss
-     then throwTE ("reference to undefined variable " ++ ide)
-  else case Map.lookup ide (topFrame ss) of
+  case typeOfIdentifier ss ident of
     Just ty -> return (ty, ss)
-    Nothing -> typeOf (popFrame ss) ident
+    _ -> throwTE ("reference to undefined variable " ++ ide)
 
 typeOf ss (PReturn expr) = typeOf ss expr
 
 -- catch all
 typeOf _ _ = throwError $ GenericTE "Unknown type error"
+
+typeOfIdentifier ss ident@(PTerm (PIdentifier ide)) =
+  if null ss
+  then Nothing
+  else case Map.lookup ide (topFrame ss) of
+    Just ty -> return ty
+    Nothing -> typeOfIdentifier (popFrame ss) ident
