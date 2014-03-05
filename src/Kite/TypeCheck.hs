@@ -45,7 +45,8 @@ retFold (ss', rets) expr = do
 
 throwTE = throwError . TypeError
 throwRE = throwError . ReferenceError
-throwAE ide exp got = throwError . ArityError $ printf "Function '%s' got too %s arguments. Expected %d, got %d"
+throwAE ide exp got = throwError . ArityError $ printf
+                      "Function '%s' got too %s arguments. Expected %d, got %d."
                       ide (if exp > got then "few" else "many") exp got
 
 -- throw if not equal
@@ -75,39 +76,44 @@ typeOf ss (PFunc (PFuncType args retType) body) = do
   let frame = Map.fromList $ map (\(PTypeArg ty (PIdentifier ide)) -> (ide, ty)) args
   let ss' = pushFrame ss frame
   (bodyRetType, _) <- typeOf ss' body
-  when (bodyRetType /= retType) (throwTE (printf "Return type %s does not match annotated type %s"
-                                          (show bodyRetType) (show retType)))
-  -- when (bodyRetType /= retType) (throwTE (printf "return type %s does not match annotated type %s" bodyRetType retType))
+  when (bodyRetType /= retType) $ throwTE $ printf
+    "Return type %s does not match annotated type %s."
+    (show bodyRetType) (show retType)
   return (PFuncType argTypes retType, ss)
 
 typeOf ss (PBinOp op lhs rhs) = do
   (tyLhs, _) <- typeOf ss lhs
   (tyRhs, _) <- typeOf ss rhs
   let tyRet = if op `elem` boolOps then PBoolType else tyRhs
-  if tyLhs == tyRhs
-    then return (tyRet, ss)
-    else throwTE $ printf "Binary operand types do not match (%s %s %s)"
-         (show tyLhs) op (show tyRhs)
+  when (tyLhs /= tyRhs) $ throwTE $ printf
+    "Binary operand types do not match (%s %s %s)."
+    (show tyLhs) op (show tyRhs)
+  return (tyRet, ss)
 
 typeOf ss (PList (x:xs)) = do
   (tyHead, _) <- typeOf ss x
-  let f acc i = typeOf ss i >>= (\(t, _) -> return $ acc && t == tyHead)
-  valid <- foldM f True xs
-  if valid
-    then return (PListType tyHead, ss)
-    else throwTE $ printf "Varying types in list (head is %s)" (show tyHead)
+  mapM_ (\i -> do
+            (ty, _) <- typeOf ss i
+            when (ty /= tyHead) $ throwTE $ printf
+              "Varying types in list. Got %s(s) and %s(s)."
+              (show tyHead) (show ty)
+        ) xs
+  return (PListType tyHead, ss)
 
 typeOf ss (PIf cond conseq alt) = do
   (tyCond, _) <- typeOf ss cond
   if (not . (==PBoolType)) tyCond
-    then throwTE ("Expected if-condition to be of type Bool, got " ++ show tyCond)
+    then throwTE $ printf
+         "Expected if-condition to be of type Bool, got %s." (show tyCond)
     else do
       let ss' = pushFrame ss Map.empty
-      (tyConseq, ss') <- typeOf ss conseq
-      (tyAlt, ss') <- typeOf ss alt
-      tine tyConseq tyAlt ss "Consequence and alternative in if-expression do not match"
+      (tyConseq, _) <- typeOf ss' conseq
+      (tyAlt, _) <- typeOf ss' alt
+      tine tyConseq tyAlt ss $ printf
+        "Consequence and alternative in if-expression do not match (%s and %s)."
+        (show tyConseq) (show tyAlt)
 
-typeOf ss (PAssign (PIdentifier ide) func@(PFunc tyFunc@(PFuncType params retType) body)) = do
+typeOf ss (PAssign (PIdentifier ide) func@(PFunc tyFunc@(PFuncType params retType) _)) = do
   let tyParams = map (\(PTypeArg ty _) -> ty) params
   let ss' = insertIde ss ide (PFuncType tyParams retType)
   typeOf ss' func
@@ -117,8 +123,9 @@ typeOf ss (PAssign ident@(PIdentifier ide) val) = do
   (tyVal, _) <- typeOf ss val
   case typeOfIdentifier ss (PTerm ident) of
     Just existingTy -> if existingTy /= tyVal
-                       then throwTE (printf "Reassigning variable '%s' of type %s with type %s"
-                                     ide (show existingTy) (show tyVal))
+                       then throwTE $ printf
+                            "Reassigning variable '%s' of type %s with type %s."
+                            ide (show existingTy) (show tyVal)
                        else return (tyVal, insertIde ss ide tyVal) -- UPDATE
     Nothing -> return (tyVal, insertIde ss ide tyVal)
 
@@ -127,9 +134,11 @@ typeOf ss (PIndex arr idx) = do
   (tyIdx, _) <- typeOf ss idx
   case tyArr of
     PListType itemTy -> if PIntegerType /= tyIdx
-                        then throwTE $ "Invalid index type, expected Int, got " ++ show tyIdx
+                        then throwTE $ printf
+                             "Invalid index type, expected Int, got %s."
+                             (show tyIdx)
                         else return (itemTy, ss)
-    _ -> throwTE "The index operator is only defined for List # Int"
+    _ -> throwTE "The index operator is only defined for List # Int."
 
 typeOf ss (PGroup body) = typeOf ss body
 
@@ -140,41 +149,43 @@ typeOf ss (PBlock StandardBlock exprs) = do
 
 typeOf ss (PBlock FuncBlock exprs) = do
   (ssLast, rets) <- foldM retFold (ss, []) exprs
-  when (null rets) (throwTE "Missing return statement")
-  let valid = foldl (\acc ty -> acc && ty == head rets) True rets
-  unless valid (throwTE "Varying return types in block")
+  when (null rets) $ throwTE "Missing return statement."
+  mapM_ (\ty ->
+          when (ty /= head rets) $ throwTE "Varying return types in block."
+        ) rets
   return (head rets, ssLast)
 
 typeOf ss (PImmCall (PFunc (PFuncType params retType) body) args) = do
-  when (length params /= length args) $ throwAE "<anonymous>" (length params) (length args)
-  valid <- foldM (\acc (arg, param) -> do
-                     let (PTypeArg tyParam _) = param
-                     (tyArg, _) <- typeOf ss arg
-                     return $ acc && tyArg == tyParam
-                 ) True (zip args params)
-  if valid
-   then return (retType, ss)
-   else throwTE "Wrong type of argument(s)"
+  when (length params /= length args) $ throwAE
+    "<anonymous>" (length params) (length args)
+  mapM_ (\(arg, param) -> do
+            let (PTypeArg tyParam _) = param
+            (tyArg, _) <- typeOf ss arg
+            when (tyArg /= tyParam) $ throwTE $ printf
+              "Wrong type of argument. Expected %s, got %s."
+              (show tyParam) (show tyArg)
+        ) (zip args params)
+  return (retType, ss)
 
 typeOf ss (PCall ident@(PIdentifier ide) args) = do
   (tyFunc, _) <- typeOf ss (PTerm ident)
-  let (PFuncType params _) = tyFunc
+  let (PFuncType params retTy) = tyFunc
   when (length params /= length args) $ throwAE ide (length params) (length args)
   case tyFunc of
-    PFuncType params retTy -> do
-      valid <- foldM (\acc (arg, tyParam) -> do
-                         (tyArg, _) <- typeOf ss arg
-                         return $ acc && tyArg == tyParam
-                     ) True (zip args params)
-      if valid
-        then return (retTy, ss)
-        else throwTE "Wrong type of argument(s)"
-    _ -> throwTE $ printf "Variable '%s' is not a function" (show ide)
+    PFuncType _ _ -> do
+      mapM_ (\(arg, tyParam) -> do
+                (tyArg, _) <- typeOf ss arg
+                when (tyArg /= tyParam) $ throwTE $ printf
+                  "Wrong type of argument when calling function '%s'. Expected %s, got %s."
+                  ide (show tyParam) (show tyArg)
+            ) (zip args params)
+      return (retTy, ss)
+    _ -> throwTE $ printf "Variable '%s' is not a function." (show ide)
 
 typeOf ss ident@(PTerm (PIdentifier ide)) =
   case typeOfIdentifier ss ident of
     Just ty -> return (ty, ss)
-    _ -> throwRE $ printf "Reference to undefined variable '%s'" ide
+    _ -> throwRE $ printf "Reference to undefined variable '%s'." ide
 
 typeOf ss (PReturn expr) = typeOf ss expr
 
