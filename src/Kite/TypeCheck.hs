@@ -6,13 +6,15 @@ import qualified Data.Map as Map
 import Text.Printf
 
 -- error handling
-data TypeError = GenericTE String
-               | UnkownTE
+data TypeError = TypeError String
+               | ReferenceError String
+               | ArityError String
+               | UnknownError
                deriving (Show)
 
 instance Error TypeError where
-  noMsg = GenericTE "Unknown type error"
-  strMsg = GenericTE
+  noMsg = UnknownError
+  strMsg = TypeError
 
 type TypeCheckMonad = Either TypeError
 
@@ -41,7 +43,11 @@ retFold (ss', rets) expr = do
         _ -> rets
   return (ss', updatedRets)
 
-throwTE = throwError . GenericTE
+throwTE = throwError . TypeError
+throwRE = throwError . ReferenceError
+throwAE ide exp got = throwError . ArityError $ printf "Function '%s' got too %s arguments. Expected %d, got %d"
+                      ide (if exp > got then "few" else "many") exp got
+
 -- throw if not equal
 tine ty1 ty2 ss msg = if ty1 == ty2
                       then return (ty1, ss)
@@ -140,9 +146,7 @@ typeOf ss (PBlock FuncBlock exprs) = do
   return (head rets, ssLast)
 
 typeOf ss (PImmCall (PFunc (PFuncType params retType) body) args) = do
-  let arityCheck cond msg = when (cond (length params) (length args)) $ throwTE $ printf "Too %s arguments given, expected %d, got %d" msg (length params) (length args)
-  arityCheck (>) "few"
-  arityCheck (<) "many"
+  when (length params /= length args) $ throwAE "<anonymous>" (length params) (length args)
   valid <- foldM (\acc (arg, param) -> do
                      let (PTypeArg tyParam _) = param
                      (tyArg, _) <- typeOf ss arg
@@ -152,12 +156,10 @@ typeOf ss (PImmCall (PFunc (PFuncType params retType) body) args) = do
    then return (retType, ss)
    else throwTE "Wrong type of argument(s)"
 
-typeOf ss (PCall ide args) = do
-  (tyFunc, _) <- typeOf ss (PTerm ide)
-  let (PFuncType funcArgs _) = tyFunc
-  let arityCheck cond msg = when (cond (length funcArgs) (length args)) $ throwTE $ printf "too %s arguments given, expected %d, got %d" msg (length funcArgs) (length args)
-  arityCheck (>) "few"
-  arityCheck (<) "many"
+typeOf ss (PCall ident@(PIdentifier ide) args) = do
+  (tyFunc, _) <- typeOf ss (PTerm ident)
+  let (PFuncType params _) = tyFunc
+  when (length params /= length args) $ throwAE ide (length params) (length args)
   case tyFunc of
     PFuncType params retTy -> do
       valid <- foldM (\acc (arg, tyParam) -> do
@@ -167,14 +169,14 @@ typeOf ss (PCall ide args) = do
       if valid
         then return (retTy, ss)
         else throwTE "Wrong type of argument(s)"
-    _ -> throwTE $ printf "Variable %s is not a function" (show ide)
+    _ -> throwTE $ printf "Variable '%s' is not a function" (show ide)
 
 typeOf ss ident@(PTerm (PIdentifier ide)) =
   case typeOfIdentifier ss ident of
     Just ty -> return (ty, ss)
-    _ -> throwTE $ printf "reference to undefined variable %s" ide
+    _ -> throwRE $ printf "Reference to undefined variable '%s'" ide
 
 typeOf ss (PReturn expr) = typeOf ss expr
 
 -- catch all
-typeOf _ _ = throwError $ GenericTE "Unknown type error"
+typeOf _ _ = throwError UnknownError
