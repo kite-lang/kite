@@ -28,6 +28,9 @@ typeCheckTests = testGroup "Type Check"
   , testCase "Reference not defined" $
     Just RefE @?= analyze "two = 1 + one"
 
+  , testCase "Reference itself not defined" $
+    Just RefE @?= analyze "two = 1 + two"
+
   , testCase "Function call" $
     Nothing @?= analyze "{ one = (Int a) -> Int { return a }; one(1); }"
 
@@ -51,6 +54,21 @@ typeCheckTests = testGroup "Type Check"
 
   , testCase "List assignment illegal values" $
     Just TypeE @?= analyze "{ list = [1, True, \"Three\"] }"
+
+  , testCase "Append to list" $
+    Nothing @?= analyze "{ list = [1, 2] + 3 }"
+
+  , testCase "Append to list with wrong type" $
+    Just TypeE @?= analyze "{ list = [1, 2] + 3.0 }"
+
+  , testCase "Concatinate string" $
+    Nothing @?= analyze "{ s = \"str\" + \"ing\" }"
+
+  , testCase "Concatinate string with numbers in sting" $
+    Nothing @?= analyze "{ s = \"2\" + \"2.0\" }"
+
+  , testCase "Concatinate string with numbers" $
+    Just TypeE @?= analyze "{ s = \"2\" + 2.0 }"
 
   , testCase "Check Bool operators" $
     Nothing @?= analyze "{ foo = () -> Bool { return 2 > 1 }; }"
