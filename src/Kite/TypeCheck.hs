@@ -165,8 +165,6 @@ typeOf env (PIndex arr idx) = do
                         else return (itemTy, env)
     _ -> throwTE "The index operator is only defined for List # Int."
 
-typeOf env (PGroup body) = typeOf env body
-
 typeOf env (PBlock StandardBlock exprs) = do
   (envLast, rets) <- foldM retFold (env, []) exprs
   --let tyRet = if null rets then PVoidType else head rets

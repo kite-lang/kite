@@ -74,7 +74,7 @@ Expr    : BinOp            { $1 }
         | If               { $1 }
         | Index            { $1 }
         | Term             { PTerm $1 }
-        | '(' Expr ')'     { PGroup $2 }
+        | '(' Expr ')'     { $2 }
 
 Exprs   : {- nothing -}    { [] }
         | Expr             { [$1] }
@@ -164,7 +164,6 @@ data Expr = PBinOp String Expr Expr -- Operator!
           | PIf Expr Expr Expr
           | PAssign Term Expr -- PIdentifier!
           | PFunc Type Expr -- PFuncType!
-          | PGroup Expr -- PFuncType!
           | PCall Term [Expr] -- PIdentifier!
           | PImmCall Expr [Expr] -- PIdentifier!
           | PReturn Expr
