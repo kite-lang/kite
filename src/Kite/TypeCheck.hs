@@ -141,7 +141,7 @@ typeOf env (PIf cond conseq alt) = do
 typeOf env (PAssign (PIdentifier ide) func@(PFunc tyFunc@(PFuncType params retType) _)) = do
   let tyParams = map (\(PTypeArg ty _) -> ty) params
   let env' = insertIde env ide (PFuncType tyParams retType)
-  typeOf env' func
+  _ <- typeOf env' func
   return (tyFunc, env')
 
 typeOf env (PAssign ident@(PIdentifier ide) val) = do
@@ -181,6 +181,9 @@ typeOf env (PBlock FuncBlock exprs) = do
 typeOf env (PImmCall (PFunc (PFuncType params retType) body) args) = do
   when (length params /= length args) $ throwAE
     "<anonymous>" (length params) (length args)
+  let frame = Map.fromList $ map (\(PTypeArg ty (PIdentifier ide)) -> (ide, ty)) params
+  let env' = pushFrame env frame
+  _ <- typeOf env' body
   mapM_ (\(arg, param) -> do
             let (PTypeArg tyParam _) = param
             (tyArg, _) <- typeOf env arg
