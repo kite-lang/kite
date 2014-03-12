@@ -57,16 +57,19 @@ import Text.Printf
 
 %%
 
-Stmt    : Expr             { $1 }
+Stmt   :: { Expr }
+        : Expr             { $1 }
         | StandardBlock    { $1 }
         | return Expr      { PReturn $2 }
 
-Stmts   : {- nothing -}    { [] }
+Stmts  :: { [Expr] }
+        : {- nothing -}    { [] }
         | Stmt             { [$1] }
         | Stmt Stmts       { $1 : $2 }
         | Stmt ';' Stmts   { $1 : $3 }
 
-Expr    : BinOp            { $1 }
+Expr   :: { Expr }
+        : BinOp            { $1 }
         | List             { $1 }
         | Assign           { $1 }
         | Func             { $1 }
@@ -76,26 +79,34 @@ Expr    : BinOp            { $1 }
         | Term             { PTerm $1 }
         | '(' Expr ')'     { $2 }
 
+Exprs  :: { [Expr] }
 Exprs   : {- nothing -}    { [] }
         | Expr             { [$1] }
         | Expr ',' Exprs   { $1 : $3 }
 
 -- expression rules
-Call    : id '(' Exprs ')'    { PCall (PIdentifier $1) $3 }
+Call   :: { Expr }
+        : id '(' Exprs ')'    { PCall (PIdentifier $1) $3 }
         | Func '(' Exprs ')'  { PImmCall $1 $3 }
 
-Index   : Expr '#' Expr     { PIndex $1 $3 }
+Index  :: { Expr }
+        : Expr '#' Expr     { PIndex $1 $3 }
 
-Assign  : id '=' Expr      { PAssign (PIdentifier $1) $3 }
+Assign :: { Expr }
+        : id '=' Expr      { PAssign (PIdentifier $1) $3 }
 
 -- differentiate between standard and function blocks
-StandardBlock : '{' Stmts '}'    { PBlock StandardBlock $2 }
+StandardBlock :: { Expr }
+               : '{' Stmts '}'    { PBlock StandardBlock $2 }
 
-FuncBlock : '{' Stmts '}'    { PBlock FuncBlock $2 }
+FuncBlock :: { Expr }
+           : '{' Stmts '}'    { PBlock FuncBlock $2 }
 
+List   :: { Expr }
 List    : '[' Exprs ']'    { PList $2 }
 
-BinOp   : Expr '+' Expr  { PBinOp "+" $1 $3 }
+BinOp  :: { Expr }
+        : Expr '+' Expr  { PBinOp "+" $1 $3 }
         | Expr '-' Expr  { PBinOp "-" $1 $3 }
         | Expr '*' Expr  { PBinOp "*" $1 $3 }
         | Expr '/' Expr  { PBinOp "/" $1 $3 }
@@ -107,44 +118,52 @@ BinOp   : Expr '+' Expr  { PBinOp "+" $1 $3 }
         | Expr '>=' Expr { PBinOp ">=" $1 $3 }
         | Expr '!=' Expr { PBinOp "!=" $1 $3 }
 
+Func   :: { Expr }
+        : FuncDef FuncBlock    { PFunc $1 $2 }
 
-Func    : FuncDef FuncBlock    { PFunc $1 $2 }
-
-Type    : boolTy           { PBoolType }
+Type   :: { Type }
+        : boolTy           { PBoolType }
         | intTy            { PIntegerType }
         | floatTy          { PFloatType }
         | stringTy         { PStringType }
         | '[' Type ']'     { PListType $2 }
         | FuncType         { $1 }
 
-TypeArg : Type id          { PTypeArg $1 (PIdentifier $2) }
+TypeArg :: { Type }
+         : Type id          { PTypeArg $1 (PIdentifier $2) }
 
 -- support both single expr and blocks
-If    : if Expr then Expr else Expr    { PIf $2 $4 $6 }
-      | if Expr then StandardBlock else StandardBlock  { PIf $2 $4 $6 }
+If     :: { Expr }
+        : if Expr then Expr else Expr    { PIf $2 $4 $6 }
+        | if Expr then StandardBlock else StandardBlock  { PIf $2 $4 $6 }
 
 -- func literal
-FuncDef : '(' ArgList ')' '->' Type { PFuncType $2 $5 }
+FuncDef :: { Type }
+         : '(' ParamList ')' '->' Type { PFuncType $2 $5 }
 
 -- named arguments
-ArgList : {- nothing -}    { [] }
-        | TypeArg             { [$1] }
-        | TypeArg ',' ArgList   { $1 : $3 }
+ParamList :: { [Type] }
+           : {- nothing -}           { [] }
+           | TypeArg                 { [$1] }
+           | TypeArg ',' ParamList   { $1 : $3 }
 
 -- func signature
-FuncType : '(' TypeList ')' '->' Type { PFuncType $2 $5 }
+FuncType  :: { Type }
+           : '(' TypeList ')' '->' Type { PFuncType $2 $5 }
 
 -- just type
-TypeList: {- nothing -}    { [] }
-        | Type             { [$1] }
-        | Type ',' TypeList   { $1 : $3 }
+TypeList :: { [Type] }
+          : {- nothing -}    { [] }
+          | Type             { [$1] }
+          | Type ',' TypeList   { $1 : $3 }
 
 -- primitive types
-Term    : int              { PInteger $1 }
-        | bool             { PBool $1 }
-        | float            { PFloat $1 }
-        | string           { PString $1 }
-        | id               { PIdentifier $1 }
+Term     :: { Term }
+          : int              { PInteger $1 }
+          | bool             { PBool $1 }
+          | float            { PFloat $1 }
+          | string           { PString $1 }
+          | id               { PIdentifier $1 }
 
 {
 
