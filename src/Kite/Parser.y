@@ -76,7 +76,7 @@ Expr   :: { Expr }
         | Call             { $1 }
         | If               { $1 }
         | Index            { $1 }
-        | Term             { PTerm $1 }
+        | Term             { $1 }
         | '(' Expr ')'     { $2 }
 
 Exprs  :: { [Expr] }
@@ -158,7 +158,7 @@ TypeList :: { [Type] }
           | Type ',' TypeList   { $1 : $3 }
 
 -- primitive types
-Term     :: { Term }
+Term     :: { Expr }
           : int              { PInteger $1 }
           | bool             { PBool $1 }
           | float            { PFloat $1 }
@@ -177,16 +177,21 @@ data BlockType = StandardBlock
                deriving (Show, Eq)
 
 data Expr = PBinOp String Expr Expr -- Operator!
-          | PTerm Term
+          -- | PTerm Term
           | PList [Expr]
           | PBlock BlockType [Expr]
           | PIf Expr Expr Expr
-          | PAssign Term Expr -- PIdentifier!
+          | PAssign Expr Expr -- PIdentifier!
           | PFunc Type Expr -- PFuncType!
-          | PCall Term [Expr] -- PIdentifier!
+          | PCall Expr [Expr] -- PIdentifier!
           | PImmCall Expr [Expr] -- PIdentifier!
           | PReturn Expr
           | PIndex Expr Expr
+          | PInteger Int
+          | PFloat Float
+          | PBool Bool
+          | PString String
+          | PIdentifier String
           deriving (Show, Eq)
 
 data Type = PListType Type
@@ -195,15 +200,15 @@ data Type = PListType Type
           | PIntegerType
           | PFloatType
           | PStringType
-          | PTypeArg Type Term -- PIdentifier!
+          | PTypeArg Type Expr -- PIdentifier!
           deriving (Eq)
 
-data Term = PInteger Int
-          | PFloat Float
-          | PBool Bool
-          | PString String
-          | PIdentifier String
-          deriving (Show, Eq)
+-- data Term = PInteger Int
+--           | PFloat Float
+--           | PBool Bool
+--           | PString String
+--           | PIdentifier String
+--           deriving (Show, Eq)
 
 instance Show Type where
   show (PListType ty)        = printf "List %s" $ show ty

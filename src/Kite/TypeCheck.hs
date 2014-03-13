@@ -74,7 +74,7 @@ tine ty1 ty2 env msg = if ty1 == ty2
                       then return (ty1, env)
                       else throwTE msg
 
-typeOfIdentifier env ident@(PTerm (PIdentifier ide)) =
+typeOfIdentifier env ident@(PIdentifier ide) =
   if null env
   then Nothing
   else case Map.lookup ide (topFrame env) of
@@ -85,10 +85,10 @@ typeOfIdentifier env ident@(PTerm (PIdentifier ide)) =
 typeOf :: Environment -> Expr -> TypeCheckMonad (Type, Environment)
 
 -- base cases
-typeOf env (PTerm (PInteger _)) = return (PIntegerType, env)
-typeOf env (PTerm (PFloat _)) = return (PFloatType, env)
-typeOf env (PTerm (PString _)) = return (PStringType, env)
-typeOf env (PTerm (PBool _)) = return (PBoolType, env)
+typeOf env (PInteger _) = return (PIntegerType, env)
+typeOf env (PFloat _) = return (PFloatType, env)
+typeOf env (PString _) = return (PStringType, env)
+typeOf env (PBool _) = return (PBoolType, env)
 
 -- compound types
 typeOf env (PFunc (PFuncType args retType) body) = do
@@ -146,7 +146,7 @@ typeOf env (PAssign (PIdentifier ide) func@(PFunc tyFunc@(PFuncType params retTy
 
 typeOf env (PAssign ident@(PIdentifier ide) val) = do
   (tyVal, _) <- typeOf env val
-  case typeOfIdentifier env (PTerm ident) of
+  case typeOfIdentifier env ident of
     Just existingTy -> if existingTy /= tyVal
                        then throwTE $ printf
                             "Reassigning variable '%s' of type %s with type %s."
@@ -194,7 +194,7 @@ typeOf env (PImmCall (PFunc (PFuncType params retType) body) args) = do
   return (retType, env)
 
 typeOf env (PCall ident@(PIdentifier ide) args) = do
-  (tyFunc, _) <- typeOf env (PTerm ident)
+  (tyFunc, _) <- typeOf env ident
   let (PFuncType params retTy) = tyFunc
   when (length params /= length args) $ throwAE ide (length params) (length args)
   case tyFunc of
@@ -208,7 +208,7 @@ typeOf env (PCall ident@(PIdentifier ide) args) = do
       return (retTy, env)
     _ -> throwTE $ printf "Variable '%s' is not a function." (show ide)
 
-typeOf env ident@(PTerm (PIdentifier ide)) =
+typeOf env ident@(PIdentifier ide) =
   case typeOfIdentifier env ident of
     Just ty -> return (ty, env)
     _ -> throwRE $ printf "Reference to undefined variable '%s'." ide
