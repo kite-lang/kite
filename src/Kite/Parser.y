@@ -177,7 +177,6 @@ data BlockType = StandardBlock
                deriving (Show, Eq)
 
 data Expr = PBinOp String Expr Expr -- Operator!
-          -- | PTerm Term
           | PList [Expr]
           | PBlock BlockType [Expr]
           | PIf Expr Expr Expr
@@ -187,6 +186,7 @@ data Expr = PBinOp String Expr Expr -- Operator!
           | PImmCall Expr [Expr] -- PIdentifier!
           | PReturn Expr
           | PIndex Expr Expr
+
           | PInteger Int
           | PFloat Float
           | PBool Bool
@@ -202,13 +202,6 @@ data Type = PListType Type
           | PStringType
           | PTypeArg Type Expr -- PIdentifier!
           deriving (Eq)
-
--- data Term = PInteger Int
---           | PFloat Float
---           | PBool Bool
---           | PString String
---           | PIdentifier String
---           deriving (Show, Eq)
 
 instance Show Type where
   show (PListType ty)        = printf "List %s" $ show ty
