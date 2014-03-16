@@ -2,8 +2,8 @@
 ;; Version: 0.1.2
 ;;
 ;;; Commentary:
-;; Provides the 'kite-mode' mode which does syntax
-;; highlighting for the kite programming language
+;; Provides the 'kite-mode' mode which does syntax highlighting
+;; and compilation facilities for the Kite programming language
 ;;
 ;;; Code:
 
@@ -38,7 +38,7 @@
 
   (let ((result (shell-command-to-string
                  (format "%s -e %s"
-                         (shell-quote-argument kite-command)
+                         kite-command
                          (shell-quote-argument (buffer-substring start end)))))
         (buffer (get-buffer kite-compiled-buffer-name)))
 
