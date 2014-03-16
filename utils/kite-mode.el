@@ -7,6 +7,57 @@
 ;;
 ;;; Code:
 
+(defvar kite-mode-map
+  (let ((map (make-sparse-keymap)))
+    (define-key map (kbd "C-c C-c") 'kite-compile-current-buffer)
+    (define-key map (kbd "C-c C-r") 'kite-compile-region)
+    map)
+  "Keymap for Kite major mode.")
+
+(defcustom kite-compiled-buffer-name "*kite-compiled*"
+  "The name of the scratch buffer used for compiled Kite source."
+  :type 'string
+  :group 'kite)
+
+(defcustom kite-command "kite"
+  "The command used to compile Kite source code."
+  :type 'string
+  :group 'kite)
+
+(defun kite-compile-current-buffer ()
+  "Compile current buffer and show output in buffer named `kite-compiled-buffer-name'."
+  (interactive)
+  (save-excursion
+    (kite-compile-region (point-min) (point-max))))
+
+(defun kite-compile-region (start end)
+  "Compile current region and show output in buffer named `kite-compiled-buffer-name'."
+  (interactive "r")
+
+  (get-buffer-create kite-compiled-buffer-name)
+
+  (let ((result (shell-command-to-string
+                 (format "%s -e %s"
+                         (shell-quote-argument kite-command)
+                         (shell-quote-argument (buffer-substring start end)))))
+        (buffer (get-buffer kite-compiled-buffer-name)))
+
+    (display-buffer buffer)
+
+    (with-current-buffer buffer
+      (erase-buffer)
+      (insert result)))
+
+  (message "Kite finished"))
+
+;; Menu bar
+
+(easy-menu-define coffee-mode-menu kite-mode-map
+  "Menu for Kite mode"
+  '("Kite"
+    ["Compile File" kite-compile-current-buffer]
+    ))
+
 ;; keywords
 (defvar kite-keywords
   '(("return\\|import\\|if\\|then\\|else" . font-lock-keyword-face)
