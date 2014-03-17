@@ -11,7 +11,7 @@ s = "str" + "ing"
 l = [1, 2] + 3
 
 -- simple func
-foo = (Int a) -> Int {
+foo = (a: Int) -> Int {
     return a + one
 }
 
@@ -25,7 +25,7 @@ nopar = () -> Int {
 nopar ()
 
 -- recursion
-fib = (Int n) -> Int {
+fib = (n: Int) -> Int {
     return
        if n == 0 then 0
        else if n == 1 then 1
@@ -35,8 +35,8 @@ fib = (Int n) -> Int {
 fib (5)
 
 -- nested recursion
-fib = (Int n) -> Int {
-    foo = (Int p) -> Int {
+fib = (n: Int) -> Int {
+    foo = (p: Int) -> Int {
         return if p > 0
            then foo (2)
            else fib (2)
@@ -47,19 +47,19 @@ fib = (Int n) -> Int {
 
 -- immediate evaluation
 
-three = (Int n) -> Int {
+three = (n: Int) -> Int {
     return n + 1
 }(2)
 
 -- indexing
-bar = ([Int] a) -> Int {
+bar = (a: [Int]) -> Int {
     return (a # 0) + one
 }
 
 bar ([foo (one)])
 
 -- hof
-baz = ((Int) -> Int a, String b) -> String {
+baz = (a: (Int) -> Int, b: String) -> String {
     if a (5) == 0 then {
        c = b + "bar"
     } else {
@@ -71,10 +71,10 @@ baz = ((Int) -> Int a, String b) -> String {
 baz (foo, "foo")
 
 -- inlined function
-baz ((Int a) -> Int { return a + 2 },
+baz ((a: Int) -> Int { return a + 2 },
     "bar")
 
-main = ([String] args) -> Int {
+main = (args: [String]) -> Int {
      if (args # 0) == "foo"
         then { foo (2) }
         else { bar ([1, 2, 3]) }

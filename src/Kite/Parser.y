@@ -1,5 +1,6 @@
 {
 module Kite.Parser where
+import Data.List
 import Kite.Lexer
 import Text.Printf
 }
@@ -48,6 +49,7 @@ import Text.Printf
         '{'                { Symbol _ '{' }
         '}'                { Symbol _ '}' }
         ','                { Symbol _ ',' }
+        ':'                { Symbol _ ':' }
         ';'                { Symbol _ ';' }
 
 %right in
@@ -128,9 +130,10 @@ Type   :: { Type }
         | stringTy         { PStringType }
         | '[' Type ']'     { PListType $2 }
         | FuncType         { $1 }
+        | id               { PFreeType $1 }
 
 TypeArg :: { Type }
-         : Type id          { PTypeArg $1 (PIdentifier $2) }
+         : id ':' Type     { PTypeArg $3 (PIdentifier $1) }
 
 -- support both single expr and blocks
 If     :: { Expr }
@@ -201,15 +204,18 @@ data Type = PListType Type
           | PFloatType
           | PStringType
           | PTypeArg Type Expr -- PIdentifier!
+
+          | PFreeType String
           deriving (Eq)
 
 instance Show Type where
   show (PListType ty)        = printf "List %s" $ show ty
   show (PFuncType [] ty)     = printf "Func [] %s" $ show ty
-  show (PFuncType (x:xs) ty) = printf "Func [%s] %s" (show x) (show ty)
+  show (PFuncType params ty) = printf "Func [%s] %s" (intercalate ", " (map show params)) (show ty)
   show PBoolType             = "Bool"
   show PIntegerType          = "Int"
   show PFloatType            = "Float"
   show PStringType           = "String"
-  show (PTypeArg ty te)      = printf "TypeArg %s %s" (show ty) (show te)
+  show (PFreeType id)        = "Free(" ++ id ++ ")"
+  show (PTypeArg te ty)      = printf "TypeArg %s %s" (show ty) (show te)
 }

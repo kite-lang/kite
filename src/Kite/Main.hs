@@ -30,5 +30,5 @@ main = do
   let ast = (kiteparser . alexScanTokens) inp
   when parOutput $ (putStrLn . ppShow) ast
   case typeCheck ast of
-    Right _ -> print "Type check passed"
+    Right (ty, env) -> print ("Type check passed. FTV: " ++ show (ftv env) ++ " SYM: " ++ show (ftv env))
     Left err -> putStrLn $ "Type error: " ++ show err
