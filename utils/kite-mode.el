@@ -9,8 +9,18 @@
 
 (defvar kite-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-c") 'kite-compile-current-buffer)
-    (define-key map (kbd "C-c C-r") 'kite-compile-region)
+    (define-key map (kbd "C-c C-c")
+      (lambda () (interactive)
+        (kite-compile-current-buffer kite-command)))
+    (define-key map (kbd "C-c C-p C-c")
+      (lambda () (interactive)
+        (kite-compile-current-buffer kite-command-emit-parser)))
+    (define-key map (kbd "C-c C-r")
+      (lambda (start end) (interactive "r")
+        (kite-compile-region kite-command start end)))
+    (define-key map (kbd "C-c C-p C-r")
+      (lambda (start end) (interactive "r")
+        (kite-compile-region kite-command-emit-parser start end)))
     map)
   "Keymap for Kite major mode.")
 
@@ -24,13 +34,18 @@
   :type 'string
   :group 'kite)
 
-(defun kite-compile-current-buffer ()
+(defcustom kite-command-emit-parser "kite -p"
+  "The command used to compile Kite source code, with parser output."
+  :type 'string
+  :group 'kite)
+
+(defun kite-compile-current-buffer (command)
   "Compile current buffer and show output in buffer named `kite-compiled-buffer-name'."
   (interactive)
   (save-excursion
-    (kite-compile-region (point-min) (point-max))))
+    (kite-compile-region command (point-min) (point-max))))
 
-(defun kite-compile-region (start end)
+(defun kite-compile-region (command start end)
   "Compile current region and show output in buffer named `kite-compiled-buffer-name'."
   (interactive "r")
 
@@ -38,7 +53,7 @@
 
   (let ((result (shell-command-to-string
                  (format "%s -e %s"
-                         kite-command
+                         command
                          (shell-quote-argument (buffer-substring start end)))))
         (buffer (get-buffer kite-compiled-buffer-name)))
 
