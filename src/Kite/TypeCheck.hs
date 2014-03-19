@@ -11,9 +11,9 @@ import Control.Monad.Error
 import qualified Data.Map as Map
 import Text.Printf
 
---------------------
---  ERROR HANDLING
---------------------
+-------------------
+-- ERROR HANDLING
+-------------------
 data TypeError = TypeError String
                | ReferenceError String
                | ArityError String
@@ -24,13 +24,13 @@ instance Error TypeError where
   noMsg = UnknownError
   strMsg = TypeError
 
-throwTE :: String -> TC TypeError
+throwTE :: String -> TC ()
 throwTE = throwError . TypeError
 
-throwRE :: String -> TC TypeError
+throwRE :: String -> TC ()
 throwRE = throwError . ReferenceError
 
-throwAE :: String -> Int -> Int -> TC TypeError
+throwAE :: String -> Int -> Int -> TC ()
 throwAE ide exp got = throwError . ArityError $ printf
                       "Function '%s' got too %s arguments. Expected %d, got %d."
                       ide (if exp > got then "few" else "many") exp got
@@ -66,18 +66,17 @@ pushSymF f = do
 
 -- stack querying
 ----------------------------
-lookupSym :: String -> TC Type
+lookupSym :: String -> TC (Maybe Type)
 lookupSym id = do
   env <- get
-  return PIntegerType
-  -- return $ findit $ sym env
+  return $ findit $ sym env
   where
     findit stack =
       if null stack
-        then throwTE "Dont match"
+        then Nothing
         else let (x:xs) = stack
                  val = Map.lookup id x
-             in fromMaybe (findit xs) val
+             in fromMaybe (findit xs) (Just val)
 
 countSyms :: TC Int
 countSyms = do
@@ -135,14 +134,21 @@ binOpLookup = [(PStringType, "+",PStringType),
   for booleans only the boolOps are allowed
 -}
 
-
--- main interface
---typeCheck :: Expr -> Either String
+-------------------
+-- INTERFACE
+-------------------
 runTC f = runState (runErrorT f) Environment {ftv = [Map.empty], sym = [Map.empty]}
 
-typeCheck expr = runTC (typeOf expr)
+typeCheck :: Expr -> Either TypeError Bool
+typeCheck expr =
+  let (r, _) = runTC (typeOf expr)
+  in case r of
+    Right _ -> Right True
+    Left err -> Left err
 
--- helpers
+-------------------
+-- HELPERS
+-------------------
 extractReturnType rets expr = do
   ty <- typeOf expr
   let updatedRets = case expr of
@@ -151,9 +157,11 @@ extractReturnType rets expr = do
   return updatedRets
 
 -- throw if not equal
-tine ty1 ty2 env msg = if ty1 == ty2
-                       then return ty1
-                       else throwTE msg
+-- tine :: Type -> Type -> TC ()
+-- tine ty1 ty2 msg = return $ if ty1 == ty2
+--                    then ty1
+--                    else throwTE msg
+
 
 -- instantiate a new free type
 -- instantiate :: Environment -> String -> Type -> Environment
@@ -179,45 +187,44 @@ typeOf :: Expr -> TC Type
 
 -- base cases
 typeOf (PInteger _) = return PIntegerType
-typeOf (PFloat _) = return PFloatType
-typeOf (PString _) = return PStringType
-typeOf (PBool _) = return PBoolType
+typeOf (PFloat _)   = return PFloatType
+typeOf (PString _)  = return PStringType
+typeOf (PBool _)    = return PBoolType
 
 -- compound types
-typeOf (PFunc (PFuncType args retType) body) = do
-  let argTypes = map (\(PTypeArg ty _) -> ty) args
-  let frame = Map.fromList $ map (\(PTypeArg ty (PIdentifier ide)) -> (ide, ty)) args
+typeOf (PFunc (PFuncType params retType) body) = do
+  let paramTypes = map (\(PTypeArg ty _) -> ty) params
+  let frame = Map.fromList $ map (\(PTypeArg ty (PIdentifier ide)) -> (ide, ty)) params
+
   -- TODO: give fresh names same free type identifiers
   pushSymF frame
   bodyRetType <- typeOf body
 
   -- TODO: add instantiated types from function body to current environment but ignore symbols
-  when (bodyRetType /= retType) $ throwTE $ printf
-    "Return type %s does not match annotated type %s."
-    (show bodyRetType) (show retType)
+  when (bodyRetType /= retType)
+    (throwTE $ printf "Return type %s does not match annotated type %s."
+    (show bodyRetType) (show retType))
 
   popSymF
 
-  return (PFuncType argTypes retType)
+  return (PFuncType paramTypes retType)
 
 typeOf (PBinOp op lhs rhs) = do
   tyLhs <- typeOf lhs
   tyRhs <- typeOf rhs
 
   -- TODO: unify types
-  --(unifiedType, env') <- unify env tyLhs tyRhs
-
   let retTy = if op `elem` boolOps then PBoolType else tyRhs
   unless ((retTy,op,retTy) `elem` binOpLookup ||
           retTy `elem` [PIntegerType,PFloatType] || -- All binary ops are allowed for Int and Float
           op `elem` boolOps) -- All boolean ops are allowed for all types
-    $ throwTE $ printf "Binary operator '%s' is not allowed for types '%s' and '%s'."
-    op (show tyRhs) (show tyLhs)
+    (throwTE $ printf "Binary operator '%s' is not allowed for types '%s' and '%s'."
+     op (show tyRhs) (show tyLhs))
 
   -- TODO: get this back
-  unless (tyLhs == tyRhs || (tyLhs,op,tyRhs) `elem` binOpLookup) $ throwTE $ printf
-    "Binary operand types do not match (%s %s %s)."
-    (show tyLhs) op (show tyRhs)
+  unless (tyLhs == tyRhs || (tyLhs,op,tyRhs) `elem` binOpLookup)
+    (throwTE $ printf "Binary operand types do not match (%s %s %s)."
+     (show tyLhs) op (show tyRhs))
 
   return retTy
 
@@ -225,45 +232,48 @@ typeOf (PList (x:xs)) = do
   tyHead <- typeOf x
   mapM_ (\i -> do
             ty <- typeOf i
-            when (ty /= tyHead) $ throwTE $ printf
-              "Varying types in list. Got %s(s) and %s(s)."
-              (show tyHead) (show ty)
+            when (ty /= tyHead)
+              (throwTE $ printf "Varying types in list. Got %s(s) and %s(s)."
+               (show tyHead) (show ty))
         ) xs
   return (PListType tyHead)
 
 typeOf (PIf cond conseq alt) = do
   tyCond <- typeOf cond
-  if (not . (==PBoolType)) tyCond
-    then throwTE $ printf
-         "Expected if-condition to be of type Bool, got %s." (show tyCond)
-    else do
-      pushEmptySymF
-      tyConseq <- typeOf conseq
-      popSymF
 
-      pushEmptySymF
-      tyAlt <- typeOf alt
-      popSymF
+  when (PBoolType /= tyCond)
+    (throwTE $ printf "Expected if-condition to be of type Bool, got %s." (show tyCond))
 
-      tine tyConseq tyAlt $ printf
-        "Consequence and alternative in if-expression do not match (%s and %s)."
-        (show tyConseq) (show tyAlt)
+  pushEmptySymF
+  tyConseq <- typeOf conseq
+  popSymF
 
-typeOf (PAssign (PIdentifier ide) func@(PFunc tyFunc@(PFuncType params retType) _)) = do
+  pushEmptySymF
+  tyAlt <- typeOf alt
+  popSymF
+
+  when (tyConseq /= tyAlt)
+    (throwTE $ printf "Consequence and alternative in if-expression do not match (%s and %s)."
+     (show tyConseq) (show tyAlt))
+
+  return tyConseq
+
+typeOf (PAssign (PIdentifier ide) func@(PFunc (PFuncType params retType) _)) = do
   let tyParams = map (\(PTypeArg ty _) -> ty) params
   insertSym ide (PFuncType tyParams retType)
-  inferredType <- typeOf func
-  return inferredType
+  typeOf func
 
-typeOf (PAssign ident@(PIdentifier ide) val) = do
+typeOf (PAssign (PIdentifier ide) val) = do
   tyVal <- typeOf val
   existing <- lookupSym ide
   case existing of
-    Just tyExisting -> if tyExisting /= tyVal
-               then throwTE $ printf "Reassigning variable '%s' of type %s with type %s."
-                    ide (show tyExisting) (show tyVal)
-               else do insertSym ide tyVal
-                       return tyVal
+    Just tyExisting -> do
+      when (tyExisting /= tyVal)
+        (throwTE $ printf "Reassigning variable '%s' of type %s with type %s."
+         ide (show tyExisting) (show tyVal))
+
+      insertSym ide tyVal
+      return tyVal
     Nothing -> do
       insertSym ide tyVal
       return tyVal
@@ -271,24 +281,29 @@ typeOf (PAssign ident@(PIdentifier ide) val) = do
 typeOf (PIndex arr idx) = do
   tyArr <- typeOf arr
   tyIdx <- typeOf idx
+
   case tyArr of
-    PListType itemTy -> if PIntegerType /= tyIdx
-                        then throwTE $ printf
-                             "Invalid index type, expected Int, got %s."
-                             (show tyIdx)
-                        else return itemTy
-    _ -> throwTE "The index operator is only defined for List # Int."
+    PListType itemTy -> do
+      when (PIntegerType /= tyIdx)
+        (throwTE $ printf "Invalid index type, expected Int, got %s." (show tyIdx))
+
+      return itemTy
+      -- TODO: fix this. fucking.
+    --_ -> throwTE "The index operator is only defined for List # Int."
+
+  return tyArr
 
 typeOf (PBlock StandardBlock exprs) = do
-  env <- get
-  (envLast, rets) <- foldM extractReturnType (env, []) exprs
+  _ <- foldM extractReturnType [] exprs
   --let tyRet = if null rets then PVoidType else head rets
-  return (PBoolType, envLast)
+  return PBoolType
 
 typeOf (PBlock FuncBlock exprs) = do
-  env <- get
-  (envLast, rets) <- foldM extractReturnType (env, []) exprs
-  when (null rets) $ throwTE "Missing return statement."
+  rets <- foldM extractReturnType [] exprs
+  
+  when (null rets)
+    (throwTE "Missing return statement.")
+    
   mapM_ (\ty -> when (ty /= head rets) $ throwTE "Varying return types in block.") rets
   return (head rets)
 
@@ -309,8 +324,12 @@ typeOf (PImmCall (PFunc (PFuncType params retType) body) args) = do
 
 typeOf (PCall ident@(PIdentifier ide) args) = do
   tyFunc <- typeOf ident
-  let (PFuncType params retTy) = trace ("ABE " ++ show params) $ tyFunc
-  when (length params /= length args) $ throwAE ide (length params) (length args)
+
+  let (PFuncType params retTy) = tyFunc
+
+  when (length params /= length args)
+    (throwAE ide (length params) (length args))
+
   case tyFunc of
     PFuncType _ _ -> do
       mapM_ (\(arg, tyParam) -> do
@@ -322,13 +341,17 @@ typeOf (PCall ident@(PIdentifier ide) args) = do
                   ide (show tyParam) (show tyArg)
             ) (zip args params)
       return retTy
-    _ -> throwTE $ printf "Variable '%s' is not a function." (show ide)
+        --TODO: fixit
+    --_ -> throwTE $ printf "Variable '%s' is not a function." (show ide)
 
-typeOf ident@(PIdentifier ide) = do
+typeOf (PIdentifier ide) = do
   val <- lookupSym ide
-  case val of
-    Just ty -> return ty
-    Nothing -> throwRE $ printf "Reference to undefined variable '%s'." ide
+
+  when (isNothing val)
+    (throwRE $ printf "Reference to undefined variable '%s'." ide)
+
+  let Just ty = val
+  return ty
 
 typeOf (PReturn expr) = typeOf expr
 
