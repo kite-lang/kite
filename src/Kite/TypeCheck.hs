@@ -42,7 +42,7 @@ type Frame = Map.Map String Type
 type Stack = [Frame]
 
 data Environment = Environment { sym :: Stack,
-                                 ftv :: Stack}
+                                 ftv :: Frame}
 
 instance Show Environment where
   show env = "SYMs: " ++ show (sym env) ++ "   FTVs: " ++ show (ftv env)
@@ -66,10 +66,27 @@ pushSymF f = do
 
 -- stack querying
 ----------------------------
+--TODO: get the potential bound type if free
+typeOfFree :: Type -> TC Type
+typeOfFree ty = case ty of
+        PFreeType ide -> do
+          r <- lookupFtv ide
+          case r of
+            Just t -> return t
+            _ -> return ty
+        _ -> return ty
+
 lookupSym :: String -> TC (Maybe Type)
 lookupSym ide = do
   env <- get
-  return $ findit $ sym env
+  let ty = findit $ sym env
+  case ty of
+    Just (PFreeType freeIde) -> do
+      f <- lookupFtv freeIde
+      case f of
+        Just bound -> return (Just bound)
+        Nothing -> return ty
+    _ -> return ty
   where
     findit stack =
       if null stack
@@ -80,15 +97,23 @@ lookupSym ide = do
                 then findit xs
                 else val
 
+lookupFtv :: String -> TC (Maybe Type)
+lookupFtv ide = do
+  env <- get
+  return $ Map.lookup ide (ftv env)
 
 countSyms :: TC Int
 countSyms = do
   env <- get
   return $ foldl (\acc frame -> acc + Map.size frame) 0 (sym env)
 
-
 -- frame manipulation
 ----------------------------
+insertFtv :: String -> Type -> TC ()
+insertFtv ide val = do
+  env <- get
+  put env{ftv = Map.insert ide val (ftv env)}
+
 insertSym :: String -> Type -> TC ()
 insertSym ide val = do
   env <- get
@@ -107,11 +132,6 @@ overrideSym :: String -> Type -> TC ()
 overrideSym ide val = do
   removeSym ide
   insertSym ide val
-
--- freshTypeName :: Environment -> String -> String
--- freshTypeName env ide =
---   let count = 5 -- sum $ map length (ftv env)
---   in ide ++ show count
 
 -- operators that return bool
 boolOps = ["==", ">", ">=", "<", "<=", "!="]
@@ -140,7 +160,7 @@ binOpLookup = [(PStringType, "+",PStringType),
 -------------------
 -- INTERFACE
 -------------------
-runTC f = runState (runErrorT f) Environment {ftv = [Map.empty], sym = [Map.empty]}
+runTC f = runState (runErrorT f) Environment {ftv = Map.empty, sym = [Map.empty]}
 
 typeCheck :: Expr -> Either TypeError Bool
 typeCheck expr =
@@ -159,8 +179,6 @@ extractReturnType rets expr = do
         _ -> rets
   return updatedRets
 
--- Constructor checker
-------------------------
 isListType (PListType _) = True
 isListType _ = False
 
@@ -170,76 +188,81 @@ isFuncType _ = False
 isIntegerType PIntegerType = True
 isIntegerType _ = False
 
--- throw if not equal
--- tine :: Type -> Type -> TC ()
--- tine ty1 ty2 msg = return $ if ty1 == ty2
---                    then ty1
---                    else throwTE msg
-
+isFreeType (PFreeType _) = True
+isFreeType _ = False
 
 -- instantiate a new free type
--- instantiate :: Environment -> String -> Type -> Environment
--- instantiate = insertType
+-- instantiate :: String -> Type -> Environment
+-- instantiate ide = insertFtv
 
--- isFree t = case t of
---   PFreeType _ -> True
---   _ -> False
+isFree t = case t of
+  PFreeType _ -> True
+  _ -> False
 
 -- unify two types
--- unify :: Environment -> Type -> Type -> TypeCheckMonad (Type, Environment)
+unify :: Type -> Type -> TC Type
 
--- unify env (PFreeType na) tb =
---   let env' = instantiate env na tb
---   in return (tb, env')
+unify (PFreeType ide) tb = do
+    insertFtv ide tb
+    return tb
 
--- unify env ta tb | ta == tb = return (ta, env)
---                 | isFree tb = unify env tb ta
---                 | otherwise = throwTE $ printf "Type mismatch (%s and %s)" (show ta) (show tb)
+unify ta tb =
+  if isFree tb
+    then unify tb ta
+    else do unless (ta == tb)
+              (throwTE $ printf "Type mismatch in unification (%s and %s)" (show ta) (show tb))
+            return ta
 
--- check the type of an expression
+instantiate :: String -> Type -> TC ()
+instantiate = overrideSym
+
+-- Get the type of an expression
+----------------------------------
 typeOf :: Expr -> TC Type
 
--- base cases
+-- Base cases
+---------------
 typeOf (PInteger _) = return PIntegerType
 typeOf (PFloat _)   = return PFloatType
 typeOf (PString _)  = return PStringType
 typeOf (PBool _)    = return PBoolType
 
--- compound types
+-- Compound types
+-------------------
 typeOf (PFunc (PFuncType params retType) body) = do
   let paramTypes = map (\(PTypeArg ty _) -> ty) params
   let frame = Map.fromList $ map (\(PTypeArg ty (PIdentifier ide)) -> (ide, ty)) params
 
   -- TODO: give fresh names same free type identifiers
   pushSymF frame
+
   bodyRetType <- typeOf body
 
-  -- TODO: add instantiated types from function body to current environment but ignore symbols
-  when (bodyRetType /= retType)
-    (throwTE $ printf "Return type %s does not match annotated type %s."
-    (show bodyRetType) (show retType))
+  -- TODO: SUBSTITUE GOD DAMN FREE TYPES FROM FTV
+  --forM params (\param -> overrideSym)
 
   popSymF
 
-  return (PFuncType paramTypes retType)
+  return (PFuncType paramTypes bodyRetType)
 
 typeOf (PBinOp op lhs rhs) = do
   tyLhs <- typeOf lhs
   tyRhs <- typeOf rhs
 
-  -- TODO: unify types
-  let retTy = if op `elem` boolOps then PBoolType else tyRhs
-  unless ((retTy,op,retTy) `elem` binOpLookup ||
-          retTy `elem` [PIntegerType,PFloatType] || -- All binary ops are allowed for Int and Float
-          op `elem` boolOps) -- All boolean ops are allowed for all types
+  unified <- unify tyLhs tyRhs
+
+  let retTy = if op `elem` boolOps then PBoolType else unified
+
+  unless ((retTy, op, retTy) `elem` binOpLookup
+          || retTy `elem` [PIntegerType,PFloatType] -- All binary ops are allowed for Int and Float
+          || op `elem` boolOps) -- All boolean ops are allowed for all types
     (throwTE $ printf "Binary operator '%s' is not allowed for types '%s' and '%s'."
      op (show tyRhs) (show tyLhs))
 
-  unless (tyLhs == tyRhs || (tyLhs,op,tyRhs) `elem` binOpLookup)
-    (throwTE $ printf "Binary operand types do not match (%s %s %s)."
-     (show tyLhs) op (show tyRhs))
-
   return retTy
+  -- unless (tyLhs == tyRhs || (tyLhs, op, tyRhs) `elem` binOpLookup)
+  --   (throwTE $ printf "Binary operand types do not match (%s %s %s)."
+  --    (show tyLhs) op (show tyRhs))
 
 typeOf (PList (x:xs)) = do
   tyHead <- typeOf x
@@ -302,7 +325,6 @@ typeOf (PIndex arr idx) = do
 
 typeOf (PBlock StandardBlock exprs) = do
   _ <- foldM extractReturnType [] exprs
-  --let tyRet = if null rets then PVoidType else head rets
   return PBoolType
 
 typeOf (PBlock FuncBlock exprs) = do
@@ -337,17 +359,23 @@ typeOf (PCall ident@(PIdentifier ide) args) = do
 
   let (PFuncType params retTy) = tyFunc
 
-  when (length params /= length args)
-    (throwAE ide (length params) (length args))
+  params' <- mapM typeOfFree params
+
+  when (length params' /= length args)
+    (throwAE ide (length params') (length args))
 
   mapM_ (\(arg, tyParam) -> do
             tyArg <- typeOf arg
 
-            --TODO: unify
-            when (tyArg /= tyParam)
+            unified <- unify tyArg tyParam
+            --traceShow unified $ return ()
+            tyArg' <- typeOfFree tyArg
+            tyParam' <- typeOfFree tyArg
+
+            when (tyArg' /= tyParam')
               (throwTE $ printf "Wrong type of argument when calling function '%s'. Expected %s, got %s."
                ide (show tyParam) (show tyArg))
-        ) (zip args params)
+        ) (zip args params')
 
   return retTy
 

@@ -59,6 +59,9 @@ import Text.Printf
 
 %%
 
+Program :: { Expr }
+         : Stmts           { PBlock StandardBlock $1 }
+
 Stmt   :: { Expr }
         : Expr             { $1 }
         | StandardBlock    { $1 }
@@ -142,7 +145,8 @@ If     :: { Expr }
 
 -- func literal
 FuncDef :: { Type }
-         : '(' ParamList ')' '->' Type { PFuncType $2 $5 }
+         : '(' ParamList ')' '->' { PFuncType $2 (PFreeType "a") }
+         | '(' ParamList ')' '->' Type { PFuncType $2 $5 }
 
 -- named arguments
 ParamList :: { [Type] }

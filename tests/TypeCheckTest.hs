@@ -72,7 +72,7 @@ typeCheckTests = testGroup "Type Check"
     (Just TypeE) "{ list = [1, True, \"Three\"] }"
 
   , testE "Append to list"
-    Nothing "{ list = [1, 2] + 3 }"
+    Nothing "{ list = [1, 2] + [3] }"
 
   , testE "Append to list with wrong type"
     (Just TypeE) "{ list = [1, 2] + 3.0 }"
