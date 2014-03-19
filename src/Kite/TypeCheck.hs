@@ -277,19 +277,14 @@ typeOf (PAssign (PIdentifier ide) val) = do
   tyVal <- typeOf val
   existing <- lookupSym ide
 
-  -- if (not . isNothing) existing
-  --    then
-  case existing of
-    Just tyExisting -> do
-      when (tyExisting /= tyVal)
+  unless (isNothing existing)
+    (let Just tyExisting = existing
+     in when (tyExisting /= tyVal)
         (throwTE $ printf "Reassigning variable '%s' of type %s with type %s."
-         ide (show tyExisting) (show tyVal))
-    
-      insertSym ide tyVal
-      return tyVal
-    Nothing -> do
-      insertSym ide tyVal
-      return tyVal
+         ide (show tyExisting) (show tyVal)))
+
+  insertSym ide tyVal
+  return tyVal
 
 typeOf (PIndex arr idx) = do
   tyArr <- typeOf arr
@@ -312,10 +307,10 @@ typeOf (PBlock StandardBlock exprs) = do
 
 typeOf (PBlock FuncBlock exprs) = do
   rets <- foldM extractReturnType [] exprs
-  
+
   when (null rets)
     (throwTE "Missing return statement.")
-    
+
   mapM_ (\ty -> when (ty /= head rets) $ throwTE "Varying return types in block.") rets
   return (head rets)
 
@@ -339,12 +334,12 @@ typeOf (PCall ident@(PIdentifier ide) args) = do
 
   unless (isFuncType tyFunc)
     (throwTE $ printf "Variable '%s' is not a function." ide)
-    
+
   let (PFuncType params retTy) = tyFunc
 
   when (length params /= length args)
     (throwAE ide (length params) (length args))
-  
+
   mapM_ (\(arg, tyParam) -> do
             tyArg <- typeOf arg
 
@@ -353,12 +348,12 @@ typeOf (PCall ident@(PIdentifier ide) args) = do
               (throwTE $ printf "Wrong type of argument when calling function '%s'. Expected %s, got %s."
                ide (show tyParam) (show tyArg))
         ) (zip args params)
-    
+
   return retTy
 
 typeOf (PIdentifier ide) = do
   val <- lookupSym ide
-  
+
   when (isNothing val)
     (throwRE $ printf "Reference to undefined variable '%s'." ide)
 
