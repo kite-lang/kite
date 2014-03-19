@@ -293,7 +293,8 @@ typeOf (PIf cond conseq alt) = do
 typeOf (PAssign (PIdentifier ide) func@(PFunc funcTy@(PFuncType params retType) _)) = do
   let tyParams = map (\(PTypeArg ty _) -> ty) params
   insertSym ide (PFuncType tyParams retType)
-  _ <- typeOf func
+  inferredFuncType <- typeOf func
+  overrideSym ide inferredFuncType
   return funcTy
 
 typeOf (PAssign (PIdentifier ide) val) = do
