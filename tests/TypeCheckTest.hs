@@ -17,7 +17,7 @@ analyze prog = case (typeCheck . kiteparser . alexScanTokens) prog of
   Left UnknownError -> Just UnE
 
 -- test expression
-testE name ex prog = testCase name $ (analyze prog) @?= ex
+testE name ex prog = testCase name $ analyze prog @?= ex
 
 typeCheckTests = testGroup "Type Check"
   [ testE "Assignment"
@@ -28,6 +28,12 @@ typeCheckTests = testGroup "Type Check"
 
   , testE "Reference"
     Nothing "{ one = 1; two = 1 + one; }"
+
+  , testE "No return statements"
+    (Just TypeE) "{ f = (a: Int) -> Int { 2 } }"
+
+  , testE "Varying return types"
+    (Just TypeE) "{ f = (a: Int) -> Int { return 2; return 2.0 } }"
 
   , testE "Reference not defined"
     (Just RefE) "two = 1 + one"
