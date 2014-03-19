@@ -17,13 +17,13 @@ analyze prog = case (typeCheck . kiteparser . alexScanTokens) prog of
   Left UnknownError -> Just UnE
 
 -- test expression
-testE name ex prog = testCase name $ ex @?= analyze prog
+testE name ex prog = testCase name $ (analyze prog) @?= ex
 
 typeCheckTests = testGroup "Type Check"
   [ testE "Assignment"
     Nothing "one = 2"
 
-  , testE "Illegal assignment"
+  , testE "Illegal reassignment"
     (Just TypeE) "{ one = 2; one = \"the\"; }"
 
   , testE "Reference"
@@ -36,16 +36,16 @@ typeCheckTests = testGroup "Type Check"
     (Just RefE) "two = 1 + two"
 
   , testE "Function call"
-    Nothing "{ one = (Int a) -> Int { return a }; one(1); }"
+    Nothing "{ one = (a: Int) -> Int { return a }; one(1); }"
 
   , testE "Function call with arg of wrong type"
-    (Just TypeE) "{ one = (Int a) -> Int { return a }; one(\"1\"); }"
+    (Just TypeE) "{ one = (a: Int) -> Int { return a }; one(\"1\"); }"
 
   , testE "Function call with multiple parameters"
-    Nothing "{ foo = (Int a, Int b) -> Int { return 1 }; foo(1, 2) }"
+    Nothing "{ foo = (a: Int, b: Int) -> Int { return 1 }; foo(1, 2) }"
 
   , testE "Function call with multiple parameters and wrong arity"
-    (Just ArE) "{ foo = (Int a, Int b) -> Int { return 1 }; foo(1) }"
+    (Just ArE) "{ foo = (a: Int, b: Int) -> Int { return 1 }; foo(1) }"
 
   , testE "Function call with wrong number of args"
     (Just ArE) "{ one = () -> Int { return 1 }; one(1); }"
@@ -54,10 +54,10 @@ typeCheckTests = testGroup "Type Check"
     (Just RefE) "{ foo(2) }"
 
   , testE "Recursive function"
-    Nothing "{ fib = (Int n) -> Int { return if n == 0 then 0 else if n == 1 then 1 else fib (n - 1) + fib (n - 2)}; fib(5); }"
+    Nothing "{ fib = (n: Int) -> Int { return if n == 0 then 0 else if n == 1 then 1 else fib (n - 1) + fib (n - 2)}; fib(5); }"
 
   , testE "Recursive function wrong return type"
-    (Just TypeE) "{ fib = (Int n) -> Bool { return if n == 0 then 0 else if n == 1 then 1 else fib (n - 1) + fib (n - 2)}; fib(5); }"
+    (Just TypeE) "{ fib = (n: Int) -> Bool { return if n == 0 then 0 else if n == 1 then 1 else fib (n - 1) + fib (n - 2)}; fib(5); }"
 
   , testE "List assignment same type"
     Nothing "{ list = [1, 2, 3] }"
@@ -81,10 +81,10 @@ typeCheckTests = testGroup "Type Check"
     (Just TypeE) "{ s = \"2\" + 2.0 }"
 
   , testE "Check Bool operators"
-    Nothing "{ foo = () -> Bool { return 2 > 1 }; }"
+    Nothing "{ foo = () -> Bool { return 2 > 1 } }"
 
   , testE "Index of list"
-    Nothing "{ foo = () -> Bool{ list = [True, False] return list # 1}; }"
+    Nothing "{ foo = () -> Bool { list = [True, False] return list # 1} }"
 
   , testE "Index of list illegal argument"
     (Just TypeE) "{ foo = [1, 2, 3] # \"one\"}"
