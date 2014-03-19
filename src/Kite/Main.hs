@@ -32,6 +32,4 @@ main = do
   let ast = (kiteparser . alexScanTokens) inp
   when parOutput $ (putStrLn . ppShow) ast
 
-  case typeCheck ast of
-    Right env -> print "Type check passed"
-    Left err -> putStrLn $ "Type error: " ++ (show err)
+  either print (const $ print "Type check passed") (typeCheck ast)

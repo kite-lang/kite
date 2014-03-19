@@ -67,7 +67,7 @@ pushSymF f = do
 -- stack querying
 ----------------------------
 lookupSym :: String -> TC (Maybe Type)
-lookupSym id = do
+lookupSym ide = do
   env <- get
   return $ findit $ sym env
   where
@@ -75,8 +75,11 @@ lookupSym id = do
       if null stack
         then Nothing
         else let (x:xs) = stack
-                 val = Map.lookup id x
-             in fromMaybe (findit xs) (Just val)
+                 val = Map.lookup ide x
+             in if isNothing val
+                then findit xs
+                else val
+
 
 countSyms :: TC Int
 countSyms = do
@@ -156,6 +159,17 @@ extractReturnType rets expr = do
         _ -> rets
   return updatedRets
 
+-- Constructor checker
+------------------------
+isListType (PListType _) = True
+isListType _ = False
+
+isFuncType (PFuncType _ _) = True
+isFuncType _ = False
+
+isIntegerType PIntegerType = True
+isIntegerType _ = False
+
 -- throw if not equal
 -- tine :: Type -> Type -> TC ()
 -- tine ty1 ty2 msg = return $ if ty1 == ty2
@@ -221,7 +235,6 @@ typeOf (PBinOp op lhs rhs) = do
     (throwTE $ printf "Binary operator '%s' is not allowed for types '%s' and '%s'."
      op (show tyRhs) (show tyLhs))
 
-  -- TODO: get this back
   unless (tyLhs == tyRhs || (tyLhs,op,tyRhs) `elem` binOpLookup)
     (throwTE $ printf "Binary operand types do not match (%s %s %s)."
      (show tyLhs) op (show tyRhs))
@@ -244,13 +257,9 @@ typeOf (PIf cond conseq alt) = do
   when (PBoolType /= tyCond)
     (throwTE $ printf "Expected if-condition to be of type Bool, got %s." (show tyCond))
 
-  pushEmptySymF
+  --TODO: handle if blocks by push/pop of frames
   tyConseq <- typeOf conseq
-  popSymF
-
-  pushEmptySymF
   tyAlt <- typeOf alt
-  popSymF
 
   when (tyConseq /= tyAlt)
     (throwTE $ printf "Consequence and alternative in if-expression do not match (%s and %s)."
@@ -258,20 +267,24 @@ typeOf (PIf cond conseq alt) = do
 
   return tyConseq
 
-typeOf (PAssign (PIdentifier ide) func@(PFunc (PFuncType params retType) _)) = do
+typeOf (PAssign (PIdentifier ide) func@(PFunc funcTy@(PFuncType params retType) _)) = do
   let tyParams = map (\(PTypeArg ty _) -> ty) params
   insertSym ide (PFuncType tyParams retType)
-  typeOf func
+  _ <- typeOf func
+  return funcTy
 
 typeOf (PAssign (PIdentifier ide) val) = do
   tyVal <- typeOf val
   existing <- lookupSym ide
+
+  -- if (not . isNothing) existing
+  --    then
   case existing of
     Just tyExisting -> do
       when (tyExisting /= tyVal)
         (throwTE $ printf "Reassigning variable '%s' of type %s with type %s."
          ide (show tyExisting) (show tyVal))
-
+    
       insertSym ide tyVal
       return tyVal
     Nothing -> do
@@ -282,16 +295,15 @@ typeOf (PIndex arr idx) = do
   tyArr <- typeOf arr
   tyIdx <- typeOf idx
 
-  case tyArr of
-    PListType itemTy -> do
-      when (PIntegerType /= tyIdx)
-        (throwTE $ printf "Invalid index type, expected Int, got %s." (show tyIdx))
+  unless (isIntegerType tyIdx)
+    (throwTE $ printf "Invalid index type, expected Int, got %s." (show tyIdx))
 
-      return itemTy
-      -- TODO: fix this. fucking.
-    --_ -> throwTE "The index operator is only defined for List # Int."
+  unless (isListType tyArr)
+    (throwTE "The index operator is only defined for List # Int.")
 
-  return tyArr
+  let PListType tyItem = tyArr
+
+  return tyItem
 
 typeOf (PBlock StandardBlock exprs) = do
   _ <- foldM extractReturnType [] exprs
@@ -325,28 +337,28 @@ typeOf (PImmCall (PFunc (PFuncType params retType) body) args) = do
 typeOf (PCall ident@(PIdentifier ide) args) = do
   tyFunc <- typeOf ident
 
+  unless (isFuncType tyFunc)
+    (throwTE $ printf "Variable '%s' is not a function." ide)
+    
   let (PFuncType params retTy) = tyFunc
 
   when (length params /= length args)
     (throwAE ide (length params) (length args))
+  
+  mapM_ (\(arg, tyParam) -> do
+            tyArg <- typeOf arg
 
-  case tyFunc of
-    PFuncType _ _ -> do
-      mapM_ (\(arg, tyParam) -> do
-                tyArg <- typeOf arg
-                --unify env tyArg tyParam
-
-                when (tyArg /= tyParam) $ throwTE $ printf
-                 "Wrong type of argument when calling function '%s'. Expected %s, got %s."
-                  ide (show tyParam) (show tyArg)
-            ) (zip args params)
-      return retTy
-        --TODO: fixit
-    --_ -> throwTE $ printf "Variable '%s' is not a function." (show ide)
+            --TODO: unify
+            when (tyArg /= tyParam)
+              (throwTE $ printf "Wrong type of argument when calling function '%s'. Expected %s, got %s."
+               ide (show tyParam) (show tyArg))
+        ) (zip args params)
+    
+  return retTy
 
 typeOf (PIdentifier ide) = do
   val <- lookupSym ide
-
+  
   when (isNothing val)
     (throwRE $ printf "Reference to undefined variable '%s'." ide)
 
