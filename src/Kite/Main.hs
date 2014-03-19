@@ -26,7 +26,7 @@ kiteArgs = cmdArgsMode $ KiteArgs {
 main = do
   KiteArgs {..} <- cmdArgsRun kiteArgs
 
-  inp <- if eval then return input else readFile input
+  inp <- if eval then return ("{" ++ input ++ "}") else readFile input
   when lexOutput $ (putStrLn . ppShow . alexScanTokens) inp
 
   let ast = (kiteparser . alexScanTokens) inp
