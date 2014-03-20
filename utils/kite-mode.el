@@ -1,5 +1,5 @@
 ;;; kite-mode.el --- Minor mode for editing kite source code
-;; Version: 0.1.2
+;; Version: 0.2.0
 ;;
 ;;; Commentary:
 ;; Provides the 'kite-mode' mode which does syntax highlighting
@@ -9,18 +9,12 @@
 
 (defvar kite-mode-map
   (let ((map (make-sparse-keymap)))
-    (define-key map (kbd "C-c C-c")
-      (lambda () (interactive)
-        (kite-compile-current-buffer kite-command)))
+    (define-key map (kbd "C-c C-c") 'kite-compile-current-buffer)
     (define-key map (kbd "C-c C-p C-c")
-      (lambda () (interactive)
-        (kite-compile-current-buffer kite-command-emit-parser)))
-    (define-key map (kbd "C-c C-r")
-      (lambda (start end) (interactive "r")
-        (kite-compile-region kite-command start end)))
+      (lambda () (interactive) (kite-compile-current-buffer "-p")))
+    (define-key map (kbd "C-c C-r") 'kite-compile-region)
     (define-key map (kbd "C-c C-p C-r")
-      (lambda (start end) (interactive "r")
-        (kite-compile-region kite-command-emit-parser start end)))
+      (lambda (start end) (interactive "r") (kite-compile-region start end "-p")))
     map)
   "Keymap for Kite major mode.")
 
@@ -34,18 +28,13 @@
   :type 'string
   :group 'kite)
 
-(defcustom kite-command-emit-parser "kite -p"
-  "The command used to compile Kite source code, with parser output."
-  :type 'string
-  :group 'kite)
-
-(defun kite-compile-current-buffer (command)
+(defun kite-compile-current-buffer (&rest args)
   "Compile current buffer and show output in buffer named `kite-compiled-buffer-name'."
   (interactive)
   (save-excursion
-    (kite-compile-region command (point-min) (point-max))))
+    (apply #'kite-compile-region (point-min) (point-max) args)))
 
-(defun kite-compile-region (command start end)
+(defun kite-compile-region (start end &rest args)
   "Compile current region and show output in buffer named `kite-compiled-buffer-name'."
   (interactive "r")
 
@@ -53,7 +42,7 @@
 
   (let ((result (shell-command-to-string
                  (format "%s -e %s"
-                         command
+                         (concatenate 'string kite-command " " (mapconcat 'identity args " "))
                          (shell-quote-argument (buffer-substring start end)))))
         (buffer (get-buffer kite-compiled-buffer-name)))
 
