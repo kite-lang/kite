@@ -9,48 +9,48 @@ import Text.Printf
 %tokentype { Token }
 
 %token
-        int                { Integer _ $$ }
-        float              { Float _ $$ }
-        string             { String _ $$ }
-        bool               { Bool _ $$ }
+        int                { TInteger _ $$ }
+        float              { TFloat _ $$ }
+        string             { TString _ $$ }
+        bool               { TBool _ $$ }
 
-        intTy              { Type _ "Int" }
-        floatTy            { Type _ "Float" }
-        stringTy           { Type _ "String" }
-        boolTy             { Type _ "Bool" }
-        id                 { Identifier _ $$ }
+        intTy              { TType _ "Int" }
+        floatTy            { TType _ "Float" }
+        stringTy           { TType _ "String" }
+        boolTy             { TType _ "Bool" }
+        id                 { TIdentifier _ $$ }
 
-        '+'                { BinOp _ "+" }
-        '-'                { BinOp _ "-" }
-        '*'                { BinOp _ "*" }
-        '/'                { BinOp _ "/" }
-        '%'                { BinOp _ "%" }
-        '=='               { BinOp _ "==" }
-        '<'                { BinOp _ "<" }
-        '<='               { BinOp _ "<=" }
-        '>'                { BinOp _ ">" }
-        '>='               { BinOp _ ">=" }
-        '!='               { BinOp _ "!=" }
+        '+'                { TBinOp _ "+" }
+        '-'                { TBinOp _ "-" }
+        '*'                { TBinOp _ "*" }
+        '/'                { TBinOp _ "/" }
+        '%'                { TBinOp _ "%" }
+        '=='               { TBinOp _ "==" }
+        '<'                { TBinOp _ "<" }
+        '<='               { TBinOp _ "<=" }
+        '>'                { TBinOp _ ">" }
+        '>='               { TBinOp _ ">=" }
+        '!='               { TBinOp _ "!=" }
 
-        return             { Keyword _ "return" }
-        if                 { Keyword _ "if" }
-        then               { Keyword _ "then" }
-        else               { Keyword _ "else" }
-        yolo               { Keyword _ "yolo" }
+        return             { TKeyword _ "return" }
+        if                 { TKeyword _ "if" }
+        then               { TKeyword _ "then" }
+        else               { TKeyword _ "else" }
+        yolo               { TKeyword _ "yolo" }
 
-        '='                { Operator _ "=" }
-        '#'                { Operator _ "#" }
-        '->'               { Operator _ "->" }
+        '='                { TOperator _ "=" }
+        '#'                { TOperator _ "#" }
+        '->'               { TOperator _ "->" }
 
-        '('                { Symbol _ '(' }
-        ')'                { Symbol _ ')' }
-        '['                { Symbol _ '[' }
-        ']'                { Symbol _ ']' }
-        '{'                { Symbol _ '{' }
-        '}'                { Symbol _ '}' }
-        ','                { Symbol _ ',' }
-        ':'                { Symbol _ ':' }
-        ';'                { Symbol _ ';' }
+        '('                { TSymbol _ '(' }
+        ')'                { TSymbol _ ')' }
+        '['                { TSymbol _ '[' }
+        ']'                { TSymbol _ ']' }
+        '{'                { TSymbol _ '{' }
+        '}'                { TSymbol _ '}' }
+        ','                { TSymbol _ ',' }
+        ':'                { TSymbol _ ':' }
+        ';'                { TSymbol _ ';' }
 
 %right in
 %nonassoc '==' '<' '<=' '>' '>=' '!='
