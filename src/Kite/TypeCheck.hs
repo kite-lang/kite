@@ -340,8 +340,10 @@ typeOf (PAssign (PIdentifier ide) func@(PFunc funcTy@(PFuncType params retType) 
   return (nullSubst, inferredFuncType)
 
 typeOf (PAssign (PIdentifier ide) val) = do
-  (_, tyVal) <- typeOf val
-  existing <- lookupSym ide
+  (s1, tyVal) <- typeOf val
+
+  env <- get
+  let existing = Map.lookup ide (head (sym env))
 
   unless (isNothing existing)
     (let Just tyExisting = existing
@@ -350,11 +352,17 @@ typeOf (PAssign (PIdentifier ide) val) = do
          ide (show tyExisting) (show tyVal)))
 
   insertSym ide tyVal
-  return (nullSubst, tyVal)
+
+  return (s1, tyVal)
 
 typeOf (PIndex arr idx) = do
   (s1, tyArr) <- typeOf arr
+
+  applySubstEnv s1
+
   (s2, tyIdx) <- typeOf idx
+
+  applySubstEnv s2
 
   unless (isIntegerType tyIdx)
     (throwTE $ printf "Invalid index type, expected Int, got %s." (show tyIdx))
@@ -370,17 +378,30 @@ typeOf (PBlock StandardBlock exprs) = do
   foldM_ extractReturnType [] exprs
   return (nullSubst, PBoolType)
 
-typeOf (PBlock FuncBlock exprs) = do
-  --TODO: support more than one expr, maybe? loljk
+typeOf (PBlock FuncBlock (x:xs)) = do
+  (s1, t1) <- typeOf x
 
-  rets <- foldM extractReturnType [] exprs
-  (s1, t) <- typeOf (head exprs)
+  (composedSubst, _) <- foldM (\(s, _) el -> do
+            (s', t') <- typeOf el
+
+            return (s `composeSubst` s', t')
+        ) (s1, t1) xs
+
+  applySubstEnv composedSubst
+
+  -- get all the return types
+  rets <- foldM extractReturnType [] (x:xs)
+
   when (null rets)
     (throwTE "Missing return statement.")
 
-  mapM_ (\ty -> when (ty /= head rets) $ throwTE "Varying return types in block.") rets
+  -- apply the new substitutions to them
+  let srets = map (\(_, t') -> applySubst composedSubst t') rets
 
-  return (s1, t)
+  forM_ srets (\ty -> when (ty /= head srets)
+                (throwTE "Varying return types in block."))
+
+  return (s1, head srets)
 
 typeOf (PImmCall (PFunc (PFuncType params retType) body) args) = do
   when (length params /= length args) $ throwAE
