@@ -35,26 +35,82 @@ throwAE ide exp got = throwError . ArityError $ printf
                       "Function '%s' got too %s arguments. Expected %d, got %d."
                       ide (if exp > got then "few" else "many") exp got
 
+-------------------
+-- INTERFACE
+-------------------
+runTC f = runState (runErrorT f) Environment { ftv = [Map.empty],
+                                               sym = [Map.empty],
+                                               symCount = 0 }
+
+typeCheck :: Expr -> Either TypeError Bool
+typeCheck expr =
+  let (r, env) = runTC (typeOf expr)
+  in case traceShow env r of
+    Right _ -> Right True
+    Left err -> Left err
+
+
 ----------------
 -- ENVIRONMENT
 ----------------
-type Frame = Map.Map String Type
+type Name = String
+type Frame = Map.Map Name Type
 type Stack = [Frame]
 
 data Environment = Environment { sym :: Stack,
-                                 ftv :: Frame}
+                                 ftv :: Stack,
+                                 symCount :: Int}
 
 instance Show Environment where
   show env = "SYMs: " ++ show (sym env) ++ "   FTVs: " ++ show (ftv env)
 
--- the monad in which all the type checking happens
+-- the monad in which all the state is kept and errors are thrown
 type TC a = ErrorT TypeError (State Environment) a
+
+-- generate a fresh type variable
+freshFtv :: String -> TC Type
+freshFtv ide = do
+  env <- get
+  let count = symCount env
+  put env{symCount =  succ count}
+  return $ PFreeType (ide ++ show count)
+
+-- substitue a type variable into the top symbol frame
+substTopF :: TC ()
+substTopF = do
+  env <- get
+  let topSyms = (head . sym) env
+      tailSyms = (tail . sym) env
+      ftvs = (head . ftv) env
+      newF = Map.map (substT ftvs) topSyms
+  put env{sym = newF : tailSyms}
+--popEmptyFtvF
+
+-- substitue a ftv into a type
+-- for instance (a: Int) into (List Free(a)) yields (List Int)
+substT :: Frame -> Type -> Type
+
+substT fr (PFreeType ide) =
+  fromMaybe (PFreeType ide) (Map.lookup ide fr)
+
+substT fr (PListType a) = do
+  let ta = substT fr a
+  PListType ta
+
+substT fr (PFuncType params ret) = do
+  let params' = map (substT fr) params
+      ret' = substT fr ret
+  PFuncType params' ret'
+
+substT _ t = t
 
 -- stack manipulation
 ----------------------------
+-- sym
 popSymF :: TC ()
-popSymF = state $ \env -> let (_:xs) = sym env
-                          in ((), env{sym = xs})
+popSymF = do
+  env <- get
+  put env{sym = tail (sym env)}
 
 pushEmptySymF :: TC ()
 pushEmptySymF = pushSymF Map.empty
@@ -63,6 +119,21 @@ pushSymF :: Frame -> TC ()
 pushSymF f = do
   env <- get
   put env{sym = f:sym env}
+
+-- ftv
+popFtvF :: TC ()
+popFtvF = do
+  env <- get
+  put env{ftv = tail (ftv env)}
+
+pushEmptyFtvF :: TC ()
+pushEmptyFtvF = pushFtvF Map.empty
+
+pushFtvF :: Frame -> TC ()
+pushFtvF f = do
+  env <- get
+  put env{ftv = f:ftv env}
+
 
 -- stack querying
 ----------------------------
@@ -100,19 +171,25 @@ lookupSym ide = do
 lookupFtv :: String -> TC (Maybe Type)
 lookupFtv ide = do
   env <- get
-  return $ Map.lookup ide (ftv env)
-
-countSyms :: TC Int
-countSyms = do
-  env <- get
-  return $ foldl (\acc frame -> acc + Map.size frame) 0 (sym env)
+  return $ findit $ ftv env
+  where
+    findit stack =
+      if null stack
+        then Nothing
+        else let (x:xs) = stack
+                 val = Map.lookup ide x
+             in if isNothing val
+                then findit xs
+                else val
 
 -- frame manipulation
 ----------------------------
 insertFtv :: String -> Type -> TC ()
 insertFtv ide val = do
   env <- get
-  put env{ftv = Map.insert ide val (ftv env)}
+  let (x:xs) = ftv env
+      newF = Map.insert ide val x
+  put env{ftv = newF:xs}
 
 insertSym :: String -> Type -> TC ()
 insertSym ide val = do
@@ -156,18 +233,6 @@ binOpLookup = [(PStringType, "+",PStringType),
   for floats and integers, all binary operators are allowed
   for booleans only the boolOps are allowed
 -}
-
--------------------
--- INTERFACE
--------------------
-runTC f = runState (runErrorT f) Environment {ftv = Map.empty, sym = [Map.empty]}
-
-typeCheck :: Expr -> Either TypeError Bool
-typeCheck expr =
-  let (r, _) = runTC (typeOf expr)
-  in case r of
-    Right _ -> Right True
-    Left err -> Left err
 
 -------------------
 -- HELPERS
@@ -290,12 +355,23 @@ typeOf (PIf cond conseq alt) = do
 
   return tyConseq
 
+-- push a frame of ftv, type check function and apply the inferred types
 typeOf (PAssign (PIdentifier ide) func@(PFunc funcTy@(PFuncType params retType) _)) = do
   let tyParams = map (\(PTypeArg ty _) -> ty) params
+
+  pushEmptyFtvF
+
   insertSym ide (PFuncType tyParams retType)
+
   inferredFuncType <- typeOf func
+
   overrideSym ide inferredFuncType
-  return funcTy
+
+  substTopF
+
+--  popFtvF
+
+  return inferredFuncType
 
 typeOf (PAssign (PIdentifier ide) val) = do
   tyVal <- typeOf val
@@ -353,6 +429,8 @@ typeOf (PImmCall (PFunc (PFuncType params retType) body) args) = do
   return retType
 
 typeOf (PCall ident@(PIdentifier ide) args) = do
+  pushEmptyFtvF
+
   tyFunc <- typeOf ident
 
   unless (isFuncType tyFunc)
@@ -369,7 +447,7 @@ typeOf (PCall ident@(PIdentifier ide) args) = do
             tyArg <- typeOf arg
 
             unified <- unify tyArg tyParam
-            --traceShow unified $ return ()
+            traceShow unified $ return ()
             tyArg' <- typeOfFree tyArg
             tyParam' <- typeOfFree tyArg
 
@@ -377,6 +455,8 @@ typeOf (PCall ident@(PIdentifier ide) args) = do
               (throwTE $ printf "Wrong type of argument when calling function '%s'. Expected %s, got %s."
                ide (show tyParam) (show tyArg))
         ) (zip args params')
+
+  --popFtvF
 
   return retTy
 
