@@ -122,26 +122,6 @@ pushSymF f = do
   env <- get
   put env{sym = f:sym env}
 
--- stack querying
-----------------------------
---TODO: get the potential bound type if free
-typeOfFree :: Type -> TC Type
-typeOfFree ty = return ty
-
-lookupSym :: String -> TC (Maybe Type)
-lookupSym ide = do
-  env <- get
-  return $ findit (sym env)
-  where
-    findit stack =
-      if null stack
-        then Nothing
-        else let (x:xs) = stack
-                 val = Map.lookup ide x
-             in if isNothing val
-                then findit xs
-                else val
-
 -- frame manipulation
 ----------------------------
 insertSym :: String -> Type -> TC ()
@@ -247,13 +227,15 @@ typeOf (PBool _)    = return (nullSubst, PBoolType)
 -------------------
 typeOf (PFunc (PFuncType params retType) body) = do
   let paramTypes = map (\(PTypeArg ty _) -> ty) params
-  let frame = Map.fromList $ map (\(PTypeArg ty (PIdentifier ide)) -> (ide, ty)) params
+  params' <- mapM (\(PTypeArg ty (PIdentifier ide)) -> return (ide, ty)
+                                 ) params
 
-  -- TODO: give fresh names same free type identifiers
-  pushSymF frame
+  pushSymF (Map.fromList params')
 
   (s1, bodyRetType) <- typeOf body
-  --substTopF subst
+
+  applySubstEnv s1
+
   popSymF
 
   s2 <- unify retType bodyRetType
@@ -367,10 +349,18 @@ typeOf (PIndex arr idx) = do
   unless (isIntegerType tyIdx)
     (throwTE $ printf "Invalid index type, expected Int, got %s." (show tyIdx))
 
-  unless (isListType tyArr)
-    (throwTE "The index operator is only defined for List # Int.")
+  fresh <- freshFtv "t"
+  s3 <- unify (PListType fresh) tyArr
 
-  let PListType tyItem = tyArr
+  applySubstEnv s3
+
+  let tyArr' = (applySubst s3 tyArr)
+
+  unless (isListType tyArr')
+    (throwTE $ printf "The index operator is only defined for List # Int, got %s # %s"
+     (show tyArr') (show tyIdx))
+
+  let PListType tyItem = tyArr'
 
   return (nullSubst, tyItem)
 
@@ -427,33 +417,44 @@ typeOf (PCall ident@(PIdentifier ide) args) = do
 
   let (PFuncType params retTy) = tyFunc
 
-  params' <- mapM typeOfFree params
+  --params' <- mapM typeOfFree params
 
-  when (length params' /= length args)
-    (throwAE ide (length params') (length args))
+  when (length params /= length args)
+    (throwAE ide (length params) (length args))
 
   mapM_ (\(arg, tyParam) -> do
             (s1, tyArg) <- typeOf arg
 
             unified <- unify tyArg tyParam
-            tyArg' <- typeOfFree tyArg
-            tyParam' <- typeOfFree tyArg
+            --tyArg' <- typeOfFree tyArg
+            --tyParam' <- typeOfFree tyArg
 
-            when (tyArg' /= tyParam')
+            when (tyArg /= tyParam)
               (throwTE $ printf "Wrong type of argument when calling function '%s'. Expected %s, got %s."
                ide (show tyParam) (show tyArg))
-        ) (zip args params')
+        ) (zip args params)
 
   return (nullSubst, retTy)
 
 typeOf (PIdentifier ide) = do
-  val <- lookupSym ide
+  env <- get
+  let val = findit (sym env)
 
   when (isNothing val)
     (throwRE $ printf "Reference to undefined variable '%s'." ide)
 
   let Just ty = val
   return (nullSubst, ty)
+
+  where findit stack =
+          if null stack
+          then Nothing
+          else let (x:xs) = stack
+                   val = Map.lookup ide x
+               in if isNothing val
+                  then findit xs
+                  else val
+
 
 typeOf (PReturn expr) = typeOf expr
 
