@@ -71,6 +71,9 @@ typeCheckTests = testGroup "Type Check"
   , testE "List assignment illegal values"
     (Just TypeE) "list = [1, True, \"Three\"]"
 
+  , testE "Varying types in list"
+    (Just TypeE) "list = [1, 2.0, 3]"
+
   , testE "Append to list"
     Nothing "list = [1, 2] + [3]"
 
