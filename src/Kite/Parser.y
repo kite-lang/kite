@@ -137,6 +137,7 @@ Type   :: { Type }
 
 TypeArg :: { Type }
          : id ':' Type     { PTypeArg $3 (PIdentifier $1) }
+         | id ':'          { PTypeArg (PFreeType "t") (PIdentifier $1) }
 
 -- support both single expr and blocks
 If     :: { Expr }
