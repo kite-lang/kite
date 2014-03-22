@@ -41,13 +41,12 @@ throwAE ide exp got = throwError . ArityError $ printf
 runTC f = runState (runErrorT f) Environment { sym = [Map.empty],
                                                symCount = 0 }
 
-typeCheck :: Expr -> Either TypeError Bool
+typeCheck :: Expr -> Either TypeError Environment
 typeCheck expr =
   let (r, env) = runTC (typeOf expr)
-  in case traceShow env r of
-    Right _ -> Right True
+  in case r of
+    Right _ -> Right env
     Left err -> Left err
-
 
 ----------------
 -- ENVIRONMENT
@@ -402,6 +401,7 @@ typeOf (PImmCall (PFunc (PFuncType params retType) body) args) = do
   mapM_ (\(arg, param) -> do
             let (PTypeArg tyParam _) = param
             (s1, tyArg) <- typeOf arg
+
             when (tyArg /= tyParam) $ throwTE $ printf
               "Wrong type of argument. Expected %s, got %s."
               (show tyParam) (show tyArg)
@@ -409,32 +409,29 @@ typeOf (PImmCall (PFunc (PFuncType params retType) body) args) = do
   return (nullSubst, retType)
 
 typeOf (PCall ident@(PIdentifier ide) args) = do
-
-  (s1, tyFunc) <- typeOf ident
+  (_, tyFunc) <- typeOf ident
 
   unless (isFuncType tyFunc)
     (throwTE $ printf "Variable '%s' is not a function." ide)
 
   let (PFuncType params retTy) = tyFunc
 
-  --params' <- mapM typeOfFree params
-
   when (length params /= length args)
     (throwAE ide (length params) (length args))
 
-  mapM_ (\(arg, tyParam) -> do
-            (s1, tyArg) <- typeOf arg
+  argSubsts <- foldM (\acc (arg, tyParam) -> do
+            (s2, tyArg) <- typeOf arg
 
-            unified <- unify tyArg tyParam
-            --tyArg' <- typeOfFree tyArg
-            --tyParam' <- typeOfFree tyArg
+            s3 <- unify tyArg tyParam
 
-            when (tyArg /= tyParam)
+            when (applySubst s3 tyArg /= applySubst s3 tyParam)
               (throwTE $ printf "Wrong type of argument when calling function '%s'. Expected %s, got %s."
                ide (show tyParam) (show tyArg))
-        ) (zip args params)
 
-  return (nullSubst, retTy)
+            return $ acc `composeSubst` s3
+        ) nullSubst (zip args params)
+
+  return (nullSubst, applySubst argSubsts retTy)
 
 typeOf (PIdentifier ide) = do
   env <- get
