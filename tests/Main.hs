@@ -6,17 +6,18 @@ import Test.Tasty.HUnit
 -- import LexerTest
 -- import ParserTest
 import TypeCheckTest
+import InferenceTest
 
 
 main :: IO ()
 main = defaultMain tests
 
-tests = testGroup "Tests"
-        [
+tests = testGroup "Kite Tests"
+        [ typeCheckTests
+        , inferenceTests
           --truthTest,
           --lexerTests,
           --parserTests,
-          typeCheckTests
         ]
 
 truthTest = testCase "Truth" $
