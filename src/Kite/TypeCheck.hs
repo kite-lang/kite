@@ -192,7 +192,14 @@ isFree t = case t of
   PFreeType _ -> True
   _ -> False
 
--- unify two types
+-- generate a fresh ftv if type is free
+freshIfFree ty = case ty of
+  PFreeType freeIde -> freshFtv freeIde
+  _ -> return ty
+
+------------------
+-- UNIFICATION
+------------------
 unify :: Type -> Type -> TC Substitution
 
 unify (PFreeType ide) tb = varBind ide tb
@@ -225,9 +232,9 @@ typeOf (PBool _)    = return (nullSubst, PBoolType)
 -- Compound types
 -------------------
 typeOf (PFunc (PFuncType params retType) body) = do
-  let paramTypes = map (\(PTypeArg ty _) -> ty) params
-  params' <- mapM (\(PTypeArg ty (PIdentifier ide)) -> return (ide, ty)
-                                 ) params
+  params' <- mapM (\(PTypeArg ty (PIdentifier ide)) -> return (ide, ty)) params
+
+  let paramTypes = map snd params'
 
   pushSymF (Map.fromList params')
 
@@ -311,12 +318,21 @@ typeOf (PIf cond conseq alt) = do
 
   return (s1 `composeSubst` s2 `composeSubst` s3 `composeSubst` s4, applySubst s4 tyConseq)
 
-typeOf (PAssign (PIdentifier ide) func@(PFunc funcTy@(PFuncType params retType) _)) = do
-  let tyParams = map (\(PTypeArg ty _) -> ty) params
+typeOf (PAssign (PIdentifier ide) (PFunc (PFuncType params retType) body)) = do
+  -- generate fresh ftvs for all free type variables in func def
+  -- TODO: clean up, it's messy AS FUCK, yo
+  params' <- mapM (\(PTypeArg ty tyIde) ->
+                    case ty of
+                      PFreeType freeIde -> freshFtv freeIde >>= \t -> return (PTypeArg t tyIde)
+                      _ -> return (PTypeArg ty tyIde)
+                  ) params
+  let tyParams = map (\(PTypeArg ty _) -> ty) params'
+  retType' <- freshIfFree retType
+  let func' = PFunc (PFuncType params' retType') body
 
-  insertSym ide (PFuncType tyParams retType)
+  insertSym ide (PFuncType tyParams retType')
 
-  (_, inferredFuncType) <- typeOf func
+  (_, inferredFuncType) <- typeOf func'
 
   return (nullSubst, inferredFuncType)
 
@@ -353,7 +369,7 @@ typeOf (PIndex arr idx) = do
 
   applySubstEnv s3
 
-  let tyArr' = (applySubst s3 tyArr)
+  let tyArr' = applySubst s3 tyArr
 
   unless (isListType tyArr')
     (throwTE $ printf "The index operator is only defined for List # Int, got %s # %s"
