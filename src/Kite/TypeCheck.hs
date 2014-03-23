@@ -61,7 +61,7 @@ data Environment = Environment { sym :: Stack,
                                  symCount :: Int}
 
 instance Show Environment where
-  show env = "SYMs: " ++ show (sym env)
+  show env = "syms = " ++ show (Map.toList . head . sym $ env)
 
 -- the monad in which all the state is kept and errors are thrown
 type TC a = ErrorT TypeError (State Environment) a
@@ -202,11 +202,19 @@ freshIfFree ty = case ty of
 ------------------
 unify :: Type -> Type -> TC Substitution
 
-unify (PFreeType ide) tb = varBind ide tb
-
 unify ta (PFreeType ide) = varBind ide ta
 
+unify (PFreeType ide) tb = varBind ide tb
+
 unify (PListType ta) (PListType tb) = unify ta tb
+
+unify (PFuncType pa ra) (PFuncType pb rb) = do
+  paramSubst <- foldM (\acc (p1, p2) -> do
+                          s <- unify p1 p2
+                          return $ acc `composeSubst` s)
+                nullSubst (zip pa pb)
+  returnSubst <- unify ra rb
+  return $ returnSubst `composeSubst` paramSubst
 
 unify ta tb = do
   when (ta /= tb)
@@ -406,7 +414,7 @@ typeOf (PBlock FuncBlock (x:xs)) = do
   forM_ srets (\ty -> when (ty /= head srets)
                 (throwTE "Varying return types in block."))
 
-  return (s1, head srets)
+  return (composedSubst, head srets)
 
 typeOf (PImmCall (PFunc (PFuncType params retType) body) args) = do
   when (length params /= length args) $ throwAE
@@ -427,10 +435,18 @@ typeOf (PImmCall (PFunc (PFuncType params retType) body) args) = do
 typeOf (PCall ident@(PIdentifier ide) args) = do
   (_, tyFunc) <- typeOf ident
 
-  unless (isFuncType tyFunc)
+  argTypes <- mapM typeOf args
+
+  -- unify function
+  fresh <- freshFtv "t"
+  s <- unify tyFunc (PFuncType ((snd . unzip) argTypes) fresh)
+
+  let tyFunc' = applySubst s tyFunc
+
+  unless (isFuncType tyFunc' && (not . isFree) tyFunc')
     (throwTE $ printf "Variable '%s' is not a function." ide)
 
-  let (PFuncType params retTy) = tyFunc
+  let (PFuncType params retTy) = tyFunc'
 
   when (length params /= length args)
     (throwAE ide (length params) (length args))
@@ -439,15 +455,15 @@ typeOf (PCall ident@(PIdentifier ide) args) = do
             (s2, tyArg) <- typeOf arg
 
             s3 <- unify tyArg tyParam
-
-            when (applySubst s3 tyArg /= applySubst s3 tyParam)
+            let s3' = s `composeSubst` s3
+            when (applySubst s3' tyArg /= applySubst s3' tyParam)
               (throwTE $ printf "Wrong type of argument when calling function '%s'. Expected %s, got %s."
                ide (show tyParam) (show tyArg))
 
             return $ acc `composeSubst` s3
-        ) nullSubst (zip args params)
+        ) s (zip args params)
 
-  return (nullSubst, applySubst argSubsts retTy)
+  return (s, applySubst argSubsts retTy)
 
 typeOf (PIdentifier ide) = do
   env <- get

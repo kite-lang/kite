@@ -74,13 +74,13 @@ inferenceTests = testGroup "Inference test"
     , test "Infer type of index expr"
       "head = (xs:) -> { return xs # 0 }"
       --TODO: fix these tx vars, it's impossible to track
-      ("head", fn [ls (free "t2")] (free "t2"))
+      ("head", fn [ls (free "t1")] (free "t1"))
     ]
 
   , testGroup "Function"
     [ test "Simple function"
       "id = (e:) -> { return e }"
-      ("id", fn [free "t0"] (free "t0"))
+      ("id", fn [free "t1"] (free "t1"))
 
     , testExt "Apply polymorhpic function to value"
       "foo = id(2)"

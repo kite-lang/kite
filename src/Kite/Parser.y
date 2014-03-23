@@ -146,7 +146,7 @@ If     :: { Expr }
 
 -- func literal
 FuncDef :: { Type }
-         : '(' ParamList ')' '->' { PFuncType $2 (PFreeType "a") }
+         : '(' ParamList ')' '->' { PFuncType $2 (PFreeType "t") }
          | '(' ParamList ')' '->' Type { PFuncType $2 $5 }
 
 -- named arguments
@@ -215,12 +215,12 @@ data Type = PListType Type
 
 instance Show Type where
   show (PListType ty)        = printf "List %s" $ show ty
-  show (PFuncType [] ty)     = printf "Func [] %s" $ show ty
-  show (PFuncType params ty) = printf "Func [%s] %s" (intercalate ", " (map show params)) (show ty)
+  show (PFuncType [] ty)     = printf "() -> %s" $ show ty
+  show (PFuncType params ty) = printf "(%s) -> %s" (intercalate ", " (map show params)) (show ty)
   show PBoolType             = "Bool"
   show PIntegerType          = "Int"
   show PFloatType            = "Float"
   show PStringType           = "String"
-  show (PFreeType id)        = "Free(" ++ id ++ ")"
+  show (PFreeType id)        = id
   show (PTypeArg te ty)      = printf "TypeArg %s %s" (show ty) (show te)
 }
