@@ -38,7 +38,7 @@ test name prog ex  = testCase name $ case Map.lookup (fst ex) (Map.fromList (par
 
 -- test env with basic types and/or simple functions
 base = "yes = True; one = 1; half = 0.5; str = \"foo\";"
-extra = base ++ "id = (x:) -> { return x };"
+extra = base ++ "id = (x) -> { return x };"
 
 testEnv name prog ex = test name (base ++ prog) ex
 testExt name prog ex = testEnv name (extra ++ prog) ex
@@ -72,18 +72,18 @@ inferenceTests = testGroup "Inference test"
       ("ls", ls int)
 
     , test "Infer type of index expr"
-      "head = (xs:) -> { return xs # 0 }"
+      "head = (xs) -> { return xs # 0 }"
       --TODO: fix these tx vars, it's impossible to track
       ("head", fn [ls (free "t1")] (free "t1"))
     ]
 
   , testGroup "Function"
     [ test "Simple function"
-      "id = (e:) -> { return e }"
+      "id = (e) -> { return e }"
       ("id", fn [free "t1"] (free "t1"))
 
     , testExt "Apply polymorhpic function to value"
-      "foo = id(2)"
+      "foo = id (2)"
       ("foo", int)
     ]
   ]
