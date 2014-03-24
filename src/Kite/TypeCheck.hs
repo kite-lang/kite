@@ -305,12 +305,14 @@ typeOf (PList (x:xs)) = do
   return (composedSubst, PListType composedType)
 
 typeOf (PIf cond conseq alt) = do
-  (s1, tyCond) <- typeOf cond
+  (s0, tyCond) <- typeOf cond
 
-  when (PBoolType /= tyCond)
+  s1 <- unify tyCond PBoolType
+
+  when (applySubst s1 tyCond /= PBoolType)
     (throwTE $ printf "Expected if-condition to be of type Bool, got %s." (show tyCond))
 
-  applySubstEnv s1
+  applySubstEnv s0
 
   (s2, tyConseq) <- typeOf conseq
 
@@ -319,12 +321,12 @@ typeOf (PIf cond conseq alt) = do
   (s3, tyAlt) <- typeOf alt
 
   s4 <- unify (applySubst s3 tyAlt) (applySubst s3 tyConseq)
+--TODO: catch unification error
+  -- when (applySubst s4 tyConseq /= applySubst s4 tyAlt)
+  --   (throwTE $ printf "Consequence and alternative in if-expression do not match (%s and %s)."
+  --    (show tyConseq) (show tyAlt))
 
-  when (applySubst s4 tyConseq /= applySubst s4 tyAlt)
-    (throwTE $ printf "Consequence and alternative in if-expression do not match (%s and %s)."
-     (show tyConseq) (show tyAlt))
-
-  return (s1 `composeSubst` s2 `composeSubst` s3 `composeSubst` s4, applySubst s4 tyConseq)
+  return (s0 `composeSubst` s1 `composeSubst` s2 `composeSubst` s3 `composeSubst` s4, applySubst s4 tyConseq)
 
 typeOf (PAssign (PIdentifier ide) (PFunc (PFuncType params retType) body)) = do
   -- generate fresh ftvs for all free type variables in func def
@@ -455,15 +457,17 @@ typeOf (PCall ident@(PIdentifier ide) args) = do
             (s2, tyArg) <- typeOf arg
 
             s3 <- unify tyArg tyParam
-            let s3' = s `composeSubst` s3
-            when (applySubst s3' tyArg /= applySubst s3' tyParam)
-              (throwTE $ printf "Wrong type of argument when calling function '%s'. Expected %s, got %s."
-               ide (show tyParam) (show tyArg))
+            --TODO:catch the error in unification
+              -- (throwTE $ printf "Wrong type of argument when calling function '%s'. Expected %s, got %s."
+              --  ide (show tyParam) (show tyArg))
+            --let s3' = s `composeSubst` s3
 
-            return $ acc `composeSubst` s3
+            return $ acc `composeSubst` s3 `composeSubst` s2
         ) s (zip args params)
 
-  return (s, applySubst argSubsts retTy)
+  --traceShow argSubsts $ return ()
+
+  return (nullSubst, applySubst argSubsts retTy)
 
 typeOf (PIdentifier ide) = do
   env <- get
