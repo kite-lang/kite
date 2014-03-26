@@ -74,7 +74,7 @@ inferenceTests = testGroup "Inference test"
     , test "Infer type of index expr"
       "head = (xs) -> { return xs # 0 }"
       --TODO: fix these tx vars, it's impossible to track
-      ("head", fn [ls (free "t1")] (free "t1"))
+      ("head", fn [ls (free "t3")] (free "t3"))
     ]
 
   , testGroup "Function"
