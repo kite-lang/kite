@@ -61,7 +61,7 @@ data Environment = Environment { sym :: Stack,
                                  symCount :: Int}
 
 instance Show Environment where
-  show env = "syms = " ++ show (Map.toList . head . sym $ env)
+  show env = "Top symbol frame\n" ++ foldl (\acc (n, v) -> acc ++ n ++ ":\t" ++ show v ++ "\n") "" (Map.toList . head . sym $ env)
 
 -- the monad in which all the state is kept and errors are thrown
 type TC a = ErrorT TypeError (State Environment) a
