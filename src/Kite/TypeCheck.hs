@@ -44,7 +44,7 @@ runTC f = runState (runErrorT f) Environment { sym = [Map.empty],
 typeCheck :: Expr -> Either TypeError Environment
 typeCheck expr =
   let (r, env) = runTC (typeOf expr)
-  in case r of
+  in case traceShow env r of
     Right _ -> Right env
     Left err -> Left err
 
@@ -169,13 +169,6 @@ binOpLookup = [(PStringType, "+",PStringType),
 -------------------
 -- HELPERS
 -------------------
-extractReturnType rets expr = do
-  ty <- typeOf expr
-  let updatedRets = case expr of
-        PReturn _ -> ty : rets
-        _ -> rets
-  return updatedRets
-
 isListType (PListType _) = True
 isListType _ = False
 
@@ -240,11 +233,27 @@ typeOf (PBool _)    = return (nullSubst, PBoolType)
 -- Compound types
 -------------------
 typeOf (PFunc (PFuncType params retType) body) = do
-  params' <- mapM (\(PTypeArg ty (PIdentifier ide)) -> return (ide, ty)) params
+  
+  -- generate fresh ftvs for all free type variables in func def
+  -- TODO: clean up, it's messy AS FUCK, yo
+  params' <- mapM (\(PTypeArg ty tyIde) ->
+                    case ty of
+                      PFreeType freeIde -> freshFtv freeIde >>= \t -> return (PTypeArg t tyIde)
+                      _ -> return (PTypeArg ty tyIde)
+                  ) params
+  let tyParams = map (\(PTypeArg ty _) -> ty) params'
+  retType' <- freshIfFree retType
+  let func' = PFunc (PFuncType params' retType') body
 
-  let paramTypes = map snd params'
+  --insertSym ide (PFuncType tyParams retType')
 
-  pushSymF (Map.fromList params')
+  --(_, inferredFuncType) <- typeOf func'
+  
+  params'' <- mapM (\(PTypeArg ty (PIdentifier ide)) -> return (ide, ty)) params'
+-----------
+  let paramTypes = map snd params''
+
+  pushSymF (Map.fromList params'')
 
   (s1, bodyRetType) <- typeOf body
 
@@ -252,11 +261,11 @@ typeOf (PFunc (PFuncType params retType) body) = do
 
   popSymF
 
-  s2 <- unify retType bodyRetType
+  s2 <- unify retType' bodyRetType
 
   applySubstEnv s2
 
-  return (s2, applySubst s2 (PFuncType paramTypes bodyRetType))
+  return (s2, applySubst (s1 `composeSubst` s2) (PFuncType tyParams bodyRetType))
 
 typeOf (PBinOp op lhs rhs) = do
   (s1, tyLhs) <- typeOf lhs
@@ -328,39 +337,25 @@ typeOf (PIf cond conseq alt) = do
 
   return (s0 `composeSubst` s1 `composeSubst` s2 `composeSubst` s3 `composeSubst` s4, applySubst s4 tyConseq)
 
-typeOf (PAssign (PIdentifier ide) (PFunc (PFuncType params retType) body)) = do
-  -- generate fresh ftvs for all free type variables in func def
-  -- TODO: clean up, it's messy AS FUCK, yo
-  params' <- mapM (\(PTypeArg ty tyIde) ->
-                    case ty of
-                      PFreeType freeIde -> freshFtv freeIde >>= \t -> return (PTypeArg t tyIde)
-                      _ -> return (PTypeArg ty tyIde)
-                  ) params
-  let tyParams = map (\(PTypeArg ty _) -> ty) params'
-  retType' <- freshIfFree retType
-  let func' = PFunc (PFuncType params' retType') body
-
-  insertSym ide (PFuncType tyParams retType')
-
-  (_, inferredFuncType) <- typeOf func'
-
-  return (nullSubst, inferredFuncType)
-
 typeOf (PAssign (PIdentifier ide) val) = do
+  fresh <- freshFtv "t"
+  insertSym ide fresh
+
   (s1, tyVal) <- typeOf val
 
   env <- get
   let existing = Map.lookup ide (head (sym env))
+  let Just tyExisting = existing
 
-  unless (isNothing existing)
-    (let Just tyExisting = existing
-     in when (tyExisting /= tyVal)
+  s2 <- unify tyExisting tyVal
+
+  when (isJust existing && applySubst s2 tyExisting /= applySubst s2 tyVal)
         (throwTE $ printf "Reassigning variable '%s' of type %s with type %s."
-         ide (show tyExisting) (show tyVal)))
-
-  insertSym ide tyVal
-
-  return (s1, tyVal)
+         ide (show tyExisting) (show tyVal))
+  
+  let s3 = s1 `composeSubst` s2
+  
+  return (s3, applySubst s3 tyVal)
 
 typeOf (PIndex arr idx) = do
   (s1, tyArr) <- typeOf arr
@@ -389,29 +384,55 @@ typeOf (PIndex arr idx) = do
 
   return (nullSubst, tyItem)
 
+-- fold a block and continously update the environment
 typeOf (PBlock StandardBlock exprs) = do
-  foldM_ extractReturnType [] exprs
+  foldM_ (\rets expr -> do
+             (s, ty) <- typeOf expr
+
+             applySubstEnv s
+
+             let updatedRets = case expr of
+                   PReturn _ -> ty : rets
+                   _ -> rets
+             return updatedRets
+         ) [] exprs
+
   return (nullSubst, PBoolType)
 
 typeOf (PBlock FuncBlock (x:xs)) = do
   (s1, t1) <- typeOf x
 
-  (composedSubst, _) <- foldM (\(s, _) el -> do
+  let rets1 = case x of
+        PReturn _ -> [t1]
+        _ -> []
+
+  (rets, composedSubst, _) <- foldM (\(rets, s, _) el -> do
             (s', t') <- typeOf el
 
-            return (s `composeSubst` s', t')
-        ) (s1, t1) xs
+            applySubstEnv s'
+            traceShow el $ return ()
+
+            -- extract the return types
+            let rets' = case el of
+                  PReturn _ -> t' : rets
+                  _ -> rets
+
+            return (rets', s `composeSubst` s', t')
+        ) (rets1, s1, t1) xs
 
   applySubstEnv composedSubst
 
   -- get all the return types
-  rets <- foldM extractReturnType [] (x:xs)
+             -- let updatedRets = case expr of
+             --       PReturn _ -> ty : rets
+             --       _ -> rets
+  -- rets <- foldM extractReturnType [] (x:xs)
 
   when (null rets)
     (throwTE "Missing return statement.")
 
   -- apply the new substitutions to them
-  let srets = map (\(_, t') -> applySubst composedSubst t') rets
+  let srets = map (\(t') -> applySubst composedSubst t') rets
 
   forM_ srets (\ty -> when (ty /= head srets)
                 (throwTE "Varying return types in block."))
