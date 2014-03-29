@@ -35,6 +35,14 @@ typeCheckTests =
      , testE "Application of returned function (HoF)"
       Nothing "id = (x) -> { return x}\
               \one = id((x) -> { return x})(1)"
+
+     , testE "Multiple nested applications of returned functions (HoF)"
+      Nothing "id = (x) -> { return x }\
+	      \foo = id((x) -> { \
+	      \    return (y) -> {\
+              \       return x + y\
+              \    }\
+              \})(1)(1)"
     ]
 
   , testGroup "Type Check"

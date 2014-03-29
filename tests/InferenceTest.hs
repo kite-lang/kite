@@ -87,7 +87,7 @@ inferenceTests = testGroup "Inference test"
       ("foo", int)
     ]
 
-  , testGroup "Simple HoF"
+  , testGroup "Higher order functions"
     [ test "Free function and free param"
       "apply = (f, x) -> { return f (x) }"
       ("apply", fn [fn [free "t2"] (free "t4"), free "t2"] (free "t4"))
@@ -97,5 +97,20 @@ inferenceTests = testGroup "Inference test"
       \fn = (x) -> { return [x] }\
       \val = apply(fn, 1)"
       ("apply", fn [fn [free "t2"] (free "t4"), free "t2"] (free "t4"))
+
+
+    , testExt "Application of returned function (HoF)"
+      "id = (x) -> { return x}\
+      \one = id((x) -> { return x})(1)"
+      ("one", int)
+
+    , testExt "Multiple nested applications of returned functions (HoF)"
+      "id = (x) -> { return x }\
+      \one = id((x) -> { \
+      \    return (y) -> {\
+      \       return x + y\
+      \    }\
+      \})(1)(1)"
+     ("one", int)
     ]
   ]

@@ -79,7 +79,6 @@ freshFtv ide = do
 -------------------
 -- substitue a type variable into the top symbol frame
 nullSubst = Map.empty
--- TODO: do this real
 composeSubst s1 s2 = s1 `Map.union` s2
 
 applySubstEnv :: Substitution -> TC ()
@@ -317,6 +316,7 @@ typeOf (PIf cond conseq alt) = do
 
   return (s0 `composeSubst` s1 `composeSubst` s2 `composeSubst` s3 `composeSubst` s4, applySubst s4 tyConseq)
 
+-- using let rec for functions
 typeOf (PAssign (PIdentifier ide) val@(PFunc _ _)) = do
   -- add a ftv for fn types, to allow recursion
   fresh <- freshFtv "t"
@@ -338,6 +338,7 @@ typeOf (PAssign (PIdentifier ide) val@(PFunc _ _)) = do
 
   return (s3, applySubst s3 tyVal)
 
+-- using normal let for everything else
 typeOf (PAssign (PIdentifier ide) val) = do
   (s, tyVal) <- typeOf val
 
