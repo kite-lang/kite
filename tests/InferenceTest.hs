@@ -86,4 +86,16 @@ inferenceTests = testGroup "Inference test"
       "foo = id (2)"
       ("foo", int)
     ]
+
+  , testGroup "Simple HoF"
+    [ test "Free function and free param"
+      "apply = (f, x) -> { return f (x) }"
+      ("apply", fn [fn [free "t2"] (free "t4"), free "t2"] (free "t4"))
+
+    , test "Free function and free param"
+      "apply = (f, x) -> { return f (x) }\
+      \fn = (x) -> { return [x] }\
+      \val = apply(fn, 1)"
+      ("apply", fn [fn [free "t2"] (free "t4"), free "t2"] (free "t4"))
+    ]
   ]

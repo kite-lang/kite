@@ -259,12 +259,9 @@ typeOf (PFunc (PFuncType params rty) body) = do
 
 typeOf (PBinOp op lhs rhs) = do
   (s1, tyLhs) <- typeOf lhs
-  --applySubstEnv s1
   (s2, tyRhs) <- typeOf rhs
 
   s3 <- unify (applySubst s2 tyLhs) (applySubst s2 tyRhs)
-
-  --applySubstEnv s3
 
   let retTy = if op `elem` boolOps then PBoolType else tyLhs
 
@@ -290,16 +287,12 @@ typeOf (PList (x:xs)) = do
 
             sUnify <- unify t (applySubst s t')
 
-            applySubstEnv sUnify
-
             when (applySubst sUnify t /= applySubst sUnify t')
               (throwTE $ printf "Varying types in list. Got %s(s) and %s(s)."
                (show t) (show t'))
 
             return (s `composeSubst` s', applySubst sUnify t)
         ) (sHead, tHead) xs
-
-  applySubstEnv composedSubst
 
   return (composedSubst, PListType composedType)
 
@@ -311,11 +304,7 @@ typeOf (PIf cond conseq alt) = do
   when (applySubst s1 tyCond /= PBoolType)
     (throwTE $ printf "Expected if-condition to be of type Bool, got %s." (show tyCond))
 
-  applySubstEnv s0
-
   (s2, tyConseq) <- typeOf conseq
-
-  applySubstEnv s2
 
   (s3, tyAlt) <- typeOf alt
 
@@ -361,17 +350,12 @@ typeOf (PAssign (PIdentifier ide) val) = do
              ide (show tyExisting) (show tyVal)))
 
   insertSym ide (applySubst s tyVal)
-
+  trace (ide ++ show (applySubst s tyVal)) $ return ()
   return (s, applySubst s tyVal)
 
 typeOf (PIndex arr idx) = do
   (s1, tyArr) <- typeOf arr
-
-  --applySubstEnv s1
-
   (s2, tyIdx) <- typeOf idx
-
-  --applySubstEnv s2
 
   unless (isIntegerType tyIdx)
     (throwTE $ printf "Invalid index type, expected Int, got %s." (show tyIdx))
@@ -379,7 +363,6 @@ typeOf (PIndex arr idx) = do
   fresh <- freshFtv "t"
   s3 <- unify tyArr (PListType fresh)
 
-  --applySubstEnv s3
   let s = s1 `composeSubst` s2 `composeSubst` s3
       tyArr' = applySubst s tyArr
 
@@ -388,8 +371,8 @@ typeOf (PIndex arr idx) = do
      (show tyArr') (show tyIdx))
 
   let PListType tyItem = tyArr'
-
-  return (s, tyItem)
+  --traceShow tyArr' $ return ()
+  return (s, applySubst s tyItem)
 
 -- fold a block and continously update the environment
 typeOf (PBlock StandardBlock exprs) = do
@@ -401,6 +384,7 @@ typeOf (PBlock StandardBlock exprs) = do
              let updatedRets = case expr of
                    PReturn _ -> ty : rets
                    _ -> rets
+
              return updatedRets
          ) [] exprs
 
@@ -436,43 +420,27 @@ typeOf (PBlock FuncBlock exprs) = do
   --let s' = composedSubst `composeSubst` ss
   return (composedSubst, applySubst composedSubst (head srets))
 
-typeOf (PImmCall (PFunc (PFuncType params retType) body) args) = do
-  when (length params /= length args) $ throwAE
-    "<anonymous>" (length params) (length args)
-  let frame = Map.fromList $ map (\(PTypeArg ty (PIdentifier ide)) -> (ide, ty)) params
-  pushSymF frame
-  _ <- typeOf body
-  mapM_ (\(arg, param) -> do
-            let (PTypeArg tyParam _) = param
-            (s1, tyArg) <- typeOf arg
-
-            when (tyArg /= tyParam) $ throwTE $ printf
-              "Wrong type of argument. Expected %s, got %s."
-              (show tyParam) (show tyArg)
-        ) (zip args params)
-  return (nullSubst, retType)
-
-typeOf (PCall ident@(PIdentifier ide) args) = do
-  (_, tyFunc) <- typeOf ident
+typeOf (PCall expr args) = do
+  (s1, tyFunc) <- typeOf expr
 
   argTypes <- mapM typeOf args
 
   -- unify function
   fresh <- freshFtv "t"
-  s <- unify tyFunc (PFuncType ((snd . unzip) argTypes) fresh)
+  s2 <- unify tyFunc (PFuncType ((snd . unzip) argTypes) fresh)
 
-  let tyFunc' = applySubst s tyFunc
+  let tyFunc' = applySubst s2 tyFunc
 
   unless (isFuncType tyFunc' && (not . isFree) tyFunc')
-    (throwTE $ printf "Variable '%s' is not a function." ide)
+    (throwTE $ printf "Expression '%s' is not a function." (show tyFunc'))
 
   let (PFuncType params retTy) = tyFunc'
 
   when (length params /= length args)
-    (throwAE ide (length params) (length args))
+    (throwAE (show tyFunc') (length params) (length args))
 
   argSubsts <- foldM (\acc (arg, tyParam) -> do
-            (s2, tyArg) <- typeOf arg
+            (s2', tyArg) <- typeOf arg
 
             s3 <- unify tyArg tyParam
             --TODO:catch the error in unification
@@ -480,12 +448,11 @@ typeOf (PCall ident@(PIdentifier ide) args) = do
               --  ide (show tyParam) (show tyArg))
             --let s3' = s `composeSubst` s3
 
-            return $ acc `composeSubst` s3 `composeSubst` s2
-        ) s (zip args params)
+            return $ acc `composeSubst` s3 `composeSubst` s2'
+        ) s2 (zip args params)
 
-  --traceShow argSubsts $ return ()
-
-  return (nullSubst, applySubst argSubsts retTy)
+  let s = s1 `composeSubst` s2 `composeSubst` argSubsts
+  return (s2, applySubst s retTy)
 
 typeOf (PIdentifier ide) = do
   env <- get
@@ -505,7 +472,6 @@ typeOf (PIdentifier ide) = do
                in if isNothing val
                   then findit xs
                   else val
-
 
 typeOf (PReturn expr) = typeOf expr
 

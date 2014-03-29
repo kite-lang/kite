@@ -92,8 +92,7 @@ Exprs   : {- nothing -}    { [] }
 
 -- expression rules
 Call   :: { Expr }
-        : id '(' Exprs ')'    { PCall (PIdentifier $1) $3 }
-        | Func '(' Exprs ')'  { PImmCall $1 $3 }
+        : Expr '(' Exprs ')'    { PCall $1 $3 }
 
 Index  :: { Expr }
         : Expr '#' Expr     { PIndex $1 $3 }
@@ -194,7 +193,6 @@ data Expr = PBinOp String Expr Expr -- Operator!
           | PAssign Expr Expr -- PIdentifier!
           | PFunc Type Expr -- PFuncType!
           | PCall Expr [Expr] -- PIdentifier!
-          | PImmCall Expr [Expr] -- PIdentifier!
           | PReturn Expr
           | PIndex Expr Expr
 
