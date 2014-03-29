@@ -41,10 +41,11 @@ throwAE ide exp got = throwError . ArityError $ printf
 runTC f = runState (runErrorT f) Environment { sym = [Map.empty],
                                                symCount = 0 }
 
-typeCheck :: Expr -> Either TypeError Environment
-typeCheck expr =
+typeCheck :: Bool -> Expr -> Either TypeError Environment
+typeCheck debug expr = do
   let (r, env) = runTC (typeOf expr)
-  in case r of
+  when debug (traceShow env $ return ())
+  case r of
     Right _ -> Right env
     Left err -> Left err
 
@@ -350,7 +351,7 @@ typeOf (PAssign (PIdentifier ide) val) = do
              ide (show tyExisting) (show tyVal)))
 
   insertSym ide (applySubst s tyVal)
-  trace (ide ++ show (applySubst s tyVal)) $ return ()
+
   return (s, applySubst s tyVal)
 
 typeOf (PIndex arr idx) = do

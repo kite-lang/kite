@@ -26,7 +26,7 @@ nullEnvironment = Environment { sym = [Map.empty],
                                 symCount = 0 }
 
 parse prog = do
-  env <- case (typeCheck . kiteparser . alexScanTokens) prog of
+  env <- case (typeCheck False . kiteparser . alexScanTokens) prog of
     Right env' -> return env'
     Left err -> error (show err) >> return nullEnvironment
   Map.assocs $ head (sym env)

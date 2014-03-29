@@ -9,7 +9,7 @@ import Kite.TypeCheck
 
 data TypeCheckError = TypeE | RefE | ArE | UnE deriving(Show, Eq)
 
-analyze prog = case (typeCheck . kiteparser . alexScanTokens) prog of
+analyze prog = case (typeCheck False . kiteparser . alexScanTokens) prog of
   Right _ -> Nothing
   Left (TypeError _) -> Just TypeE
   Left (ReferenceError _) -> Just RefE
