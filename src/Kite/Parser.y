@@ -42,6 +42,7 @@ import Text.Printf
         '='                { TOperator _ "=" }
         '#'                { TOperator _ "#" }
         '->'               { TOperator _ "->" }
+        '|'               { TOperator _ "|" }
 
         '('                { TSymbol _ '(' }
         ')'                { TSymbol _ ')' }
@@ -83,7 +84,7 @@ Expr   :: { Expr }
         | If               { $1 }
         | Index            { $1 }
         | Term             { $1 }
-        --| '(' Expr ')'     { $2 }
+        | '(' Expr ')'     { $2 }
 
 Exprs  :: { [Expr] }
 Exprs   : {- nothing -}    { [] }
@@ -143,8 +144,8 @@ Func   :: { Expr }
 
 -- func literal
 FuncSignature :: { Type }
-         : '(' Parameters ')' '->'       { PFuncType $2 (PFreeType "t") }
-         | '(' Parameters ')' '->' Type  { PFuncType $2 $5 }
+         : '|' Parameters '|' '->'       { PFuncType $2 (PFreeType "t") }
+         | '|' Parameters '|' '->' Type  { PFuncType $2 $5 }
 
 -- named arguments
 Parameters :: { [Type] }
@@ -159,7 +160,7 @@ Parameter :: { Type }
 
 -- func signature
 FuncType  :: { Type }
-           : '(' TypeList ')' '->' Type { PFuncType $2 $5 }
+           : '|' TypeList '|' '->' Type { PFuncType $2 $5 }
 
 -- just type
 TypeList :: { [Type] }
