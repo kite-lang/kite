@@ -1,9 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable, RecordWildCards #-}
 module Main where
 
-import Kite.Lexer
-import Kite.Parser
-import Kite.TypeCheck
+import qualified Kite.Driver as Kt
 
 import System.Console.CmdArgs
 import Control.Monad
@@ -29,9 +27,13 @@ main = do
   KiteArgs {..} <- cmdArgsRun kiteArgs
 
   inp <- if eval then return input else readFile input
-  when lexOutput $ (putStrLn . ppShow . alexScanTokens) inp
 
-  let ast = (kiteparser . alexScanTokens) inp
-  when parOutput $ (putStrLn . ppShow) ast
+  let tokens = Kt.lex inp
+  when lexOutput (prettyPrint tokens)
+  
+  let ast = Kt.parse tokens
+  --when parOutput (prettyPrint ast)
 
-  either print (const $ print "Type check passed") (typeCheck debugOutput ast)
+  either print (const $ print "Type check passed") (Kt.analyze debugOutput ast)
+  
+    where prettyPrint = putStrLn . ppShow
