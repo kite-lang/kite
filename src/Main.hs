@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable, RecordWildCards #-}
+{-# LANGUAGE DeriveDataTypeable, RecordWildCards, NoMonomorphismRestriction #-}
 module Main where
 
 import qualified Kite.Driver as Kt
@@ -30,10 +30,10 @@ main = do
 
   let tokens = Kt.lex inp
   when lexOutput (prettyPrint tokens)
-  
+
   let ast = Kt.parse tokens
-  --when parOutput (prettyPrint ast)
+  when parOutput (prettyPrint ast)
 
   either print (const $ print "Type check passed") (Kt.analyze debugOutput ast)
-  
+
     where prettyPrint = putStrLn . ppShow

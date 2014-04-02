@@ -9,4 +9,8 @@ lex = alexScanTokens
 parse = kiteparser
 analyze = typeCheck
 kite = analyze False . parse . lex
+
 kited = analyze True . parse . lex
+kitef file = do
+  inp <- readFile file
+  return $ kite inp
