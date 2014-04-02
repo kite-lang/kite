@@ -2,6 +2,7 @@
 module Main where
 
 import qualified Kite.Driver as Kt
+import qualified Kite.JSEmit as Kjs
 
 import System.Console.CmdArgs
 import Control.Monad
@@ -35,5 +36,5 @@ main = do
   when parOutput (prettyPrint ast)
 
   either print (const $ print "Type check passed") (Kt.analyze debugOutput ast)
-
+  print (Kjs.emit "" ast)
     where prettyPrint = putStrLn . ppShow
