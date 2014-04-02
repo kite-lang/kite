@@ -42,7 +42,8 @@ import Text.Printf
         '='                { TOperator _ "=" }
         '#'                { TOperator _ "#" }
         '->'               { TOperator _ "->" }
-        '|'               { TOperator _ "|" }
+        '|'                { TOperator _ "|" }
+        '`'                { TOperator _ "`" }
 
         '('                { TSymbol _ '(' }
         ')'                { TSymbol _ ')' }
@@ -94,6 +95,7 @@ Exprs   : {- nothing -}    { [] }
 -- expression rules
 Call   :: { Expr }
         : Expr '(' Exprs ')'    { PCall $1 $3 }
+        | Expr '`' Expr Expr    { PCall $3 [$1, $4] }
 
 Index  :: { Expr }
         : Expr '#' Expr     { PIndex $1 $3 }
@@ -112,17 +114,17 @@ List   :: { Expr }
 List    : '[' Exprs ']'    { PList $2 }
 
 BinOp  :: { Expr }
-        : Expr '+' Expr  { PBinOp "+" $1 $3 }
-        | Expr '-' Expr  { PBinOp "-" $1 $3 }
-        | Expr '*' Expr  { PBinOp "*" $1 $3 }
-        | Expr '/' Expr  { PBinOp "/" $1 $3 }
-        | Expr '%' Expr  { PBinOp "%" $1 $3 }
-        | Expr '==' Expr { PBinOp "==" $1 $3 }
-        | Expr '<' Expr  { PBinOp "<" $1 $3 }
-        | Expr '<=' Expr { PBinOp "<=" $1 $3 }
-        | Expr '>' Expr  { PBinOp ">" $1 $3 }
-        | Expr '>=' Expr { PBinOp ">=" $1 $3 }
-        | Expr '!=' Expr { PBinOp "!=" $1 $3 }
+        : Expr '+' Expr  { PCall (PIdentifier "+") [$1, $3] }
+        | Expr '-' Expr  { PCall (PIdentifier "-") [$1, $3] }
+        | Expr '*' Expr  { PCall (PIdentifier "*") [$1, $3] }
+        | Expr '/' Expr  { PCall (PIdentifier "/") [$1, $3] }
+        | Expr '%' Expr  { PCall (PIdentifier "%") [$1, $3] }
+        | Expr '==' Expr { PCall (PIdentifier "==") [$1, $3] }
+        | Expr '<' Expr  { PCall (PIdentifier "<") [$1, $3] }
+        | Expr '<=' Expr { PCall (PIdentifier "<=") [$1, $3] }
+        | Expr '>' Expr  { PCall (PIdentifier ">") [$1, $3] }
+        | Expr '>=' Expr { PCall (PIdentifier ">=") [$1, $3] }
+        | Expr '!=' Expr { PCall (PIdentifier "!=") [$1, $3] }
 
 Type   :: { Type }
         : boolTy           { PBoolType }
@@ -187,8 +189,7 @@ data BlockType = StandardBlock
                | FuncBlock
                deriving (Show, Eq)
 
-data Expr = PBinOp String Expr Expr -- Operator!
-          | PList [Expr]
+data Expr = PList [Expr]
           | PBlock BlockType [Expr]
           | PIf Expr Expr Expr
           | PAssign Expr Expr -- PIdentifier!

@@ -13,7 +13,7 @@ $symbols		= [\(\)\{\}\[\]\;\,\:]
 
 @keywords		= return | import | if | then | else | yolo
 @binops	                = "+" | "-" | "/" | "*" | "%" | "==" | "<" | "<=" | ">" | ">=" | "!="
-@operators		= "=" | "#" | "->" | "|"
+@operators		= "=" | "#" | "->" | "|" | "`"
 @string                 = \" (. # \")* \"
 @identifier		= $downcase [$alphaNum \_ \' \! \?]*
 @bool			= "True" | "False"

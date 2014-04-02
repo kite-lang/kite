@@ -38,8 +38,25 @@ throwAE ide exp got = throwError . ArityError $ printf
 -------------------
 -- INTERFACE
 -------------------
-runTC f = runState (runErrorT f) Environment { sym = [Map.empty],
-                                               symCount = 0 }
+runTC f = runState (runErrorT f) Environment { sym = [initSymbols],
+                                               symCount = Map.size initSymbols }
+
+-- traceShow initSymbols $ return()
+
+stdBinOpArgs = PFuncType [PFreeType "a", PFreeType "a"] (PFreeType "a")
+initSymbols = Map.fromList [("+",stdBinOpArgs),
+                            ("-",stdBinOpArgs),
+                            ("*",stdBinOpArgs),
+                            ("/",stdBinOpArgs),
+                            ("%",stdBinOpArgs),
+                            ("==",stdBinOpArgs),
+                            ("<",stdBinOpArgs),
+                            ("<=",stdBinOpArgs),
+                            (">",stdBinOpArgs),
+                            (">=",stdBinOpArgs),
+                            ("!=",stdBinOpArgs)]
+
+
 
 typeCheck :: Bool -> Expr -> Either TypeError Environment
 typeCheck debug expr = do
@@ -145,22 +162,6 @@ overrideSym ide val = do
 -- operators that return bool
 boolOps = ["==", ">", ">=", "<", "<=", "!="]
 
--- arithmic operations look-up
-
-binOpLookup = [(PStringType, "+",PStringType),
-               (PListType PStringType,"+",PListType PStringType),
-               (PListType PIntegerType,"+",PListType PIntegerType),
-               (PListType PFloatType,"+",PListType PFloatType),
-               (PListType PBoolType,"+",PListType PBoolType),
-               (PListType PStringType,"+",PStringType),
-               (PListType PIntegerType,"+", PIntegerType),
-               (PListType PFloatType,"+", PFloatType),
-               (PListType PBoolType,"+", PBoolType),
-               (PStringType,"+",PListType PStringType),
-               (PIntegerType,"+",PListType PIntegerType),
-               (PFloatType,"+",PListType PFloatType),
-               (PBoolType,"+",PListType PBoolType),
-               (PFreeType "","+",PFreeType "")]
 {-
   for floats and integers, all binary operators are allowed
   for booleans only the boolOps are allowed
@@ -257,6 +258,7 @@ typeOf (PFunc (PFuncType params rty) body) = do
 
   return (s, applySubst s (PFuncType (map snd params') bodyTy))
 
+{-
 typeOf (PBinOp op lhs rhs) = do
   (s1, tyLhs) <- typeOf lhs
   (s2, tyRhs) <- typeOf rhs
@@ -275,6 +277,7 @@ typeOf (PBinOp op lhs rhs) = do
   -- unless (tyLhs == tyRhs || (tyLhs, op, tyRhs) `elem` binOpLookup)
   --   (throwTE $ printf "Binary operand types do not match (%s %s %s)."
   --    (show tyLhs) op (show tyRhs))
+-}
 
 typeOf (PList []) = do
   fresh <- freshFtv "t"

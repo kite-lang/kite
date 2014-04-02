@@ -74,13 +74,13 @@ inferenceTests = testGroup "Inference test"
     , test "Infer type of index expr"
       "head = |xs| -> { return xs # 0 }"
       --TODO: fix these tx vars, it's impossible to track
-      ("head", fn [ls (free "t3")] (free "t3"))
+      ("head", fn [ls (free "t4")] (free "t4"))
     ]
 
   , testGroup "Function"
     [ test "Simple function"
       "id = |e| -> { return e }"
-      ("id", fn [free "t1"] (free "t1"))
+      ("id", fn [free "t2"] (free "t2"))
 
     , testExt "Apply polymorhpic function to value"
       "foo = id(2)"
@@ -90,13 +90,13 @@ inferenceTests = testGroup "Inference test"
   , testGroup "Higher order functions"
     [ test "Free function and free param"
       "apply = |f, x| -> { return f(x) }"
-      ("apply", fn [fn [free "t2"] (free "t4"), free "t2"] (free "t4"))
+      ("apply", fn [fn [free "t3"] (free "t5"), free "t3"] (free "t5"))
 
     , test "Free function and free param"
       "apply = |f, x| -> { return f(x) }\
       \fn =  |x| -> { return [x] }\
       \val = apply(fn, 1)"
-      ("apply", fn [fn [free "t2"] (free "t4"), free "t2"] (free "t4"))
+      ("apply", fn [fn [free "t3"] (free "t5"), free "t3"] (free "t5"))
 
 
     , testExt "Application of returned function (HoF)"
