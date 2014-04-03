@@ -9,7 +9,9 @@ import Data.Maybe
 import Control.Monad.State
 import Control.Monad.Error
 import qualified Data.Map as Map
+import qualified Data.Set as Set
 import Text.Printf
+
 
 -------------------
 -- ERROR HANDLING
@@ -24,13 +26,13 @@ instance Error TypeError where
   noMsg = UnknownError
   strMsg = TypeError
 
-throwTE :: String -> TC ()
+throwTE :: String -> TC a
 throwTE = throwError . TypeError
 
-throwRE :: String -> TC ()
+throwRE :: String -> TC a
 throwRE = throwError . ReferenceError
 
-throwAE :: String -> Int -> Int -> TC ()
+throwAE :: String -> Int -> Int -> TC a
 throwAE ide exp got = throwError . ArityError $ printf
                       "Function '%s' got too %s arguments. Expected %d, got %d."
                       ide (if exp > got then "few" else "many") exp got
@@ -60,8 +62,10 @@ initSymbols = Map.fromList [("+",stdBinOpArgs),
 
 typeCheck :: Bool -> Expr -> Either TypeError Environment
 typeCheck debug expr = do
-  let (r, env) = runTC (typeOf expr)
-  when debug (traceShow env $ return ())
+  --let (r, env) = runTC (typeOf expr)
+  let (r, env) = runTC (infer (TypeEnvironment Map.empty) expr)
+  --when debug (traceShow env $ return ())
+  traceShow r $ return ()
   case r of
     Right _ -> Right env
     Left err -> Left err
@@ -71,7 +75,6 @@ typeCheck debug expr = do
 ----------------
 type Name = String
 -- substitution maps a type variable to a type
-type Substitution = Map.Map Name Type
 type Frame = Map.Map Name Type
 type Stack = [Frame]
 
@@ -84,6 +87,49 @@ instance Show Environment where
 -- the monad in which all the state is kept and errors are thrown
 type TC a = ErrorT TypeError (State Environment) a
 
+---------------------------
+data Scheme = Scheme [String] Type
+
+newtype TypeEnvironment = TypeEnvironment (Map.Map String Scheme)
+
+class Types a where
+  ftv :: a -> Set.Set String
+  apply :: Substitution -> a -> a
+
+instance Types TypeEnvironment where
+  ftv (TypeEnvironment env) = ftv (Map.elems env)
+  apply s (TypeEnvironment env) = TypeEnvironment (Map.map (apply s) env)
+
+instance Types Type where
+  ftv (PFreeType ide) = Set.singleton ide
+  ftv (PListType t) = ftv t
+  ftv (PFuncType tParams tRet) = ftv tParams `Set.union` ftv tRet
+  ftv _ = Set.empty
+  apply s (PFreeType ide) = fromMaybe (PFreeType ide) (Map.lookup ide s)
+  apply s (PFuncType tParams tRet) = PFuncType (apply s tParams) (apply s tRet)
+  apply s (PListType t) = PListType (apply s t)
+  apply s t = t
+
+instance Types a => Types [a] where
+  ftv = foldr (Set.union . ftv) Set.empty
+  apply s = map (apply s)
+
+instance Types Scheme where
+  ftv (Scheme vars t) = ftv t Set.\\ Set.fromList vars
+  apply s (Scheme vars t) = Scheme vars (apply (foldr Map.delete s vars) t)
+
+remove :: TypeEnvironment -> String -> TypeEnvironment
+remove (TypeEnvironment env) ide = TypeEnvironment (Map.delete ide env)
+
+generalize :: TypeEnvironment -> Type -> Scheme
+generalize env t = Scheme (Set.toList (ftv t Set.\\ ftv env)) t
+
+instantiate :: Scheme -> TC Type
+instantiate (Scheme vars t) = do
+  freshVars <- mapM (\_ -> freshFtv "t") vars
+  let s = Map.fromList (zip vars freshVars)
+  return (apply s t)
+
 -- generate a fresh type variable
 freshFtv :: String -> TC Type
 freshFtv ide = do
@@ -95,36 +141,109 @@ freshFtv ide = do
 -- SUBSTITUTIONS
 -------------------
 -- substitue a type variable into the top symbol frame
+type Substitution = Map.Map Name Type
 nullSubst = Map.empty
-composeSubst s1 s2 = s1 `Map.union` s2
+composeSubst s1 s2 = Map.map (apply s1) s2 `Map.union` s1
 
-applySubstEnv :: Substitution -> TC ()
-applySubstEnv s = do
+infer :: TypeEnvironment -> Expr -> TC (Substitution, Type)
+
+infer (TypeEnvironment _) (PInteger _) = return (nullSubst, PIntegerType)
+infer (TypeEnvironment _) (PFloat _) = return (nullSubst, PFloatType)
+infer (TypeEnvironment _) (PString _) = return (nullSubst, PStringType)
+
+infer env (PBlock StandardBlock exprs) = infer env (head exprs)
+infer env (PBlock FuncBlock exprs) = infer env (head exprs)
+
+infer (TypeEnvironment env) (PIdentifier ide) =
+  case Map.lookup ide env of
+    Just f -> do
+      t <- instantiate f
+      return (nullSubst, t)
+    Nothing -> error ("Undefined variable: " ++ ide)
+
+infer env (PList elems) = do
+  fresh <- freshFtv "t"
+  (sElems, tElems) <- foldM (\(s, t) e -> do
+                                (se, te) <- infer (apply s env) e
+                                s' <- unify te t
+                                return (se `composeSubst` s' `composeSubst` s, te)
+                            ) (nullSubst, fresh) elems
+  return (sElems, PListType (apply sElems tElems))
+
+infer env (PFunc (PFuncType params ret) body) = do
+  let PTypeArg t (PIdentifier ide) = head params
+      TypeEnvironment env' = remove env ide
+      env'' = TypeEnvironment (env' `Map.union` Map.singleton ide (Scheme [] ret))
+  (s1, t1) <- infer env'' body
+  return (s1, PFuncType [(apply s1 ret)] t1)
+
+infer env (PCall expr args) = do
+  fresh <- freshFtv "t"
+  (s1, t1) <- infer env expr
+  (s2, t2) <- infer (apply s1 env) (head args)
+  s3 <- unify (apply s2 t1) (PFuncType [t2] fresh)
+  return (s1 `composeSubst` s2 `composeSubst` s3, apply s3 fresh)
+
+infer (TypeEnvironment env) (PAssign (PIdentifier ide) expr) = do
+  (s1, t1) <- infer (TypeEnvironment env) expr
+  let env' = TypeEnvironment (Map.insert ide (Scheme [] t1) env)
+  return (nullSubst, apply s1 t1)
+
+unify :: Type -> Type -> TC Substitution
+
+unify ta (PFreeType ide) = varBind ide ta
+
+unify (PFreeType ide) tb = varBind ide tb
+
+unify (PListType ta) (PListType tb) = unify ta tb
+
+unify (PFuncType pa ra) (PFuncType pb rb) = do
+  s1 <- unify (head pa) (head pb)
+  s2 <- unify (apply s1 ra) (apply s1 rb)
+  return (s1 `composeSubst` s2)
+
+unify ta tb = throwTE $ printf "Type mismatch in unification (%s and %s)" (show ta) (show tb)
+
+varBind :: Name -> Type -> TC Substitution
+varBind ide t | PFreeType ide == t = return nullSubst
+              | otherwise = return $ Map.singleton ide t
+
+insertSym :: String -> Type -> TC ()
+insertSym ide val = do
   env <- get
-  let sym' = map (Map.map (applySubst s)) (sym env)
-  put env{sym = sym'}
+  let (x:xs) = sym env
+      newF = Map.insert ide val x
+  put env{sym = newF:xs}
+{-
 
--- substitue a ftv into a type
--- for instance (a: Int) into (List Free(a)) yields (List Int)
-applySubst :: Frame -> Type -> Type
+-- applySubstEnv :: Substitution -> TC ()
+-- applySubstEnv s = do
+--   env <- get
+--   let sym' = map (Map.map (applySubst s)) (sym env)
+--   put env{sym = sym'}
 
-applySubst fr (PFreeType ide) =
-  fromMaybe (PFreeType ide) (Map.lookup ide fr)
+-- -- substitue a ftv into a type
+-- -- for instance (a: Int) into (List Free(a)) yields (List Int)
+-- applySubst :: Frame -> Type -> Type
 
-applySubst fr (PListType a) = do
-  let ta = applySubst fr a
-  PListType ta
+-- applySubst fr (PFreeType ide) =
+--   fromMaybe (PFreeType ide) (Map.lookup ide fr)
 
-applySubst fr (PFuncType params ret) = do
-  let params' = map (applySubst fr) params
-      ret' = applySubst fr ret
-  PFuncType params' ret'
+-- applySubst fr (PListType a) = do
+--   let ta = applySubst fr a
+--   PListType ta
 
-applySubst _ t = t
+-- applySubst fr (PFuncType params ret) = do
+--   let params' = map (applySubst fr) params
+--       ret' = applySubst fr ret
+--   PFuncType params' ret'
+
+-- applySubst _ t = t
 
 -- stack manipulation
 ----------------------------
 -- sym
+
 popSymF :: TC ()
 popSymF = do
   env <- get
@@ -482,3 +601,4 @@ typeOf (PReturn expr) = typeOf expr
 
 -- catch all
 typeOf _ = throwError UnknownError
+-}
