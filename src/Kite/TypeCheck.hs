@@ -170,19 +170,28 @@ infer env (PList elems) = do
                             ) (nullSubst, fresh) elems
   return (sElems, PListType (apply sElems tElems))
 
+-- TODO: check return type(?)
 infer env (PFunc (PFuncType params ret) body) = do
-  let PTypeArg t (PIdentifier ide) = head params
-      TypeEnvironment env' = remove env ide
-      env'' = TypeEnvironment (env' `Map.union` Map.singleton ide (Scheme [] ret))
-  (s1, t1) <- infer env'' body
-  return (s1, PFuncType [(apply s1 ret)] t1)
+  (envParams, tParams) <- foldM (\(envAcc, tParams) p -> do
+                         tParam <- freshFtv "t"
+                         let PTypeArg _ (PIdentifier ide) = p
+                             TypeEnvironment env' = remove envAcc ide
+                             env'' = TypeEnvironment (Map.insert ide (Scheme [] tParam) env')
+                         return (env'', tParams ++ [tParam])
+                     ) (env, []) params
+  (s1, t1) <- infer envParams body
+  return (s1, PFuncType (apply s1 tParams) t1)
 
 infer env (PCall expr args) = do
   fresh <- freshFtv "t"
-  (s1, t1) <- infer env expr
-  (s2, t2) <- infer (apply s1 env) (head args)
-  s3 <- unify (apply s2 t1) (PFuncType [t2] fresh)
-  return (s1 `composeSubst` s2 `composeSubst` s3, apply s3 fresh)
+  (sFn, tFn) <- infer env expr
+  let env' = apply sFn env
+  (sArgs, tArgs) <- foldM (\(s, tArgs') p -> do
+                                  (sArg, tArg) <- infer env' p
+                                  return (sArg `composeSubst` s, tArgs' ++ [tArg])
+                                  ) (nullSubst, []) args
+  s3 <- unify (apply sArgs tFn) (PFuncType tArgs fresh)
+  return (sFn `composeSubst` sArgs `composeSubst` s3, apply s3 fresh)
 
 infer (TypeEnvironment env) (PAssign (PIdentifier ide) expr) = do
   (s1, t1) <- infer (TypeEnvironment env) expr
@@ -197,10 +206,14 @@ unify (PFreeType ide) tb = varBind ide tb
 
 unify (PListType ta) (PListType tb) = unify ta tb
 
-unify (PFuncType pa ra) (PFuncType pb rb) = do
-  s1 <- unify (head pa) (head pb)
-  s2 <- unify (apply s1 ra) (apply s1 rb)
-  return (s1 `composeSubst` s2)
+unify (PFuncType paramsA ra) (PFuncType paramsB rb) = do
+  --s1 <- unify (head pa) (head pb)
+  sParams <- foldM (\s (paramA, paramB) -> do
+                       s' <- unify paramB paramA
+                       return (s `composeSubst` s')
+                   ) nullSubst (zip paramsA paramsB)
+  s2 <- unify (apply sParams ra) (apply sParams rb)
+  return (s2 `composeSubst` sParams)
 
 unify ta tb = throwTE $ printf "Type mismatch in unification (%s and %s)" (show ta) (show tb)
 
