@@ -13,4 +13,5 @@ kite = analyze False . parse . lex
 kited = analyze True . parse . lex
 kitef file = do
   inp <- readFile file
+  --print $ (parse . lex) inp
   return $ kite inp

@@ -6,6 +6,7 @@ import Debug.Trace
 import Kite.Parser
 
 import Data.Maybe
+import Data.List
 import Control.Monad.State
 import Control.Monad.Error
 import qualified Data.Map as Map
@@ -43,22 +44,16 @@ throwAE ide exp got = throwError . ArityError $ printf
 runTC f = runState (runErrorT f) Environment { sym = [initSymbols],
                                                symCount = Map.size initSymbols }
 
--- traceShow initSymbols $ return()
+mkBinopSignature n = let t = PFreeType ("t" ++ n) in PFuncType [t, t] t
+mkBoolBinopSignature n = let t = PFreeType ("t" ++ n) in PFuncType [t, t] PBoolType
 
-stdBinOpArgs = PFuncType [PFreeType "a", PFreeType "a"] (PFreeType "a")
-initSymbols = Map.fromList [("+",stdBinOpArgs),
-                            ("-",stdBinOpArgs),
-                            ("*",stdBinOpArgs),
-                            ("/",stdBinOpArgs),
-                            ("%",stdBinOpArgs),
-                            ("==",stdBinOpArgs),
-                            ("<",stdBinOpArgs),
-                            ("<=",stdBinOpArgs),
-                            (">",stdBinOpArgs),
-                            (">=",stdBinOpArgs),
-                            ("!=",stdBinOpArgs)]
-
-
+initSymbols = do
+  let ops = ["+", "-", "*", "/", "%"]
+      boolOps = ["==", "<", "<=", ">", ">=", "!="]
+      opSigs = map (\(op, n) -> (op, mkBinopSignature (show n))) (zip ops [0 .. length ops])
+      boolOpSigs = map (\(op, n) -> (op, mkBoolBinopSignature (show n))) (zip boolOps [length ops ..  length ops + length boolOps])
+  traceShow (opSigs `union` boolOpSigs) $
+    Map.fromList (opSigs `union` boolOpSigs)
 
 typeCheck :: Bool -> Expr -> Either TypeError Environment
 typeCheck debug expr = do
@@ -143,23 +138,46 @@ freshFtv ide = do
 -- substitue a type variable into the top symbol frame
 type Substitution = Map.Map Name Type
 nullSubst = Map.empty
-composeSubst s1 s2 = Map.map (apply s1) s2 `Map.union` s1
+
+validate :: Maybe Type -> Maybe Type -> Bool
+validate Nothing _ = True
+validate _ Nothing = True
+validate (Just (PFreeType _)) _ = True
+validate _ (Just (PFreeType _)) = True
+validate (Just t1) (Just t2) = t1 == t2
+
+composeSubst s1 s2 =
+  let overlapping = Map.keys s1 `intersect` Map.keys s2
+      valid = all (\k -> validate (Map.lookup k s1) (Map.lookup k s2)) overlapping
+  in if valid
+    then Map.map (apply s1) s2 `Map.union` s1
+    else error "Invalid unification"
+--composeSubst s1 s2 = Map.map (apply s1) s2 `Map.union` s1
 
 infer :: TypeEnvironment -> Expr -> TC (Substitution, Type)
 
-infer (TypeEnvironment _) (PInteger _) = return (nullSubst, PIntegerType)
-infer (TypeEnvironment _) (PFloat _) = return (nullSubst, PFloatType)
-infer (TypeEnvironment _) (PString _) = return (nullSubst, PStringType)
+infer _ (PInteger _) = return (nullSubst, PIntegerType)
+infer _ (PFloat _) = return (nullSubst, PFloatType)
+infer _ (PString _) = return (nullSubst, PStringType)
 
-infer env (PBlock StandardBlock exprs) = infer env (head exprs)
-infer env (PBlock FuncBlock exprs) = infer env (head exprs)
+-- TODO: why have different block types?
+infer env (PBlock StandardBlock exprs) = do
+  forM_ exprs (infer env)
+  return (nullSubst, PBoolType)
 
-infer (TypeEnvironment env) (PIdentifier ide) =
+infer env (PBlock FuncBlock exprs) = do
+  (s, t) <- infer env (head exprs)
+  return (s, t)
+
+infer (TypeEnvironment env) (PIdentifier ide) = do
+  symEnv <- get
   case Map.lookup ide env of
     Just f -> do
       t <- instantiate f
       return (nullSubst, t)
-    Nothing -> error ("Undefined variable: " ++ ide)
+    Nothing -> case Map.lookup ide (head $ sym symEnv) of
+      Just t' -> return (nullSubst, t')
+      Nothing -> throwRE $ printf "Reference to undefined variable '%s'." ide
 
 infer env (PList elems) = do
   fresh <- freshFtv "t"
@@ -182,6 +200,7 @@ infer env (PFunc (PFuncType params ret) body) = do
   (s1, t1) <- infer envParams body
   return (s1, PFuncType (apply s1 tParams) t1)
 
+-- TODO: check arity
 infer env (PCall expr args) = do
   fresh <- freshFtv "t"
   (sFn, tFn) <- infer env expr
@@ -189,16 +208,24 @@ infer env (PCall expr args) = do
   (sArgs, tArgs) <- foldM (\(s, tArgs') p -> do
                                   (sArg, tArg) <- infer env' p
                                   return (sArg `composeSubst` s, tArgs' ++ [tArg])
-                                  ) (nullSubst, []) args
-  s3 <- unify (apply sArgs tFn) (PFuncType tArgs fresh)
+                          ) (nullSubst, []) args
+  s3 <- unify (PFuncType tArgs fresh) (apply sArgs tFn) 
+  traceShow (PFuncType tArgs fresh) $ return ()
+  traceShow (apply sArgs tFn) $ return ()
+  --traceShow (s3) $ return ()
+  --traceShow expr $ return ()
   return (sFn `composeSubst` sArgs `composeSubst` s3, apply s3 fresh)
 
 infer (TypeEnvironment env) (PAssign (PIdentifier ide) expr) = do
   (s1, t1) <- infer (TypeEnvironment env) expr
-  let env' = TypeEnvironment (Map.insert ide (Scheme [] t1) env)
+  insertSym ide (apply s1 t1)
   return (nullSubst, apply s1 t1)
 
 unify :: Type -> Type -> TC Substitution
+
+unify PIntegerType PIntegerType = return nullSubst
+unify PFloatType PFloatType = return nullSubst
+unify PStringType PStringType = return nullSubst
 
 unify ta (PFreeType ide) = varBind ide ta
 
@@ -207,18 +234,18 @@ unify (PFreeType ide) tb = varBind ide tb
 unify (PListType ta) (PListType tb) = unify ta tb
 
 unify (PFuncType paramsA ra) (PFuncType paramsB rb) = do
-  --s1 <- unify (head pa) (head pb)
   sParams <- foldM (\s (paramA, paramB) -> do
                        s' <- unify paramB paramA
                        return (s `composeSubst` s')
                    ) nullSubst (zip paramsA paramsB)
   s2 <- unify (apply sParams ra) (apply sParams rb)
-  return (s2 `composeSubst` sParams)
+  return (s2 `composeSubst` (apply s2 sParams))
 
 unify ta tb = throwTE $ printf "Type mismatch in unification (%s and %s)" (show ta) (show tb)
 
 varBind :: Name -> Type -> TC Substitution
-varBind ide t | PFreeType ide == t = return nullSubst
+varBind ide t | t == PFreeType ide = return nullSubst
+              | PFreeType ide == t = return nullSubst
               | otherwise = return $ Map.singleton ide t
 
 insertSym :: String -> Type -> TC ()
@@ -227,6 +254,8 @@ insertSym ide val = do
   let (x:xs) = sym env
       newF = Map.insert ide val x
   put env{sym = newF:xs}
+
+
 {-
 
 -- applySubstEnv :: Substitution -> TC ()
