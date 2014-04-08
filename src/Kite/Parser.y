@@ -3,6 +3,8 @@ module Kite.Parser where
 import Data.List
 import Kite.Lexer
 import Text.Printf
+
+mkBinopCall op a1 a2 = PCall (PCall (PIdentifier op) [a1]) [a2]
 }
 
 %name kiteparser
@@ -114,17 +116,17 @@ List   :: { Expr }
 List    : '[' Exprs ']'    { PList $2 }
 
 BinOp  :: { Expr }
-        : Expr '+' Expr  { PCall (PIdentifier "+") [$1, $3] }
-        | Expr '-' Expr  { PCall (PIdentifier "-") [$1, $3] }
-        | Expr '*' Expr  { PCall (PIdentifier "*") [$1, $3] }
-        | Expr '/' Expr  { PCall (PIdentifier "/") [$1, $3] }
-        | Expr '%' Expr  { PCall (PIdentifier "%") [$1, $3] }
-        | Expr '==' Expr { PCall (PIdentifier "==") [$1, $3] }
-        | Expr '<' Expr  { PCall (PIdentifier "<") [$1, $3] }
-        | Expr '<=' Expr { PCall (PIdentifier "<=") [$1, $3] }
-        | Expr '>' Expr  { PCall (PIdentifier ">") [$1, $3] }
-        | Expr '>=' Expr { PCall (PIdentifier ">=") [$1, $3] }
-        | Expr '!=' Expr { PCall (PIdentifier "!=") [$1, $3] }
+        : Expr '+' Expr  { mkBinopCall "+" $1 $3 }
+        | Expr '-' Expr  { mkBinopCall "-" $1 $3 }
+        | Expr '*' Expr  { mkBinopCall "*" $1 $3 }
+        | Expr '/' Expr  { mkBinopCall "/" $1 $3 }
+        | Expr '%' Expr  { mkBinopCall "%" $1 $3 }
+        | Expr '==' Expr { mkBinopCall "==" $1 $3 }
+        | Expr '<' Expr  { mkBinopCall "<" $1 $3 }
+        | Expr '<=' Expr { mkBinopCall "<=" $1 $3 }
+        | Expr '>' Expr  { mkBinopCall ">" $1 $3 }
+        | Expr '>=' Expr { mkBinopCall ">=" $1 $3 }
+        | Expr '!=' Expr { mkBinopCall "!=" $1 $3 }
 
 Type   :: { Type }
         : boolTy           { PBoolType }
