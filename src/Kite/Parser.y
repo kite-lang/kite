@@ -5,6 +5,7 @@ import Kite.Lexer
 import Text.Printf
 
 mkBinopCall op a1 a2 = PCall (PCall (PIdentifier op) [a1]) [a2]
+mkCalls f args = foldl (\calls arg -> PCall calls [arg]) (PCall f [head args]) (tail args)
 }
 
 %name kiteparser
@@ -96,8 +97,8 @@ Exprs   : {- nothing -}    { [] }
 
 -- expression rules
 Call   :: { Expr }
-        : Expr '(' Exprs ')'    { PCall $1 $3 }
-        | Expr '`' Expr Expr    { PCall $3 [$1, $4] }
+        : Expr '(' Exprs ')'    { mkCalls $1 $3 }
+        | Expr '`' Expr Expr    { PCall (PCall $3 [$1]) [$4] }
 
 Index  :: { Expr }
         : Expr '#' Expr     { PIndex $1 $3 }
