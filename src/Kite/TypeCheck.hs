@@ -160,8 +160,8 @@ infer :: TypeEnvironment -> Expr -> TC (Substitution, Type)
 infer _ (PInteger _) = return (nullSubst, PIntegerType)
 infer _ (PFloat _) = return (nullSubst, PFloatType)
 infer _ (PString _) = return (nullSubst, PStringType)
+infer _ (PBool _) = return (nullSubst, PBoolType)
 
--- TODO: why have different block types?
 infer env (PBlock StandardBlock exprs) = do
   forM_ exprs (infer env)
   return (nullSubst, PBoolType)
@@ -201,6 +201,22 @@ infer env (PList elems) = do
                             ) (nullSubst, fresh) elems
   return (sElems, PListType (apply sElems tElems))
 
+infer env (PIf cond conseq alt) = do
+  (s0, tyCond) <- infer env cond
+
+  s1 <- unify tyCond PBoolType
+
+  when (apply s1 tyCond /= PBoolType)
+    (throwTE $ printf "Expected if-condition to be of type Bool, got %s." (show tyCond))
+
+  (s2, tyConseq) <- infer env conseq
+
+  (s3, tyAlt) <- infer env alt
+
+  s4 <- unify (apply s3 tyAlt) (apply s3 tyConseq)
+
+  return (s0 `composeSubst` s1 `composeSubst` s2 `composeSubst` s3 `composeSubst` s4, apply s4 tyConseq)  
+
 -- TODO: check return type(?)
 infer env (PFunc (PFuncType params ret) body) = do
   let param = head params
@@ -211,7 +227,6 @@ infer env (PFunc (PFuncType params ret) body) = do
   (s1, t1) <- infer env'' body
   return (s1, PFuncType [apply s1 tParam] t1)
 
--- TODO: check arity
 infer env (PCall expr args) = do
   fresh <- freshFtv "t"
   (sFn, tFn) <- infer env expr
@@ -230,6 +245,7 @@ unify :: Type -> Type -> TC Substitution
 unify PIntegerType PIntegerType = return nullSubst
 unify PFloatType PFloatType = return nullSubst
 unify PStringType PStringType = return nullSubst
+unify PBoolType PBoolType = return nullSubst
 
 unify ta (PFreeType ide) = varBind ide ta
 
