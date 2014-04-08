@@ -147,6 +147,14 @@ popSymF = do
   env <- get
   put env{sym = tail (sym env)}
 
+pushEmptySymF :: TC ()
+pushEmptySymF = pushSymF Map.empty
+
+pushSymF :: Frame -> TC ()
+pushSymF f = do
+  env <- get
+  put env{sym = f:sym env}
+
 infer :: TypeEnvironment -> Expr -> TC (Substitution, Type)
 
 infer _ (PInteger _) = return (nullSubst, PIntegerType)
@@ -159,8 +167,10 @@ infer env (PBlock StandardBlock exprs) = do
   return (nullSubst, PBoolType)
 
 infer env (PBlock FuncBlock exprs) = do
+  pushEmptySymF
   forM_ (init exprs) (infer env)
   (s, t) <- infer env (last exprs)
+  popSymF
   return (s, t)
 
 infer (TypeEnvironment env) (PIdentifier ide) = do
@@ -169,9 +179,18 @@ infer (TypeEnvironment env) (PIdentifier ide) = do
     Just f -> do
       t <- instantiate f
       return (nullSubst, t)
-    Nothing -> case Map.lookup ide (head $ sym symEnv) of
+    Nothing -> case findit (sym symEnv) of
       Just t' -> return (nullSubst, t')
       Nothing -> throwRE $ printf "Reference to undefined variable '%s'." ide
+
+  where findit stack =
+          if null stack
+          then Nothing
+          else let (x:xs) = stack
+                   val = Map.lookup ide x
+               in if isNothing val
+                  then findit xs
+                  else val
 
 infer env (PList elems) = do
   fresh <- freshFtv "t"
@@ -184,7 +203,7 @@ infer env (PList elems) = do
 
 -- TODO: check return type(?)
 infer env (PFunc (PFuncType params ret) body) = do
-  let param = head params    
+  let param = head params
   tParam <- freshFtv "t"
   let PTypeArg _ (PIdentifier ide) = param
       TypeEnvironment env' = remove env ide
@@ -199,14 +218,13 @@ infer env (PCall expr args) = do
   let env' = apply sFn env
       arg = head args
   (sArg, tArg) <- infer env' arg
-  s3 <- unify (PFuncType [tArg] fresh) (apply sArg tFn) 
+  s3 <- unify (PFuncType [tArg] fresh) (apply sArg tFn)
   return (sFn `composeSubst` sArg `composeSubst` s3, apply s3 fresh)
 
 infer (TypeEnvironment env) (PAssign (PIdentifier ide) expr) = do
   (s1, t1) <- infer (TypeEnvironment env) expr
   insertSym ide (apply s1 t1)
   return (nullSubst, apply s1 t1)
-
 unify :: Type -> Type -> TC Substitution
 
 unify PIntegerType PIntegerType = return nullSubst
