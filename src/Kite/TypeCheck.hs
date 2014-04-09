@@ -244,11 +244,10 @@ infer env (PFunc (PFuncType param ret) body) = do
   (s1, t1) <- infer env'' body
   return (s1, PFuncType (apply s1 tParam) t1)
 
-infer env (PCall expr args) = do
+infer env (PCall expr arg) = do
   fresh <- freshFtv "t"
   (sFn, tFn) <- infer env expr
   let env' = apply sFn env
-      arg = head args
   (sArg, tArg) <- infer env' arg
 
   s3 <- unify (PFuncType tArg fresh) (apply sArg tFn)

@@ -4,9 +4,9 @@ import Data.List
 import Kite.Lexer
 import Text.Printf
 
-mkBinopCall op a1 a2 = PCall (PCall (PIdentifier op) [a1]) [a2]
+mkBinopCall op a1 a2 = PCall (PCall (PIdentifier op) a1) a2
 
-mkCalls f args = foldl (\calls arg -> PCall calls [arg]) (PCall f [head args]) (tail args)
+mkCalls f args = foldl (\calls arg -> PCall calls arg) (PCall f (head args)) (tail args)
 
 mkFunc params body =
   let par = if null params then PVoidType else head params
@@ -106,7 +106,7 @@ Exprs   : {- nothing -}    { [] }
 -- expression rules
 Call   :: { Expr }
         : Expr '(' Exprs ')'    { mkCalls $1 $3 }
-        | Expr '`' Expr Expr    { PCall (PCall $3 [$1]) [$4] }
+        | Expr '`' Expr Expr    { PCall (PCall $3 $1) $4 }
 
 Assign :: { Expr }
         : id '=' Expr      { PAssign (PIdentifier $1) $3 }
@@ -203,7 +203,7 @@ data Expr = PList [Expr]
           | PIf Expr Expr Expr
           | PAssign Expr Expr -- PIdentifier!
           | PFunc Type Expr -- PFuncType!
-          | PCall Expr [Expr] -- PIdentifier!
+          | PCall Expr Expr -- PIdentifier!
           | PReturn Expr
 
           | PInteger Int
