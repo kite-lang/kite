@@ -8,10 +8,11 @@ mkBinopCall op a1 a2 = PCall (PCall (PIdentifier op) [a1]) [a2]
 
 mkCalls f args = foldl (\calls arg -> PCall calls [arg]) (PCall f [head args]) (tail args)
 
-mkFunc (PFuncType params ret) body =
-  let ini = PFunc (PFuncType [head params] (PFreeType "t"))
+mkFunc params body =
+  let par = if null params then PVoidType else head params
+      ini = PFunc (PFuncType par (PFreeType "t"))
       fns = foldl (\fn param ->
-                    fn . (PFunc (PFuncType [param] (PFreeType "t")))
+                    fn . PFunc (PFuncType param (PFreeType "t"))
                   ) ini (tail params)
   in fns body
 }
@@ -140,7 +141,7 @@ Type   :: { Type }
         | floatTy          { PFloatType }
         | stringTy         { PStringType }
         | '[' Type ']'     { PListType $2 }
-        | FuncType         { $1 }
+--        | FuncType         { $1 }
         | id               { PFreeType $1 }
 
 -- support both single expr and blocks
@@ -150,12 +151,12 @@ If     :: { Expr }
 
 -- functions
 Func   :: { Expr }
-        : FuncSignature FuncBlock        { mkFunc $1 $2 }
+        : FuncSignature FuncBlock        { mkFunc (fst $1) $2 }
 
 -- func literal
-FuncSignature :: { Type }
-         : '|' Parameters '|' '->'       { PFuncType $2 (PFreeType "t") }
-         | '|' Parameters '|' '->' Type  { PFuncType $2 $5 }
+FuncSignature :: { ([Type], Type) }
+         : '|' Parameters '|' '->'       { ($2, PFreeType "t") }
+         | '|' Parameters '|' '->' Type  { ($2, $5) }
 
 -- named arguments
 Parameters :: { [Type] }
@@ -169,8 +170,8 @@ Parameter :: { Type }
          | id ':' Type     { PTypeArg $3 (PIdentifier $1) }
 
 -- func signature
-FuncType  :: { Type }
-           : '|' TypeList '|' '->' Type { PFuncType $2 $5 }
+-- FuncType  :: { Type }
+--            : '|' TypeList '|' '->' Type { mkFuncType $2 $5 }
 
 -- just type
 TypeList :: { [Type] }
@@ -213,22 +214,22 @@ data Expr = PList [Expr]
           deriving (Show, Eq)
 
 data Type = PListType Type
-          | PFuncType [Type] Type
+          | PFuncType Type Type
           | PBoolType
           | PIntegerType
           | PFloatType
           | PStringType
           | PTypeArg Type Expr -- PIdentifier!
-
           | PFreeType String
+          | PVoidType
           deriving (Eq)
 
 instance Show Type where
   show (PListType ty)        = printf "[%s]" $ show ty
-  show (PFuncType [] ty)     = printf "(_ -> %s)" $ show ty
-  show (PFuncType params ty) = printf "(%s -> %s)" (intercalate ", " (map show params)) (show ty)
+  show (PFuncType param ret) = printf "(%s -> %s)" (show param) (show ret)
   show PBoolType             = "Bool"
   show PIntegerType          = "Int"
+  show PVoidType             = "Void"
   show PFloatType            = "Float"
   show PStringType           = "String"
   show (PFreeType id)        = id

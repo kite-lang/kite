@@ -45,9 +45,9 @@ runTC f = runState (runErrorT f) Environment { sym = [initSymbols],
                                                symCount = Map.size initSymbols,
                                                returns = [] }
 
-mkIndexSignature n = let t = PFreeType ("lt" ++ n) in PFuncType [PListType t] (PFuncType [PIntegerType] t)
-mkBinopSignature n = let t = PFreeType ("t" ++ n) in PFuncType [t] (PFuncType [t] t)
-mkBoolBinopSignature n = let t = PFreeType ("t" ++ n) in PFuncType [t] (PFuncType [t] PBoolType)
+mkIndexSignature n = let t = PFreeType ("lt" ++ n) in PFuncType (PListType t) (PFuncType PIntegerType t)
+mkBinopSignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t t)
+mkBoolBinopSignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t PBoolType)
 
 initSymbols = do
   let ops = ["+", "-", "*", "/", "%"]
@@ -118,10 +118,10 @@ instance Types TypeEnvironment where
 instance Types Type where
   ftv (PFreeType ide) = Set.singleton ide
   ftv (PListType t) = ftv t
-  ftv (PFuncType tParams tRet) = ftv tParams `Set.union` ftv tRet
+  ftv (PFuncType tParam tRet) = ftv tParam `Set.union` ftv tRet
   ftv _ = Set.empty
   apply s (PFreeType ide) = fromMaybe (PFreeType ide) (Map.lookup ide s)
-  apply s (PFuncType tParams tRet) = PFuncType (apply s tParams) (apply s tRet)
+  apply s (PFuncType tParam tRet) = PFuncType (apply s tParam) (apply s tRet)
   apply s (PListType t) = PListType (apply s t)
   apply s t = t
 
@@ -175,11 +175,20 @@ infer env (PBlock StandardBlock exprs) = do
 infer env (PBlock FuncBlock exprs) = do
   pushSymFrame
   pushReturnFrame
+
   forM_ exprs (infer env)
   (s, t) <- infer env (last exprs)
   e <- get
+  let rets = returns e
+      implicit = apply s t
+      valid = all (==implicit) (head rets)
+
+  unless valid
+    (throwRE $ printf "Varying return types")
+
   popSymFrame
   popReturnFrame
+
   return (s, apply s t)
 
 infer (TypeEnvironment env) (PIdentifier ide) = do
@@ -227,14 +236,13 @@ infer env (PIf cond conseq alt) = do
   return (s0 `composeSubst` s1 `composeSubst` s2 `composeSubst` s3 `composeSubst` s4, apply s4 tyConseq)
 
 -- TODO: check return type(?)
-infer env (PFunc (PFuncType params ret) body) = do
-  let param = head params
+infer env (PFunc (PFuncType param ret) body) = do
   tParam <- freshFtv "t"
   let PTypeArg _ (PIdentifier ide) = param
       TypeEnvironment env' = remove env ide
       env'' = TypeEnvironment (Map.insert ide (Scheme [] tParam) env')
   (s1, t1) <- infer env'' body
-  return (s1, PFuncType [apply s1 tParam] t1)
+  return (s1, PFuncType (apply s1 tParam) t1)
 
 infer env (PCall expr args) = do
   fresh <- freshFtv "t"
@@ -243,8 +251,8 @@ infer env (PCall expr args) = do
       arg = head args
   (sArg, tArg) <- infer env' arg
 
-  s3 <- unify (PFuncType [tArg] fresh) (apply sArg tFn)
-  
+  s3 <- unify (PFuncType tArg fresh) (apply sArg tFn)
+
   return (sFn `composeSubst` sArg `composeSubst` s3, apply s3 fresh)
 
 infer (TypeEnvironment env) (PAssign (PIdentifier ide) expr) = do
@@ -276,8 +284,8 @@ unify (PFreeType ide) tb = varBind ide tb
 unify (PListType ta) (PListType tb) = unify ta tb
 
 -- functions
-unify (PFuncType paramsA ra) (PFuncType paramsB rb) = do
-  sParam <- unify (head paramsB) (head paramsA)
+unify (PFuncType paramA ra) (PFuncType paramB rb) = do
+  sParam <- unify paramB paramA
   s2 <- unify (apply sParam ra) (apply sParam rb)
   return (s2 `composeSubst` sParam)
 

@@ -55,11 +55,8 @@ typeCheckTests =
     , testE "Reference"
       Nothing "one = 1; two = 1 + one;"
 
-    , testE "No return statements"
-      (Just TypeE) "f = |a: Int| -> Int { 2 }"
-
     , testE "Varying return types"
-      (Just TypeE) "f = |a: Int| -> Int { return 2; return 2.0 }"
+      (Just TypeE) "f = |a: Int| -> Int { return 2; 2.0 }"
 
     , testE "Reference not defined"
       (Just RefE) "two = 1 + one"
