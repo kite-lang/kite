@@ -1,4 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-missing-signatures #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Kite.TypeCheck where
 
@@ -41,7 +42,8 @@ throwAE ide exp got = throwError . ArityError $ printf
 -- INTERFACE
 -------------------
 runTC f = runState (runErrorT f) Environment { sym = [initSymbols],
-                                               symCount = Map.size initSymbols }
+                                               symCount = Map.size initSymbols,
+                                               returns = [] }
 
 mkIndexSignature n = let t = PFreeType ("lt" ++ n) in PFuncType [PListType t] (PFuncType [PIntegerType] t)
 mkBinopSignature n = let t = PFreeType ("t" ++ n) in PFuncType [t] (PFuncType [t] t)
@@ -72,7 +74,25 @@ type Frame = Map.Map Name Type
 type Stack = [Frame]
 
 data Environment = Environment { sym :: Stack,
-                                 symCount :: Int}
+                                 symCount :: Int,
+                                 returns :: [[Type]] }
+
+-- environment manipulation
+pushReturnFrame = do
+  env <- get
+  put env{returns = [] : returns env}
+
+popReturnFrame = do
+  env <- get
+  put env{returns = tail (returns env)}
+
+pushSymFrame = do
+  env <- get
+  put env{sym = Map.empty:sym env}
+
+popSymFrame = do
+  env <- get
+  put env{sym = tail (sym env)}
 
 instance Show Environment where
   show env = "Top symbol frame\n" ++ foldl (\acc (n, v) -> acc ++ n ++ ":\t" ++ show v ++ "\n") "" (Map.toList . head . sym $ env)
@@ -141,19 +161,6 @@ nullSubst = Map.empty
 
 composeSubst s1 s2 = Map.map (apply s1) s2 `Map.union` s1
 
-popSymF :: TC ()
-popSymF = do
-  env <- get
-  put env{sym = tail (sym env)}
-
-pushEmptySymF :: TC ()
-pushEmptySymF = pushSymF Map.empty
-
-pushSymF :: Frame -> TC ()
-pushSymF f = do
-  env <- get
-  put env{sym = f:sym env}
-
 infer :: TypeEnvironment -> Expr -> TC (Substitution, Type)
 
 infer _ (PInteger _) = return (nullSubst, PIntegerType)
@@ -166,11 +173,14 @@ infer env (PBlock StandardBlock exprs) = do
   return (nullSubst, PBoolType)
 
 infer env (PBlock FuncBlock exprs) = do
-  pushEmptySymF
-  forM_ (init exprs) (infer env)
+  pushSymFrame
+  pushReturnFrame
+  forM_ exprs (infer env)
   (s, t) <- infer env (last exprs)
-  popSymF
-  return (s, t)
+  e <- get
+  popSymFrame
+  popReturnFrame
+  return (s, apply s t)
 
 infer (TypeEnvironment env) (PIdentifier ide) = do
   symEnv <- get
@@ -234,15 +244,21 @@ infer env (PCall expr args) = do
   (sArg, tArg) <- infer env' arg
 
   s3 <- unify (PFuncType [tArg] fresh) (apply sArg tFn)
-
+  
   return (sFn `composeSubst` sArg `composeSubst` s3, apply s3 fresh)
 
 infer (TypeEnvironment env) (PAssign (PIdentifier ide) expr) = do
   (s1, t1) <- infer (TypeEnvironment env) expr
   insertSym ide (apply s1 t1)
-  return (nullSubst, apply s1 t1)
+  return (s1, apply s1 t1)
 
-infer env (PReturn expr) = infer env expr
+infer env (PReturn expr) = do
+  (s, t) <- infer env expr
+  env' <- get
+  let top = head (returns env')
+      new = t : top
+  put env'{ returns = new : returns env'}
+  return (s, t)
 
 unify :: Type -> Type -> TC Substitution
 
