@@ -5,7 +5,15 @@ import Kite.Lexer
 import Text.Printf
 
 mkBinopCall op a1 a2 = PCall (PCall (PIdentifier op) [a1]) [a2]
+
 mkCalls f args = foldl (\calls arg -> PCall calls [arg]) (PCall f [head args]) (tail args)
+
+mkFunc (PFuncType params ret) body =
+  let ini = PFunc (PFuncType [head params] (PFreeType "t"))
+      fns = foldl (\fn param ->
+                    fn . (PFunc (PFuncType [param] (PFreeType "t")))
+                  ) ini (tail params)
+  in fns body
 }
 
 %name kiteparser
@@ -86,7 +94,6 @@ Expr   :: { Expr }
         | Func             { $1 }
         | Call             { $1 }
         | If               { $1 }
-        | Index            { $1 }
         | Term             { $1 }
         | '(' Expr ')'     { $2 }
 
@@ -99,9 +106,6 @@ Exprs   : {- nothing -}    { [] }
 Call   :: { Expr }
         : Expr '(' Exprs ')'    { mkCalls $1 $3 }
         | Expr '`' Expr Expr    { PCall (PCall $3 [$1]) [$4] }
-
-Index  :: { Expr }
-        : Expr '#' Expr     { PIndex $1 $3 }
 
 Assign :: { Expr }
         : id '=' Expr      { PAssign (PIdentifier $1) $3 }
@@ -128,6 +132,7 @@ BinOp  :: { Expr }
         | Expr '>' Expr  { mkBinopCall ">" $1 $3 }
         | Expr '>=' Expr { mkBinopCall ">=" $1 $3 }
         | Expr '!=' Expr { mkBinopCall "!=" $1 $3 }
+        | Expr '#' Expr  { mkBinopCall "#" $1 $3 }
 
 Type   :: { Type }
         : boolTy           { PBoolType }
@@ -145,7 +150,7 @@ If     :: { Expr }
 
 -- functions
 Func   :: { Expr }
-        : FuncSignature FuncBlock        { PFunc $1 $2 }
+        : FuncSignature FuncBlock        { mkFunc $1 $2 }
 
 -- func literal
 FuncSignature :: { Type }
@@ -199,7 +204,6 @@ data Expr = PList [Expr]
           | PFunc Type Expr -- PFuncType!
           | PCall Expr [Expr] -- PIdentifier!
           | PReturn Expr
-          | PIndex Expr Expr
 
           | PInteger Int
           | PFloat Float
@@ -220,13 +224,13 @@ data Type = PListType Type
           deriving (Eq)
 
 instance Show Type where
-  show (PListType ty)        = printf "List %s" $ show ty
-  show (PFuncType [] ty)     = printf "() -> %s" $ show ty
-  show (PFuncType params ty) = printf "(%s) -> %s" (intercalate ", " (map show params)) (show ty)
+  show (PListType ty)        = printf "[%s]" $ show ty
+  show (PFuncType [] ty)     = printf "(_ -> %s)" $ show ty
+  show (PFuncType params ty) = printf "(%s -> %s)" (intercalate ", " (map show params)) (show ty)
   show PBoolType             = "Bool"
   show PIntegerType          = "Int"
   show PFloatType            = "Float"
   show PStringType           = "String"
   show (PFreeType id)        = id
-  show (PTypeArg te ty)      = printf "TypeArg %s %s" (show ty) (show te)
+  show (PTypeArg te ty)      = printf "%s: %s" (show ty) (show te)
 }

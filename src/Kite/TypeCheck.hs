@@ -13,7 +13,6 @@ import qualified Data.Map as Map
 import qualified Data.Set as Set
 import Text.Printf
 
-
 -------------------
 -- ERROR HANDLING
 -------------------
@@ -44,6 +43,7 @@ throwAE ide exp got = throwError . ArityError $ printf
 runTC f = runState (runErrorT f) Environment { sym = [initSymbols],
                                                symCount = Map.size initSymbols }
 
+mkIndexSignature n = let t = PFreeType ("lt" ++ n) in PFuncType [PListType t] (PFuncType [PIntegerType] t)
 mkBinopSignature n = let t = PFreeType ("t" ++ n) in PFuncType [t] (PFuncType [t] t)
 mkBoolBinopSignature n = let t = PFreeType ("t" ++ n) in PFuncType [t] (PFuncType [t] PBoolType)
 
@@ -52,14 +52,13 @@ initSymbols = do
       boolOps = ["==", "<", "<=", ">", ">=", "!="]
       opSigs = map (\(op, n) -> (op, mkBinopSignature (show n))) (zip ops [0 .. length ops])
       boolOpSigs = map (\(op, n) -> (op, mkBoolBinopSignature (show n))) (zip boolOps [length ops ..  length ops + length boolOps])
-  Map.fromList (opSigs `union` boolOpSigs)
+      indexSig = mkIndexSignature (show $ length ops + length boolOps + 1)
+  Map.fromList (opSigs `union` boolOpSigs `union` [("#", indexSig)])
 
 typeCheck :: Bool -> Expr -> Either TypeError Environment
 typeCheck debug expr = do
-  --let (r, env) = runTC (typeOf expr)
   let (r, env) = runTC (infer (TypeEnvironment Map.empty) expr)
-  --when debug (traceShow env $ return ())
-  traceShow r $ return ()
+  when debug (traceShow env $ return ())
   case r of
     Right _ -> Right env
     Left err -> Left err
@@ -215,7 +214,7 @@ infer env (PIf cond conseq alt) = do
 
   s4 <- unify (apply s3 tyAlt) (apply s3 tyConseq)
 
-  return (s0 `composeSubst` s1 `composeSubst` s2 `composeSubst` s3 `composeSubst` s4, apply s4 tyConseq)  
+  return (s0 `composeSubst` s1 `composeSubst` s2 `composeSubst` s3 `composeSubst` s4, apply s4 tyConseq)
 
 -- TODO: check return type(?)
 infer env (PFunc (PFuncType params ret) body) = do
@@ -233,31 +232,40 @@ infer env (PCall expr args) = do
   let env' = apply sFn env
       arg = head args
   (sArg, tArg) <- infer env' arg
+
   s3 <- unify (PFuncType [tArg] fresh) (apply sArg tFn)
+
   return (sFn `composeSubst` sArg `composeSubst` s3, apply s3 fresh)
 
 infer (TypeEnvironment env) (PAssign (PIdentifier ide) expr) = do
   (s1, t1) <- infer (TypeEnvironment env) expr
   insertSym ide (apply s1 t1)
   return (nullSubst, apply s1 t1)
+
+infer env (PReturn expr) = infer env expr
+
 unify :: Type -> Type -> TC Substitution
 
+-- primitive base cases
 unify PIntegerType PIntegerType = return nullSubst
 unify PFloatType PFloatType = return nullSubst
 unify PStringType PStringType = return nullSubst
 unify PBoolType PBoolType = return nullSubst
 
+-- free type with any type
 unify ta (PFreeType ide) = varBind ide ta
-
 unify (PFreeType ide) tb = varBind ide tb
 
+-- lists
 unify (PListType ta) (PListType tb) = unify ta tb
 
+-- functions
 unify (PFuncType paramsA ra) (PFuncType paramsB rb) = do
   sParam <- unify (head paramsB) (head paramsA)
   s2 <- unify (apply sParam ra) (apply sParam rb)
   return (s2 `composeSubst` sParam)
 
+-- if nothing matched it's an error
 unify ta tb = throwTE $ printf "Type mismatch in unification (%s and %s)" (show ta) (show tb)
 
 varBind :: Name -> Type -> TC Substitution
