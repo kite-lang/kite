@@ -176,8 +176,10 @@ infer env (PBlock FuncBlock exprs) = do
   pushSymFrame
   pushReturnFrame
 
-  forM_ exprs (infer env)
-  (s, t) <- infer env (last exprs)
+  (s, t) <- foldM (\(s, _) expr -> do
+                      (s', t) <- infer (apply s env) expr
+                      return (s `composeSubst` s', t)
+                  ) (nullSubst, PVoidType) exprs
   e <- get
   let rets = returns e
       implicit = apply s t
