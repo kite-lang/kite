@@ -185,8 +185,7 @@ infer env (PBlock FuncBlock exprs) = do
       implicit = apply s t
       valid = all (==implicit) (head rets)
 
-  unless valid
-    (throwRE $ printf "Varying return types")
+  unless valid (throwRE $ printf "Varying return types")
 
   popSymFrame
   popReturnFrame
@@ -233,7 +232,9 @@ infer env (PIf cond conseq alt) = do
 
   (s3, tyAlt) <- infer env alt
 
-  s4 <- unify (apply s3 tyAlt) (apply s3 tyConseq)
+  let s = s2 `composeSubst` s3
+
+  s4 <- unify (apply s tyAlt) (apply s tyConseq)
 
   return (s0 `composeSubst` s1 `composeSubst` s2 `composeSubst` s3 `composeSubst` s4, apply s4 tyConseq)
 
@@ -244,20 +245,25 @@ infer env (PFunc (PFuncType param ret) body) = do
       TypeEnvironment env' = remove env ide
       env'' = TypeEnvironment (Map.insert ide (Scheme [] tParam) env')
   (s1, t1) <- infer env'' body
-  return (s1, PFuncType (apply s1 tParam) t1)
+  return (s1, apply s1 (PFuncType tParam t1))
 
 infer env (PCall expr arg) = do
+  (sArg, tArg) <- infer env arg
+  (sFn, tFn) <- infer (apply sArg env) expr
+
   fresh <- freshFtv "t"
-  (sFn, tFn) <- infer env expr
-  let env' = apply sFn env
-  (sArg, tArg) <- infer env' arg
+  s3 <- unify (PFuncType (apply sFn tArg) fresh) (apply sFn tFn)
 
-  s3 <- unify (PFuncType tArg fresh) (apply sArg tFn)
-
-  return (sFn `composeSubst` sArg `composeSubst` s3, apply s3 fresh)
+  let s = sFn `composeSubst` sArg `composeSubst` s3
+  return (s, apply s fresh)
 
 infer (TypeEnvironment env) (PAssign (PIdentifier ide) expr) = do
+  fresh <- freshFtv "rec"
+  insertSym ide fresh
+
   (s1, t1) <- infer (TypeEnvironment env) expr
+
+  removeSym ide
   insertSym ide (apply s1 t1)
   return (s1, apply s1 t1)
 
@@ -276,6 +282,7 @@ unify PIntegerType PIntegerType = return nullSubst
 unify PFloatType PFloatType = return nullSubst
 unify PStringType PStringType = return nullSubst
 unify PBoolType PBoolType = return nullSubst
+unify PVoidType PVoidType = return nullSubst
 
 -- free type with any type
 unify ta (PFreeType ide) = varBind ide ta
@@ -297,6 +304,13 @@ varBind :: Name -> Type -> TC Substitution
 varBind ide t | t == PFreeType ide = return nullSubst
               | PFreeType ide == t = return nullSubst
               | otherwise = return $ Map.singleton ide t
+
+removeSym :: String -> TC ()
+removeSym ide = do
+  env <- get
+  let (x:xs) = sym env
+      newF = Map.delete ide x
+  put env{sym = newF:xs}
 
 insertSym :: String -> Type -> TC ()
 insertSym ide val = do
