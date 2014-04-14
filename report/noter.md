@@ -1,6 +1,6 @@
 # Language design
 ## Functional paradigm
-HoF as central part of language. All functions take one argument. 
+Functions as first-class citizens. All functions take one argument. No named functions, only lambdas bound to names. 
 
 
 # Parsing
@@ -9,7 +9,7 @@ Shift-reduce parsing via Happy. Grammar in BNF format.
 
 # Type inference
 ## Hindley-Milner
-Basically uses extended lambda calculus. Easier to understand and implement if using one-parameter functions, thus using higher-order functions to simulate multi-parameter functions.
+Basically uses extended lambda calculus. Easier to understand and implement if using one-parameter functions, thus using higher-order functions to simulate multi-parameter functions. Invites us to allow partial application.
 
 Functional style implementation uses substitutions instead of mutable global state.
 
