@@ -20,7 +20,7 @@ emit :: Expr -> Source
 
 emit (PInteger val) = show val
 emit (PFloat val) = show val
-emit (PString val) = val
+emit (PString val) = "\"" ++ val ++ "\""
 emit (PBool val) = if val then "true" else "false"
 
 emit (PIdentifier ide) = ide

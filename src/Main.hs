@@ -38,6 +38,6 @@ main = do
   let analysis = Kt.analyze debugOutput ast
   case analysis of
     Right _ -> Kjs.codegen ast >>= putStrLn
-    Left _ -> putStrLn "An error :("
+    Left err -> putStrLn ("Error: " ++ show err)
 
   where prettyPrint = putStrLn . ppShow
