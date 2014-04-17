@@ -8,9 +8,6 @@ mkBinopCall op a1 a2 = PCall (PCall (PIdentifier op) a1) a2
 
 mkCalls f args = foldl PCall (PCall f (head args)) (tail args)
 
---- |x, y, z| -> { x + y + z }
---- |x| -> { return |y| -> { return |z| -> { x + y } } }
-
 mkFunc params body =
   let ini = PFunc (PFuncType (head params) (PFreeType "t"))
       fns = foldl (\fn param ->
@@ -79,7 +76,8 @@ mkFuncBlock exprs =
         ';'                { TSymbol _ ';' }
 
 %right in
-%nonassoc '==' '<' '<=' '>' '>=' '!=' '&&' '||'
+%nonassoc '&&' '||'
+%nonassoc '==' '<' '<=' '>' '>=' '!='
 %left '+' '-'
 %left '*' '/' '%'
 
