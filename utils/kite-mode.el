@@ -65,10 +65,10 @@
 ;; keywords
 (defvar kite-keywords
   '(("return\\|import\\|if\\|then\\|else" . font-lock-keyword-face)
-    ("False\\|True\\|[0-9]\\(\\.[0-9]*\\)?" . font-lock-constant-face)
-    ("->" . font-lock-function-name-face)
+    ("[a-z][a-zA-Z0-9_']*" . font-lock-variable-name-face)
     ("[A-Z][a-zA-Z0-9_']*" . font-lock-type-face)
-    ("[a-z][a-zA-Z0-9_']*" . font-lock-variable-name-face)))
+    ("False\\|True\\|[0-9]\\(\\.[0-9]*\\)?" . font-lock-constant-face)
+    ("->" . font-lock-function-name-face)))
 
 ;; syntax table
 (defvar kite-syntax-table nil "Syntax table for `kite-mode'.")

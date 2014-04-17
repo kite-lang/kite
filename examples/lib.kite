@@ -93,6 +93,10 @@ any = |p, xs| -> {
   fold (|acc, x| -> { acc || p (x) }, False, xs)
 }
 
+flatten = |xs| -> {
+  fold1 (|ls, x| -> { ls ++ x }, xs)
+}
+
 contains = |el, xs| -> {
   any (|x| -> { x == el}, xs)
 }
