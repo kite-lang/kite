@@ -74,13 +74,13 @@ filter = |f, xs| -> {
 }
 
 take = |n, xs| -> {
-  if (n <= 0) || empty (xs)
+  if n <= 0 || empty (xs)
     then []
     else [head (xs)] ++ take (n - 1, tail (xs))
 }
 
 drop = |n, xs| -> {
-  if (n <= 0) || empty (xs)
+  if n <= 0 || empty (xs)
     then xs
     else drop (n - 1, tail (xs))
 }
@@ -101,6 +101,34 @@ contains = |el, xs| -> {
   any (|x| -> { x == el}, xs)
 }
 
+rangeStep = |from, to, step| -> {
+  inner = |from, to, ls| -> {
+    if from > to
+      then ls
+      else [from] ++ inner (from + step, to, ls)
+  }
+  inner(from, to, [])
+}
+
+range = |from, to| -> {
+  rangeStep (from, to, 1)
+}
+
+reverse = |xs| -> {
+  if empty (xs)
+    then []
+    else reverse (tail (xs)) ++ [head (xs)]
+}
+
+-- quicksort
+sort = |xs| -> {
+  if empty (xs)
+    then []
+    else sort (filter (|x| -> { x < head (xs) }, tail (xs)))
+         ++ [head (xs)]
+         ++ sort (filter (|x| -> { x >= head (xs) }, tail (xs)))
+}
+
 -- numeric
 sum = |xs| -> {
   fold (|acc, n| -> { acc + n }, 0, xs)
@@ -110,30 +138,36 @@ product = |xs| -> {
   fold (|acc, n| -> { acc * n }, 1, xs)
 }
 
-min = |xs| -> {
-  fold1 (|acc, x| -> { if x < acc then x else acc }, xs)
+min = |a, b| -> {
+  if a < b then a else b
 }
 
-max = |xs| -> {
-  fold1 (|acc, x| -> { if x > acc then x else acc }, xs)
+max = |a, b| -> {
+  if a > b then a else b
 }
 
--------------------------------
-fib = |n| -> {
-  if n < 2
-    then n
-    else fib(n - 1) + fib(n - 2)
+minimum = |xs| -> {
+  fold1 (min, xs)
 }
 
-quicksort = |xs| -> {
-  if empty (xs)
-    then []
-    else quicksort(filter (|x| -> { x < head (xs) }, tail (xs)))
-         ++ [head (xs)]
-         ++ quicksort(filter (|x| -> { x >= head (xs) }, tail (xs)))
+maximum = |xs| -> {
+  fold1 (max, xs)
 }
 
-main = |meh| -> {
-  print (fib (10))
-  print (quicksort ([4, 5, 3, 7, 5, 0]))
+-- some testing
+isPrime = |n, ps| -> {
+  if n == 2
+    then True
+    else not (any (|x| -> { (n % x) == 0 }, ps))
+}
+
+primes = |lim| -> {
+  fold (|ps, n| -> { if isPrime (n, ps) then [n] ++ ps else ps }, [2], rangeStep(3, lim, 2))
+}
+
+main = |a| -> {
+  print (sort ([4, 5, 3, 7, 5, 0]))
+  print (flatten ([[1, 2], [3, 4]]))
+  print (length (primes (250)))
+  print (reverse ([1, 2, 3, 4]))
 }
