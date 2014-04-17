@@ -16,6 +16,10 @@ not = |p| -> {
   if p then False else True
 }
 
+even = |x| -> { x % 2 == 0 }
+
+odd = |x| -> { not (even (x)) }
+
 -- list functions
 empty = |xs| -> {
     length (xs) == 0
@@ -55,6 +59,12 @@ fold = |f, acc, xs| -> {
     else fold (f, f (acc, head (xs)), tail (xs))
 }
 
+fold1 = |f, xs| -> {
+  if empty (xs)
+    then head (xs) -- TODO: needs an error function
+    else fold (f, head (xs), tail (xs))
+}
+
 filter = |f, xs| -> {
   if empty (xs)
     then []
@@ -63,11 +73,46 @@ filter = |f, xs| -> {
            else filter (f, tail (xs))
 }
 
--- short cuts
+take = |n, xs| -> {
+  if (n <= 0) || empty (xs)
+    then []
+    else [head (xs)] ++ take (n - 1, tail (xs))
+}
+
+drop = |n, xs| -> {
+  if (n <= 0) || empty (xs)
+    then xs
+    else drop (n - 1, tail (xs))
+}
+
+all = |p, xs| -> {
+  fold (|acc, x| -> { acc && p (x) }, True, xs)
+}
+
+any = |p, xs| -> {
+  fold (|acc, x| -> { acc || p (x) }, False, xs)
+}
+
+contains = |el, xs| -> {
+  any (|x| -> { x == el}, xs)
+}
+
+-- numeric
 sum = |xs| -> {
   fold (|acc, n| -> { acc + n }, 0, xs)
 }
 
+product = |xs| -> {
+  fold (|acc, n| -> { acc * n }, 1, xs)
+}
+
+min = |xs| -> {
+  fold1 (|acc, x| -> { if x < acc then x else acc }, xs)
+}
+
+max = |xs| -> {
+  fold1 (|acc, x| -> { if x > acc then x else acc }, xs)
+}
 
 -------------------------------
 fib = |n| -> {
@@ -85,6 +130,6 @@ quicksort = |xs| -> {
 }
 
 main = |meh| -> {
+  print (fib (10))
   print (quicksort ([4, 5, 3, 7, 5, 0]))
 }
-
