@@ -50,15 +50,18 @@ mkIndexSignature n = let t = PFreeType ("lt" ++ n) in PFuncType (PListType t) (P
 mkConcatSignature n = let t = PFreeType ("ltt" ++ n) in PFuncType (PListType t) (PFuncType (PListType t) (PListType t))
 mkBinopSignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t t)
 mkBoolBinopSignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t PBoolType)
+mkBool2BoolBinopSignature = PFuncType PBoolType (PFuncType PBoolType PBoolType)
 
 initSymbols = do
   let ops = ["KT_BIN_ADD", "KT_BIN_SUB", "KT_BIN_MUL", "KT_BIN_DIV", "KT_BIN_MOD"]
       boolOps = ["KT_BIN_EQ", "KT_BIN_LT", "KT_BIN_LTE", "KT_BIN_GT", "KT_BIN_GTE", "KT_BIN_NEQ"]
+      bool2boolOps = ["KT_LAND", "KT_LOR"]
       opSigs = map (\(op, n) -> (op, mkBinopSignature (show n))) (zip ops [0 .. length ops])
       boolOpSigs = map (\(op, n) -> (op, mkBoolBinopSignature (show n))) (zip boolOps [length ops ..  length ops + length boolOps])
       indexSig = mkIndexSignature (show $ length ops + length boolOps + 1)
       concatSig = mkConcatSignature (show $ length ops + length boolOps + 2)
-  Map.fromList (opSigs `union` boolOpSigs `union` [("KT_BIN_IDX", indexSig)] `union` [("KT_CONCAT", concatSig)])
+      bool2bool = map (\op -> (op, mkBool2BoolBinopSignature)) bool2boolOps
+  Map.fromList (opSigs `union` boolOpSigs `union` [("KT_BIN_IDX", indexSig)] `union` [("KT_CONCAT", concatSig)] `union` bool2bool)
 
 typeCheck :: Bool -> Expr -> Either TypeError Expr
 typeCheck debug expr = do

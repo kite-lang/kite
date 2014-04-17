@@ -47,6 +47,8 @@ mkFuncBlock exprs =
         '/'                { TBinOp _ "/" }
         '%'                { TBinOp _ "%" }
         '=='               { TBinOp _ "==" }
+        '||'               { TBinOp _ "||" }
+        '&&'               { TBinOp _ "&&" }
         '<'                { TBinOp _ "<" }
         '<='               { TBinOp _ "<=" }
         '>'                { TBinOp _ ">" }
@@ -77,7 +79,7 @@ mkFuncBlock exprs =
         ';'                { TSymbol _ ';' }
 
 %right in
-%nonassoc '==' '<' '<=' '>' '>=' '!='
+%nonassoc '==' '<' '<=' '>' '>=' '!=' '&&' '||'
 %left '+' '-'
 %left '*' '/' '%'
 
@@ -138,6 +140,8 @@ BinOp  :: { Expr }
         | Expr '/' Expr  { mkBinopCall "KT_BIN_DIV" $1 $3 }
         | Expr '%' Expr  { mkBinopCall "KT_BIN_MOD" $1 $3 }
         | Expr '==' Expr { mkBinopCall "KT_BIN_EQ" $1 $3 }
+        | Expr '&&' Expr { mkBinopCall "KT_LAND" $1 $3 }
+        | Expr '||' Expr { mkBinopCall "KT_LOR" $1 $3 }
         | Expr '<' Expr  { mkBinopCall "KT_BIN_LT" $1 $3 }
         | Expr '<=' Expr { mkBinopCall "KT_BIN_LTE" $1 $3 }
         | Expr '>' Expr  { mkBinopCall "KT_BIN_GT" $1 $3 }
