@@ -35,6 +35,9 @@ main = do
   let ast = Kt.parse tokens
   when parOutput (prettyPrint ast)
 
-  either print (const $ print "Type check passed") (Kt.analyze debugOutput ast)
-  print (Kjs.emit "" ast)
-    where prettyPrint = putStrLn . ppShow
+  let analysis = Kt.analyze debugOutput ast
+  case analysis of
+    Right _ -> Kjs.codegen ast >>= putStrLn
+    Left _ -> putStrLn "An error :("
+
+  where prettyPrint = putStrLn . ppShow

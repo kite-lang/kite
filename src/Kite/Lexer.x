@@ -12,7 +12,7 @@ $alphaNum		= [$alpha $digit]
 $symbols		= [\(\)\{\}\[\]\;\,\:]
 
 @keywords		= return | import | if | then | else | yolo
-@binops	                = "+" | "-" | "/" | "*" | "%" | "==" | "<" | "<=" | ">" | ">=" | "!="
+@binops	                = "++" | "+" | "-" | "/" | "*" | "%" | "==" | "<" | "<=" | ">" | ">=" | "!="
 @operators		= "=" | "#" | "->" | "|" | "`"
 @string                 = \" (. # \")* \"
 @identifier		= $downcase [$alphaNum \_ \' \! \?]*

@@ -6,15 +6,23 @@ import Text.Printf
 
 mkBinopCall op a1 a2 = PCall (PCall (PIdentifier op) a1) a2
 
-mkCalls f args = foldl (\calls arg -> PCall calls arg) (PCall f (head args)) (tail args)
+mkCalls f args = foldl PCall (PCall f (head args)) (tail args)
+
+--- |x, y, z| -> { x + y + z }
+--- |x| -> { return |y| -> { return |z| -> { x + y } } }
 
 mkFunc params body =
-  let par = if null params then PVoidType else head params
-      ini = PFunc (PFuncType par (PFreeType "t"))
+  let ini = PFunc (PFuncType (head params) (PFreeType "t"))
       fns = foldl (\fn param ->
-                    fn . PFunc (PFuncType param (PFreeType "t"))
+                    fn . PReturn . PFunc (PFuncType param (PFreeType "t"))
                   ) ini (tail params)
   in fns body
+
+mkFuncBlock exprs =
+  case last exprs of
+    PReturn _ -> PBlock FuncBlock exprs
+    _ -> PBlock FuncBlock (init exprs ++ [PReturn (last exprs)])
+
 }
 
 %name kiteparser
@@ -32,6 +40,7 @@ mkFunc params body =
         boolTy             { TType _ "Bool" }
         id                 { TIdentifier _ $$ }
 
+        '++'               { TBinOp _ "++" }
         '+'                { TBinOp _ "+" }
         '-'                { TBinOp _ "-" }
         '*'                { TBinOp _ "*" }
@@ -116,24 +125,25 @@ StandardBlock :: { Expr }
                : '{' Stmts '}'    { PBlock StandardBlock $2 }
 
 FuncBlock :: { Expr }
-           : '{' Stmts '}'    { PBlock FuncBlock $2 }
+           : '{' Stmts '}'    { mkFuncBlock $2 }
 
 List   :: { Expr }
 List    : '[' Exprs ']'    { PList $2 }
 
 BinOp  :: { Expr }
-        : Expr '+' Expr  { mkBinopCall "+" $1 $3 }
-        | Expr '-' Expr  { mkBinopCall "-" $1 $3 }
-        | Expr '*' Expr  { mkBinopCall "*" $1 $3 }
-        | Expr '/' Expr  { mkBinopCall "/" $1 $3 }
-        | Expr '%' Expr  { mkBinopCall "%" $1 $3 }
-        | Expr '==' Expr { mkBinopCall "==" $1 $3 }
-        | Expr '<' Expr  { mkBinopCall "<" $1 $3 }
-        | Expr '<=' Expr { mkBinopCall "<=" $1 $3 }
-        | Expr '>' Expr  { mkBinopCall ">" $1 $3 }
-        | Expr '>=' Expr { mkBinopCall ">=" $1 $3 }
-        | Expr '!=' Expr { mkBinopCall "!=" $1 $3 }
-        | Expr '#' Expr  { mkBinopCall "#" $1 $3 }
+        : Expr '+' Expr  { mkBinopCall "KT_BIN_ADD" $1 $3 }
+        | Expr '++' Expr { mkBinopCall "KT_CONCAT" $1 $3 }
+        | Expr '-' Expr  { mkBinopCall "KT_BIN_SUB" $1 $3 }
+        | Expr '*' Expr  { mkBinopCall "KT_BIN_MUL" $1 $3 }
+        | Expr '/' Expr  { mkBinopCall "KT_BIN_DIV" $1 $3 }
+        | Expr '%' Expr  { mkBinopCall "KT_BIN_MOD" $1 $3 }
+        | Expr '==' Expr { mkBinopCall "KT_BIN_EQ" $1 $3 }
+        | Expr '<' Expr  { mkBinopCall "KT_BIN_LT" $1 $3 }
+        | Expr '<=' Expr { mkBinopCall "KT_BIN_LTE" $1 $3 }
+        | Expr '>' Expr  { mkBinopCall "KT_BIN_GT" $1 $3 }
+        | Expr '>=' Expr { mkBinopCall "KT_BIN_GTE" $1 $3 }
+        | Expr '!=' Expr { mkBinopCall "KT_BIN_NEQ" $1 $3 }
+        | Expr '#' Expr  { mkBinopCall "KT_BIN_IDX" $1 $3 }
 
 Type   :: { Type }
         : boolTy           { PBoolType }

@@ -1,35 +1,50 @@
 module Kite.JSEmit where
 
-import Control.Monad.State
-import Data.List
+import Control.Monad
+import Text.Printf
 
 import Kite.Parser
 
 type Source = String
 
-emit :: Source -> Expr -> Source
+runtime = readFile "js/kt_runtime.js"
 
-emit src (PInteger val) = show val
+codegen :: Expr -> IO Source
+codegen expr = do
+  r <- runtime
+  let r' = filter (not . (=='\n')) r
+  return (emit expr ++ r' ++ "main();")
+--codegen expr = liftM2 (++)  runtime (return (emit expr))
 
-emit src (PFunc (PFuncType params tRet) body) =
-  let params' = concatMap (\p -> case p of
-                              PTypeArg _ (PIdentifier ide) -> ide) params
-  in src ++ "function(" ++ params' ++ ") {" ++ emit "" body ++ "}"
+emit :: Expr -> Source
 
-emit src (PAssign (PIdentifier ide) expr) =
-  src ++ ide ++ " = " ++ emit src expr ++ ";"
+emit (PInteger val) = show val
+emit (PFloat val) = show val
+emit (PString val) = val
+emit (PBool val) = if val then "true" else "false"
 
-emit src (PBlock StandardBlock exprs) =
-  foldl emit src exprs
+emit (PIdentifier ide) = ide
 
-emit src (PBlock FuncBlock exprs) =
-  foldl emit src exprs
+emit (PList elems) = printf "[%s]" (emitAll "," elems)
 
-emit src (PReturn expr) =
-  src ++ "return " ++ emit src expr ++ ";"
+emit (PIf cond conseq alt) =
+  printf "KT_IF(function() { return %s; })(function() { return %s; })(function() { return %s; })" (emit cond) (emit conseq) (emit alt)
 
-emit src (PIdentifier ide) = ide
+emit (PFunc (PFuncType param _) body) =
+  let PTypeArg _ (PIdentifier ide) = param
+  in printf "(function(%s) {%s})" ide (emit body)
 
-emit src (PCall expr args) =
-  let args' = map (emit "") args
-  in emit "" expr ++ "(" ++ (intercalate "," args') ++ ");"
+emit (PAssign (PIdentifier ide) expr) =
+  printf "var %s = %s" ide (emit expr)
+
+emit (PBlock _ exprs) =
+  emitAll ";" exprs
+
+emit (PReturn expr) =
+  "return " ++ emit expr
+
+emit (PCall expr arg) =
+  printf "%s(%s)" (emit expr) (emit arg)
+
+emitAll :: String -> [Expr] -> Source
+emitAll delim = foldl (\acc x -> acc ++ emit x ++ delim) ""
