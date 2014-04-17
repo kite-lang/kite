@@ -1,0 +1,90 @@
+-- dummy
+length = |xs| -> {
+  (xs # 1) + 1
+}
+
+slice  = |xs, from, to| -> {
+  [xs # (1 + from + to)]
+}
+
+print = |str| -> { str }
+
+-- utils
+id = |x| -> { x }
+
+not = |p| -> {
+  if p then False else True
+}
+
+-- list functions
+empty = |xs| -> {
+    length (xs) == 0
+}
+
+head = |xs| -> {
+    xs # 0
+}
+
+tail = |xs| -> {
+  if empty (xs)
+    then []
+    else slice (xs, 1, length (xs))
+}
+
+last = |xs| -> {
+  if length (xs) == 1
+    then last (tail (xs))
+    else head (xs)
+}
+
+init = |xs| -> {
+  if empty (xs)
+    then []
+    else slice (xs, 0, length (xs) - 1)
+}
+
+map = |f, xs| -> {
+  if empty (xs)
+    then []
+    else [f (head (xs))] ++ map (f, tail (xs))
+}
+
+fold = |f, acc, xs| -> {
+  if empty (xs)
+    then acc
+    else fold (f, f (acc, head (xs)), tail (xs))
+}
+
+filter = |f, xs| -> {
+  if empty (xs)
+    then []
+    else if f (head (xs))
+           then [head (xs)] ++ filter (f, tail (xs))
+           else filter (f, tail (xs))
+}
+
+-- short cuts
+sum = |xs| -> {
+  fold (|acc, n| -> { acc + n }, 0, xs)
+}
+
+
+-------------------------------
+fib = |n| -> {
+  if n < 2
+    then n
+    else fib(n - 1) + fib(n - 2)
+}
+
+quicksort = |xs| -> {
+  if empty (xs)
+    then []
+    else quicksort(filter (|x| -> { x < head (xs) }, tail (xs)))
+         ++ [head (xs)]
+         ++ quicksort(filter (|x| -> { x >= head (xs) }, tail (xs)))
+}
+
+main = |meh| -> {
+  print (quicksort ([4, 5, 3, 7, 5, 0]))
+}
+
