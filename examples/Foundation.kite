@@ -1,13 +1,4 @@
--- dummy
-length = |xs| -> {
-  (xs # 1) + 1
-}
 
-slice  = |xs, from, to| -> {
-  [xs # (1 + from + to)]
-}
-
-print = |str| -> { str }
 
 -- functional
 id = |x| -> { x }
@@ -18,14 +9,15 @@ compose = |f, g| -> {
   }
 }
 
+flip = |f, x, y| -> {
+  f (y, x)
+}
+
 not = |p| -> {
   if p then False else True
 }
 
-even = |x| -> { x % 2 == 0 }
-
-odd = not `compose even
-
+-- misc
 until = |p, f, x| -> {
   if p (x)
     then x
@@ -38,11 +30,11 @@ while = |p, f, x| -> {
 
 -- list functions
 empty = |xs| -> {
-    length (xs) == 0
+  length (xs) == 0
 }
 
 head = |xs| -> {
-    xs # 0
+  xs # 0
 }
 
 tail = |xs| -> {
@@ -102,13 +94,11 @@ drop = |n, xs| -> {
 }
 
 and = |xs| -> {
-  fold (|acc, x| -> { acc && x }, True, xs)
-  --fold ((&&), True, xs)
+  fold ((&&), True, xs)
 }
 
 or = |xs| -> {
-  fold (|acc, x| -> { acc || x }, False, xs)
-  --fold ((||), False, xs)
+  fold ((||), False, xs)
 }
 
 all = |p, xs| -> {
@@ -120,17 +110,11 @@ any = |p, xs| -> {
 }
 
 flatten = |xs| -> {
-  fold1 (|ls, x| -> { ls ++ x }, xs)
-  --fold1 ((++), xs)
-}
-
-flip = |f, x, y| -> {
-  f (y, x)
+  fold1 ((++), xs)
 }
 
 contains = |el, xs| -> {
-  any (|x| -> { x == el}, xs)
-  --any ((==)(el), xs)
+  any ((==)(el), xs)
 }
 
 rangeStep = |from, to, step| -> {
@@ -156,9 +140,9 @@ reverse = |xs| -> {
 sort = |xs| -> {
   if empty (xs)
     then []
-    else sort (filter (|x| -> { x < head (xs) }, tail (xs)))
+    else sort (filter (flip ((<)) (head (xs)), tail (xs)))
          ++ [head (xs)]
-         ++ sort (filter (|x| -> { x >= head (xs) }, tail (xs)))
+         ++ sort (filter (flip ((>=)) (head (xs)), tail (xs)))
 }
 
 -- numeric
@@ -185,3 +169,7 @@ minimum = |xs| -> {
 maximum = |xs| -> {
   fold1 (max, xs)
 }
+
+even = (==) (0) `compose flip ((%)) (2)
+
+odd = not `compose even

@@ -28,7 +28,7 @@ codegen :: Expr -> IO Source
 codegen expr = do
   r <- runtime
   let r' = filter (not . (=='\n')) r
-  return (emit expr ++ r' ++ "main();")
+  return (r' ++ emit expr ++ "main();")
 
 emit :: Expr -> Source
 
