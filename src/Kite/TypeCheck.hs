@@ -49,27 +49,20 @@ runTC expr f = runState (runErrorT f) Environment { sym = [initSymbols],
 mkIndexSignature n = let t = PFreeType ("lt" ++ n) in PFuncType (PListType t) (PFuncType PIntegerType t)
 mkConcatSignature n = let t = PFreeType ("ltt" ++ n) in PFuncType (PListType t) (PFuncType (PListType t) (PListType t))
 mkBinopSignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t t)
-mkBoolBinopSignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t PBoolType)
+mkEqualitySignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t PBoolType)
 mkBool2BoolBinopSignature = PFuncType PBoolType (PFuncType PBoolType PBoolType)
 
 initSymbols =
   let ops = ["+", "-", "*", "/", "%"]
-      boolOps = ["==", "<", "<=", ">", ">=", "!="]
-      bool2boolOps = ["&&", "||"]
       opSigs = map (\(op, n) -> (op, mkBinopSignature (show n))) (zip ops [0 .. length ops])
-      boolOpSigs = map (\(op, n) -> (op, mkBoolBinopSignature (show n))) (zip boolOps [length ops ..  length ops + length boolOps])
-      indexSig = mkIndexSignature (show $ length ops + length boolOps + 1)
-      concatSig = mkConcatSignature (show $ length ops + length boolOps + 2)
-      bool2bool = map (\op -> (op, mkBool2BoolBinopSignature)) bool2boolOps
-      builtIn = [("length", PFuncType (PListType (PFreeType "tlength")) PIntegerType),
-                 ("slice", PFuncType (PListType (PFreeType "tslice")) (PFuncType PIntegerType (PFuncType PIntegerType (PListType (PFreeType "tslice"))))),
-                 ("print", PFuncType (PFreeType "tprint") (PFreeType "tprint"))]
   in Map.fromList (opSigs
-                   `union` boolOpSigs
-                   `union` [("#", indexSig)]
-                   `union` [("++", concatSig)]
-                   `union` bool2bool
-                   `union` builtIn)
+                   `union` [("<=", mkEqualitySignature (show $ length ops + 1)),
+                            ("==", mkEqualitySignature (show $ length ops + 1)),
+                            ("#", mkIndexSignature (show $ length ops + 2)),
+                            ("++", mkConcatSignature (show $ length ops + 3)),
+                            ("length", PFuncType (PListType (PFreeType "tlength")) PIntegerType),
+                            ("slice", PFuncType (PListType (PFreeType "tslice")) (PFuncType PIntegerType (PFuncType PIntegerType (PListType (PFreeType "tslice"))))),
+                            ("print", PFuncType (PFreeType "tprint") (PFreeType "tprint"))])
 
 typeCheck :: Bool -> Expr -> Either TypeError Expr
 typeCheck debug expr = do

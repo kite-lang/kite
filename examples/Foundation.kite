@@ -3,8 +3,9 @@
 
 id = |x| -> { x }
 
+-- composition
 -- (b -> c) -> (a -> b) -> (a -> c)
-compose = |f, g| -> {
+{.} = |f, g| -> {
   |x| -> {
     f (g (x))
   }
@@ -20,17 +21,30 @@ not = |p| -> {
   if p then False else True
 }
 
--- Misc
+-- Equality (built in: <= and ==)
 
--- (a -> Bool) -> (a -> a) -> a -> a
-until = |p, f, x| -> {
-  if p (x)
-    then x
-    else until (p, f, f (x))
+{&&} = |l, r| -> {
+  if l then r else False
 }
 
-while = |p, f, x| -> {
-  until (not `compose p, f, x)
+{||} = |l, r| -> {
+  if l then True else r
+}
+
+{!=} = |l, r| -> {
+  not (l == r)
+}
+
+{<} = |l, r| -> {
+  not (r <= l)
+}
+
+{>} = |l, r| -> {
+  (r <= l) && (r != l)
+}
+
+{>=} = |l, r| -> {
+  (l > r) || (l == r)
 }
 
 -- Lists
@@ -122,12 +136,12 @@ or = |xs| -> {
 
 -- (a -> Bool) -> [a] -> Bool
 all = |p, xs| -> {
-  (and `compose map (p)) (xs)
+  (and . map (p)) (xs)
 }
 
 -- (a -> Bool) -> [a] -> Bool
 any = |p, xs| -> {
-  (or `compose map (p)) (xs)
+  (or . map (p)) (xs)
 }
 
 -- [[a]] -> [a]
@@ -206,7 +220,33 @@ maximum = |xs| -> {
 }
 
 -- Int -> Bool
-even = (==) (0) `compose flip ((%)) (2)
+even = (==) (0) . flip ((%)) (2)
 
 -- Int -> Bool
-odd = not `compose even
+odd = not . even
+
+-- Int -> Int
+negate = |n| -> {
+  0 - n
+}
+
+-- Int -> Int
+abs = |n| -> {
+  if n < 0
+    then negate (n)
+    else n
+}
+
+-- Misc
+
+-- (a -> Bool) -> (a -> a) -> a -> a
+until = |p, f, x| -> {
+  if p (x)
+    then x
+    else until (p, f, f (x))
+}
+
+-- (a -> Bool) -> (a -> a) -> a -> a
+while = |p, f, x| -> {
+  until (not . p, f, x)
+}
