@@ -34,6 +34,7 @@ codegen expr = do
 
 emit :: Expr -> Source
 
+emit PVoid = ""
 emit (PInteger val) = show val
 emit (PFloat val) = show val
 emit (PString val) = "\"" ++ val ++ "\""

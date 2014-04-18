@@ -6,13 +6,19 @@ import Text.Printf
 
 mkInfixCall op a1 a2 = PCall (PCall (PIdentifier op) a1) a2
 
-mkCalls f args = foldl PCall (PCall f (head args)) (tail args)
+--TODO: clean parameterless functions up
+mkCalls f args =
+  if null args
+     then PCall f PVoid
+     else foldl PCall (PCall f (head args)) (tail args)
 
 mkFunc params body =
-  let ini = PFunc (PFuncType (head params) (PFreeType "t"))
+  let firstParam = if null params then PTypeArg PVoidType (PIdentifier "_") else head params
+      restParams = if null params then [] else tail params
+      ini = PFunc (PFuncType firstParam (PFreeType "t"))
       fns = foldl (\fn param ->
                     fn . PReturn . PFunc (PFuncType param (PFreeType "t"))
-                  ) ini (tail params)
+                  ) ini restParams
   in fns body
 
 mkFuncBlock exprs =
@@ -134,6 +140,7 @@ If     :: { Expr }
 -- functions
 Func   :: { Expr }
         : FuncSignature FuncBlock        { mkFunc (fst $1) $2 }
+        | '->' FuncBlock                 { mkFunc [] $2 }
 
 -- func literal
 FuncSignature :: { ([Type], Type) }
@@ -194,6 +201,7 @@ data Expr = PList [Expr]
           | PBool Bool
           | PString String
           | PIdentifier String
+          | PVoid
           deriving (Show, Eq)
 
 data Type = PListType Type

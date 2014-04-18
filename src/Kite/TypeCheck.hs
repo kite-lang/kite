@@ -173,6 +173,7 @@ infer _ (PInteger _) = return (nullSubst, PIntegerType)
 infer _ (PFloat _) = return (nullSubst, PFloatType)
 infer _ (PString _) = return (nullSubst, PStringType)
 infer _ (PBool _) = return (nullSubst, PBoolType)
+infer _ (PVoid) = return (nullSubst, PVoidType)
 
 infer env (PBlock StandardBlock exprs) = do
   forM_ exprs (infer env)
