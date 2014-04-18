@@ -2,6 +2,7 @@
 module Main where
 
 import qualified Kite.Driver as Kt
+import qualified Kite.JSEmit as Kjs
 
 import System.Console.CmdArgs
 import Control.Monad
@@ -34,6 +35,9 @@ main = do
   let ast = Kt.parse tokens
   when parOutput (prettyPrint ast)
 
-  either print (const $ print "Type check passed") (Kt.analyze debugOutput ast)
+  let analysis = Kt.analyze debugOutput ast
+  case analysis of
+    Right _ -> Kjs.codegen ast >>= putStrLn
+    Left err -> putStrLn ("Error: " ++ show err)
 
-    where prettyPrint = putStrLn . ppShow
+  where prettyPrint = putStrLn . ppShow

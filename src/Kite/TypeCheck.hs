@@ -41,28 +41,33 @@ throwAE ide exp got = throwError . ArityError $ printf
 -------------------
 -- INTERFACE
 -------------------
-runTC f = runState (runErrorT f) Environment { sym = [initSymbols],
-                                               symCount = Map.size initSymbols,
-                                               returns = [] }
+runTC expr f = runState (runErrorT f) Environment { sym = [initSymbols],
+                                                    symCount = Map.size initSymbols,
+                                                    ast = expr,
+                                                    returns = [] }
 
 mkIndexSignature n = let t = PFreeType ("lt" ++ n) in PFuncType (PListType t) (PFuncType PIntegerType t)
-mkBinopSignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t t)
-mkBoolBinopSignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t PBoolType)
+mkConsSignature n = let t = PFreeType ("ltt" ++ n) in PFuncType t (PFuncType (PListType t) (PListType t))
+mkArithSignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t t)
+mkEqualitySignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t PBoolType)
 
-initSymbols = do
+initSymbols =
   let ops = ["+", "-", "*", "/", "%"]
-      boolOps = ["==", "<", "<=", ">", ">=", "!="]
-      opSigs = map (\(op, n) -> (op, mkBinopSignature (show n))) (zip ops [0 .. length ops])
-      boolOpSigs = map (\(op, n) -> (op, mkBoolBinopSignature (show n))) (zip boolOps [length ops ..  length ops + length boolOps])
-      indexSig = mkIndexSignature (show $ length ops + length boolOps + 1)
-  Map.fromList (opSigs `union` boolOpSigs `union` [("#", indexSig)])
+      opSigs = map (\(op, n) -> (op, mkArithSignature (show n))) (zip ops [0 .. length ops])
+  in Map.fromList (opSigs `union` [("<=", mkEqualitySignature (show $ length ops + 1)),
+                                   ("==", mkEqualitySignature (show $ length ops + 2)),
+                                   ("#", mkIndexSignature (show $ length ops + 3)),
+                                   (":", mkConsSignature (show $ length ops + 4)),
+                                   ("length", PFuncType (PListType (PFreeType "tlength")) PIntegerType),
+                                   ("slice", PFuncType (PListType (PFreeType "tslice")) (PFuncType PIntegerType (PFuncType PIntegerType (PListType (PFreeType "tslice"))))),
+                                   ("print", PFuncType (PFreeType "tprint") (PFreeType "tprint"))])
 
-typeCheck :: Bool -> Expr -> Either TypeError Environment
+typeCheck :: Bool -> Expr -> Either TypeError Expr
 typeCheck debug expr = do
-  let (r, env) = runTC (infer (TypeEnvironment Map.empty) expr)
+  let (r, env) = runTC expr (infer (TypeEnvironment Map.empty) expr)
   when debug (traceShow env $ return ())
   case r of
-    Right _ -> Right env
+    Right _ -> Right $ ast env
     Left err -> Left err
 
 ----------------
@@ -75,6 +80,7 @@ type Stack = [Frame]
 
 data Environment = Environment { sym :: Stack,
                                  symCount :: Int,
+                                 ast :: Expr,
                                  returns :: [[Type]] }
 
 -- environment manipulation
@@ -180,15 +186,15 @@ infer env (PBlock FuncBlock exprs) = do
                       (s', t) <- infer (apply s env) expr
                       return (s `composeSubst` s', t)
                   ) (nullSubst, PVoidType) exprs
-  e <- get
-  let rets = returns e
-      implicit = apply s t
-      valid = all (==implicit) (head rets)
+  -- e <- get
+  -- let rets = returns e
+  --     implicit = apply s t
+  --     valid = all (==implicit) (head rets)
 
-  unless valid (throwRE $ printf "Varying return types")
+  -- unless valid (throwRE $ printf "Varying return types: %s" (show $ head rets))
 
-  popSymFrame
   popReturnFrame
+  popSymFrame
 
   return (s, apply s t)
 

@@ -10,10 +10,10 @@ $digit			= 0-9
 $alpha			= [$downcase $upcase]
 $alphaNum		= [$alpha $digit]
 $symbols		= [\(\)\{\}\[\]\;\,\:]
+$operatorSymbols        = [\+\-\/\*\%\=\|\&\<\>\!\~\`\#\.\:]
 
 @keywords		= return | import | if | then | else | yolo
-@binops	                = "+" | "-" | "/" | "*" | "%" | "==" | "<" | "<=" | ">" | ">=" | "!="
-@operators		= "=" | "#" | "->" | "|" | "`"
+@operators		= [$operatorSymbols]+
 @string                 = \" (. # \")* \"
 @identifier		= $downcase [$alphaNum \_ \' \! \?]*
 @bool			= "True" | "False"
@@ -28,8 +28,6 @@ kite :-
 
   @keywords		{ tok (\p s -> TKeyword p s) }
   @operators		{ tok (\p s -> TOperator p s) }
-  @binops		{ tok (\p s -> TBinOp p s) }
-
   $digit+\.$digit+	{ tok (\p s -> TFloat p (read s)) }
   $digit+		{ tok (\p s -> TInteger p (read s)) }
   @bool		        { tok (\p s -> TBool p (read s)) }
@@ -56,7 +54,6 @@ data Token
   | TString     AlexPosn String
   | TKeyword    AlexPosn String
   | TOperator   AlexPosn String
-  | TBinOp      AlexPosn String
   | TEOF        AlexPosn
   deriving (Eq,Show)
 
@@ -70,7 +67,6 @@ tok2posn (TString     p _) = p
 tok2posn (TBool       p _) = p
 tok2posn (TKeyword    p _) = p
 tok2posn (TOperator   p _) = p
-tok2posn (TBinOp      p _) = p
 tok2posn (TEOF        p  ) = p
 
 }

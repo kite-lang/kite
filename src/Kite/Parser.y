@@ -4,17 +4,22 @@ import Data.List
 import Kite.Lexer
 import Text.Printf
 
-mkBinopCall op a1 a2 = PCall (PCall (PIdentifier op) a1) a2
+mkInfixCall op a1 a2 = PCall (PCall (PIdentifier op) a1) a2
 
-mkCalls f args = foldl (\calls arg -> PCall calls arg) (PCall f (head args)) (tail args)
+mkCalls f args = foldl PCall (PCall f (head args)) (tail args)
 
 mkFunc params body =
-  let par = if null params then PVoidType else head params
-      ini = PFunc (PFuncType par (PFreeType "t"))
+  let ini = PFunc (PFuncType (head params) (PFreeType "t"))
       fns = foldl (\fn param ->
-                    fn . PFunc (PFuncType param (PFreeType "t"))
+                    fn . PReturn . PFunc (PFuncType param (PFreeType "t"))
                   ) ini (tail params)
   in fns body
+
+mkFuncBlock exprs =
+  case last exprs of
+    PReturn _ -> PBlock FuncBlock exprs
+    _ -> PBlock FuncBlock (init exprs ++ [PReturn (last exprs)])
+
 }
 
 %name kiteparser
@@ -32,17 +37,12 @@ mkFunc params body =
         boolTy             { TType _ "Bool" }
         id                 { TIdentifier _ $$ }
 
-        '+'                { TBinOp _ "+" }
-        '-'                { TBinOp _ "-" }
-        '*'                { TBinOp _ "*" }
-        '/'                { TBinOp _ "/" }
-        '%'                { TBinOp _ "%" }
-        '=='               { TBinOp _ "==" }
-        '<'                { TBinOp _ "<" }
-        '<='               { TBinOp _ "<=" }
-        '>'                { TBinOp _ ">" }
-        '>='               { TBinOp _ ">=" }
-        '!='               { TBinOp _ "!=" }
+        '='                { TOperator _ "=" }
+        '->'               { TOperator _ "->" }
+        '|'                { TOperator _ "|" }
+        '`'                { TOperator _ "`" }
+
+        operator           { TOperator _ $$ }
 
         import             { TKeyword _ "import" }
         return             { TKeyword _ "return" }
@@ -50,12 +50,6 @@ mkFunc params body =
         then               { TKeyword _ "then" }
         else               { TKeyword _ "else" }
         yolo               { TKeyword _ "yolo" }
-
-        '='                { TOperator _ "=" }
-        '#'                { TOperator _ "#" }
-        '->'               { TOperator _ "->" }
-        '|'                { TOperator _ "|" }
-        '`'                { TOperator _ "`" }
 
         '('                { TSymbol _ '(' }
         ')'                { TSymbol _ ')' }
@@ -68,6 +62,7 @@ mkFunc params body =
         ';'                { TSymbol _ ';' }
 
 %right in
+%nonassoc '&&' '||'
 %nonassoc '==' '<' '<=' '>' '>=' '!='
 %left '+' '-'
 %left '*' '/' '%'
@@ -89,8 +84,7 @@ Stmts  :: { [Expr] }
         | Stmt ';' Stmts   { $1 : $3 }
 
 Expr   :: { Expr }
-        : BinOp            { $1 }
-        | List             { $1 }
+        : List             { $1 }
         | Assign           { $1 }
         | Func             { $1 }
         | Call             { $1 }
@@ -107,33 +101,21 @@ Exprs   : {- nothing -}    { [] }
 Call   :: { Expr }
         : Expr '(' Exprs ')'    { mkCalls $1 $3 }
         | Expr '`' Expr Expr    { PCall (PCall $3 $1) $4 }
+        | Expr operator Expr    { mkInfixCall $2 $1 $3 } -- infix operator
 
 Assign :: { Expr }
-        : id '=' Expr      { PAssign (PIdentifier $1) $3 }
+        : id '=' Expr                  { PAssign (PIdentifier $1) $3 }
+        | '{' operator '}' '=' Expr    { PAssign (PIdentifier $2) $5 }
 
 -- differentiate between standard and function blocks
 StandardBlock :: { Expr }
                : '{' Stmts '}'    { PBlock StandardBlock $2 }
 
 FuncBlock :: { Expr }
-           : '{' Stmts '}'    { PBlock FuncBlock $2 }
+           : '{' Stmts '}'    { mkFuncBlock $2 }
 
 List   :: { Expr }
 List    : '[' Exprs ']'    { PList $2 }
-
-BinOp  :: { Expr }
-        : Expr '+' Expr  { mkBinopCall "+" $1 $3 }
-        | Expr '-' Expr  { mkBinopCall "-" $1 $3 }
-        | Expr '*' Expr  { mkBinopCall "*" $1 $3 }
-        | Expr '/' Expr  { mkBinopCall "/" $1 $3 }
-        | Expr '%' Expr  { mkBinopCall "%" $1 $3 }
-        | Expr '==' Expr { mkBinopCall "==" $1 $3 }
-        | Expr '<' Expr  { mkBinopCall "<" $1 $3 }
-        | Expr '<=' Expr { mkBinopCall "<=" $1 $3 }
-        | Expr '>' Expr  { mkBinopCall ">" $1 $3 }
-        | Expr '>=' Expr { mkBinopCall ">=" $1 $3 }
-        | Expr '!=' Expr { mkBinopCall "!=" $1 $3 }
-        | Expr '#' Expr  { mkBinopCall "#" $1 $3 }
 
 Type   :: { Type }
         : boolTy           { PBoolType }
@@ -174,10 +156,10 @@ Parameter :: { Type }
 --            : '|' TypeList '|' '->' Type { mkFuncType $2 $5 }
 
 -- just type
-TypeList :: { [Type] }
-          : {- nothing -}      { [] }
-          | Type               { [$1] }
-          | Type ',' TypeList  { $1 : $3 }
+-- TypeList :: { [Type] }
+--           : {- nothing -}      { [] }
+--           | Type               { [$1] }
+--           | Type ',' TypeList  { $1 : $3 }
 
 -- primitive types
 Term     :: { Expr }
@@ -186,6 +168,7 @@ Term     :: { Expr }
           | float            { PFloat $1 }
           | string           { PString $1 }
           | id               { PIdentifier $1 }
+          | '(' operator ')' { PIdentifier $2 }
 
 {
 
