@@ -92,7 +92,7 @@ init = |xs| -> {
 map = |f, xs| -> {
   if empty (xs)
     then []
-    else [f (head (xs))] ++ map (f, tail (xs))
+    else f (head (xs)) : map (f, tail (xs))
 }
 
 -- (a -> b -> a) -> a -> [b] -> a
@@ -114,7 +114,7 @@ filter = |f, xs| -> {
   if empty (xs)
     then []
     else if f (head (xs))
-           then [head (xs)] ++ filter (f, tail (xs))
+           then head (xs) : filter (f, tail (xs))
            else filter (f, tail (xs))
 }
 
@@ -122,7 +122,7 @@ filter = |f, xs| -> {
 take = |n, xs| -> {
   if (n <= 0) || empty (xs)
     then []
-    else [head (xs)] ++ take (n - 1, tail (xs))
+    else head (xs) : take (n - 1, tail (xs))
 }
 
 -- Int -> [a] -> [a]
@@ -167,7 +167,7 @@ rangeStep = |from, to, step| -> {
   inner = |from, to, ls| -> {
     if from > to
       then ls
-      else [from] ++ inner (from + step, to, ls)
+      else from : inner (from + step, to, ls)
   }
   inner(from, to, [])
 }
