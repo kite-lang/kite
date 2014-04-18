@@ -1,6 +1,7 @@
 module Kite.JSEmit where
 
 import Control.Monad
+import Data.Maybe
 import Text.Printf
 
 import Kite.Parser
@@ -9,8 +10,19 @@ type Source = String
 
 reserved = ["while", "for"]
 kitePrefix = "KITE_"
-
 runtime = readFile "js/kt_runtime.js"
+opNames = [('+', "KT_PLUS"),
+           ('-', "KT_MINUS"),
+           ('*', "KT_STAR"),
+           ('/', "KT_SLASH"),
+           ('%', "KT_PERCENT"),
+           ('=', "KT_EQ"),
+           ('&', "KT_AMP"),
+           ('|', "KT_PIPE"),
+           ('<', "KT_LT"),
+           ('>', "KT_GT"),
+           ('!', "KT_EXCL"),
+           ('#', "KT_POUND")]
 
 codegen :: Expr -> IO Source
 codegen expr = do
@@ -26,9 +38,11 @@ emit (PString val) = "\"" ++ val ++ "\""
 emit (PBool val) = if val then "true" else "false"
 
 emit (PIdentifier ide) =
-  if ide `elem` reserved
-    then kitePrefix ++ ide
-    else ide
+  let ide' = if ide `elem` reserved
+               then kitePrefix ++ ide
+               else ide
+  in concatMap replace ide'
+  where replace c = fromMaybe [c] (lookup c opNames)
 
 emit (PList elems) = printf "[%s]" (emitAll "," elems)
 
@@ -40,7 +54,7 @@ emit (PFunc (PFuncType param _) body) =
   in printf "(function(%s) {%s})" (emit ide) (emit body)
 
 emit (PAssign ide expr) =
-  printf "var %s = %s" (emit ide) (emit expr)
+  printf "%s = %s" (emit ide) (emit expr)
 
 emit (PBlock _ exprs) =
   emitAll ";" exprs

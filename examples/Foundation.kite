@@ -90,13 +90,13 @@ filter = |f, xs| -> {
 }
 
 take = |n, xs| -> {
-  if n <= 0 || empty (xs)
+  if (n <= 0) || empty (xs)
     then []
     else [head (xs)] ++ take (n - 1, tail (xs))
 }
 
 drop = |n, xs| -> {
-  if n <= 0 || empty (xs)
+  if (n <= 0) || empty (xs)
     then xs
     else drop (n - 1, tail (xs))
 }

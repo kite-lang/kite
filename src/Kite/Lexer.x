@@ -10,10 +10,10 @@ $digit			= 0-9
 $alpha			= [$downcase $upcase]
 $alphaNum		= [$alpha $digit]
 $symbols		= [\(\)\{\}\[\]\;\,\:]
+$operatorSymbols        = [\+\-\/\*\%\=\|\&\<\>\!\~\`\#]
 
 @keywords		= return | import | if | then | else | yolo
-@binops	                = "++" | "+" | "-" | "/" | "*" | "%" | "==" | "||" | "&&" | "<" | "<=" | ">" | ">=" | "!="
-@operators		= "=" | "#" | "->" | "|" | "`"
+@operators		= [$operatorSymbols]+
 @string                 = \" (. # \")* \"
 @identifier		= $downcase [$alphaNum \_ \' \! \?]*
 @bool			= "True" | "False"
@@ -28,8 +28,6 @@ kite :-
 
   @keywords		{ tok (\p s -> TKeyword p s) }
   @operators		{ tok (\p s -> TOperator p s) }
-  @binops		{ tok (\p s -> TBinOp p s) }
-
   $digit+\.$digit+	{ tok (\p s -> TFloat p (read s)) }
   $digit+		{ tok (\p s -> TInteger p (read s)) }
   @bool		        { tok (\p s -> TBool p (read s)) }

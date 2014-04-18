@@ -37,20 +37,12 @@ mkFuncBlock exprs =
         boolTy             { TType _ "Bool" }
         id                 { TIdentifier _ $$ }
 
-        '++'               { TBinOp _ "++" }
-        '+'                { TBinOp _ "+" }
-        '-'                { TBinOp _ "-" }
-        '*'                { TBinOp _ "*" }
-        '/'                { TBinOp _ "/" }
-        '%'                { TBinOp _ "%" }
-        '=='               { TBinOp _ "==" }
-        '||'               { TBinOp _ "||" }
-        '&&'               { TBinOp _ "&&" }
-        '<'                { TBinOp _ "<" }
-        '<='               { TBinOp _ "<=" }
-        '>'                { TBinOp _ ">" }
-        '>='               { TBinOp _ ">=" }
-        '!='               { TBinOp _ "!=" }
+        '='                { TOperator _ "=" }
+        '->'               { TOperator _ "->" }
+        '|'                { TOperator _ "|" }
+        '`'                { TOperator _ "`" }
+
+        operator           { TOperator _ $$ }
 
         import             { TKeyword _ "import" }
         return             { TKeyword _ "return" }
@@ -58,12 +50,6 @@ mkFuncBlock exprs =
         then               { TKeyword _ "then" }
         else               { TKeyword _ "else" }
         yolo               { TKeyword _ "yolo" }
-
-        '='                { TOperator _ "=" }
-        '#'                { TOperator _ "#" }
-        '->'               { TOperator _ "->" }
-        '|'                { TOperator _ "|" }
-        '`'                { TOperator _ "`" }
 
         '('                { TSymbol _ '(' }
         ')'                { TSymbol _ ')' }
@@ -131,21 +117,7 @@ List   :: { Expr }
 List    : '[' Exprs ']'    { PList $2 }
 
 BinOp  :: { Expr }
-        : Expr '+' Expr  { mkBinopCall "KT_BIN_ADD" $1 $3 }
-        | Expr '++' Expr { mkBinopCall "KT_CONCAT" $1 $3 }
-        | Expr '-' Expr  { mkBinopCall "KT_BIN_SUB" $1 $3 }
-        | Expr '*' Expr  { mkBinopCall "KT_BIN_MUL" $1 $3 }
-        | Expr '/' Expr  { mkBinopCall "KT_BIN_DIV" $1 $3 }
-        | Expr '%' Expr  { mkBinopCall "KT_BIN_MOD" $1 $3 }
-        | Expr '==' Expr { mkBinopCall "KT_BIN_EQ" $1 $3 }
-        | Expr '&&' Expr { mkBinopCall "KT_LAND" $1 $3 }
-        | Expr '||' Expr { mkBinopCall "KT_LOR" $1 $3 }
-        | Expr '<' Expr  { mkBinopCall "KT_BIN_LT" $1 $3 }
-        | Expr '<=' Expr { mkBinopCall "KT_BIN_LTE" $1 $3 }
-        | Expr '>' Expr  { mkBinopCall "KT_BIN_GT" $1 $3 }
-        | Expr '>=' Expr { mkBinopCall "KT_BIN_GTE" $1 $3 }
-        | Expr '!=' Expr { mkBinopCall "KT_BIN_NEQ" $1 $3 }
-        | Expr '#' Expr  { mkBinopCall "KT_BIN_IDX" $1 $3 }
+        : Expr operator Expr  { mkBinopCall $2 $1 $3 }
 
 Type   :: { Type }
         : boolTy           { PBoolType }
