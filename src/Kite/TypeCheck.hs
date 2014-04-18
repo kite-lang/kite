@@ -55,9 +55,8 @@ initSymbols =
   let ops = ["+", "-", "*", "/", "%"]
       opSigs = map (\(op, n) -> (op, mkArithSignature (show n))) (zip ops [0 .. length ops])
   in Map.fromList (opSigs `union` [("<=", mkEqualitySignature (show $ length ops + 1)),
-                                   ("==", mkEqualitySignature (show $ length ops + 2)),
-                                   ("#", mkIndexSignature (show $ length ops + 3)),
-                                   (":", mkConsSignature (show $ length ops + 4)),
+                                   ("#", mkIndexSignature (show $ length ops + 2)),
+                                   (":", mkConsSignature (show $ length ops + 3)),
                                    ("length", PFuncType (PListType (PFreeType "tlength")) PIntegerType),
                                    ("slice", PFuncType (PListType (PFreeType "tslice")) (PFuncType PIntegerType (PFuncType PIntegerType (PListType (PFreeType "tslice"))))),
                                    ("print", PFuncType (PFreeType "tprint") (PFreeType "tprint"))])

@@ -21,7 +21,7 @@ not = |p| -> {
   if p then False else True
 }
 
--- Equality (built in: <= and ==)
+-- Equality (built in: <=)
 
 {&&} = |l, r| -> {
   if l then r else False
@@ -29,6 +29,10 @@ not = |p| -> {
 
 {||} = |l, r| -> {
   if l then True else r
+}
+
+{==} = |l, r| -> {
+  (l <= r) && (r <= l)
 }
 
 {!=} = |l, r| -> {
