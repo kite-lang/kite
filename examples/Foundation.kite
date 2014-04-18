@@ -1,23 +1,28 @@
 
+-- Functional
 
--- functional
 id = |x| -> { x }
 
+-- (b -> c) -> (a -> b) -> (a -> c)
 compose = |f, g| -> {
-  |x| -> { 
-    f (g (x)) 
+  |x| -> {
+    f (g (x))
   }
 }
 
+-- (a -> b -> c) -> (b -> a -> c)
 flip = |f, x, y| -> {
   f (y, x)
 }
 
+-- Bool -> Bool
 not = |p| -> {
   if p then False else True
 }
 
--- misc
+-- Misc
+
+-- (a -> Bool) -> (a -> a) -> a -> a
 until = |p, f, x| -> {
   if p (x)
     then x
@@ -28,51 +33,61 @@ while = |p, f, x| -> {
   until (not `compose p, f, x)
 }
 
--- list functions
+-- Lists
+
+-- [a] -> Bool
 empty = |xs| -> {
   length (xs) == 0
 }
 
+-- [a] -> a
 head = |xs| -> {
   xs # 0
 }
 
+-- [a] -> [a]
 tail = |xs| -> {
   if empty (xs)
     then []
     else slice (xs, 1, length (xs))
 }
 
+-- [a] -> a
 last = |xs| -> {
   if length (xs) == 1
     then last (tail (xs))
     else head (xs)
 }
 
+-- [a] -> [a]
 init = |xs| -> {
   if empty (xs)
     then []
     else slice (xs, 0, length (xs) - 1)
 }
 
+-- (a -> b) -> [a] -> [b]
 map = |f, xs| -> {
   if empty (xs)
     then []
     else [f (head (xs))] ++ map (f, tail (xs))
 }
 
+-- (a -> b -> a) -> a -> [b] -> a
 fold = |f, acc, xs| -> {
   if empty (xs)
     then acc
     else fold (f, f (acc, head (xs)), tail (xs))
 }
 
+-- (a -> b -> a) -> [b] -> a
 fold1 = |f, xs| -> {
   if empty (xs)
     then head (xs) -- TODO: needs an error function
     else fold (f, head (xs), tail (xs))
 }
 
+-- (a -> Bool) -> [a] -> [a]
 filter = |f, xs| -> {
   if empty (xs)
     then []
@@ -81,42 +96,51 @@ filter = |f, xs| -> {
            else filter (f, tail (xs))
 }
 
+-- Int -> [a] -> [a]
 take = |n, xs| -> {
   if (n <= 0) || empty (xs)
     then []
     else [head (xs)] ++ take (n - 1, tail (xs))
 }
 
+-- Int -> [a] -> [a]
 drop = |n, xs| -> {
   if (n <= 0) || empty (xs)
     then xs
     else drop (n - 1, tail (xs))
 }
 
+-- [Bool] -> Bool
 and = |xs| -> {
   fold ((&&), True, xs)
 }
 
+-- [Bool] -> Bool
 or = |xs| -> {
   fold ((||), False, xs)
 }
 
+-- (a -> Bool) -> [a] -> Bool
 all = |p, xs| -> {
   (and `compose map (p)) (xs)
 }
 
+-- (a -> Bool) -> [a] -> Bool
 any = |p, xs| -> {
   (or `compose map (p)) (xs)
 }
 
+-- [[a]] -> [a]
 flatten = |xs| -> {
   fold1 ((++), xs)
 }
 
+-- a -> [a] -> Bool
 contains = |el, xs| -> {
   any ((==)(el), xs)
 }
 
+-- Int -> Int -> Int -> [Int]
 rangeStep = |from, to, step| -> {
   inner = |from, to, ls| -> {
     if from > to
@@ -126,17 +150,21 @@ rangeStep = |from, to, step| -> {
   inner(from, to, [])
 }
 
+-- Int -> Int -> [Int]
 range = |from, to| -> {
   rangeStep (from, to, 1)
 }
 
+-- [a] -> [a]
 reverse = |xs| -> {
   if empty (xs)
     then []
     else reverse (tail (xs)) ++ [head (xs)]
 }
 
+
 -- quicksort
+-- [a] -> [a]
 sort = |xs| -> {
   if empty (xs)
     then []
@@ -145,31 +173,40 @@ sort = |xs| -> {
          ++ sort (filter (flip ((>=)) (head (xs)), tail (xs)))
 }
 
--- numeric
+--- Numeric
+
+-- [a] -> a
 sum = |xs| -> {
   fold (|acc, n| -> { acc + n }, 0, xs)
 }
 
+-- a -> a -> a
 product = |xs| -> {
   fold (|acc, n| -> { acc * n }, 1, xs)
 }
 
+-- a -> a -> a
 min = |a, b| -> {
   if a < b then a else b
 }
 
+-- a -> a -> a
 max = |a, b| -> {
   if a > b then a else b
 }
 
+-- [a] -> a
 minimum = |xs| -> {
   fold1 (min, xs)
 }
 
+-- [a] -> a
 maximum = |xs| -> {
   fold1 (max, xs)
 }
 
+-- Int -> Bool
 even = (==) (0) `compose flip ((%)) (2)
 
+-- Int -> Bool
 odd = not `compose even
