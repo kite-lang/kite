@@ -170,6 +170,7 @@ Term     :: { Expr }
           | float            { PFloat $1 }
           | string           { PString $1 }
           | id               { PIdentifier $1 }
+          | '(' operator ')' { PIdentifier $2 }
 
 {
 
