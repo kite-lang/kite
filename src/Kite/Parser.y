@@ -4,7 +4,7 @@ import Data.List
 import Kite.Lexer
 import Text.Printf
 
-mkBinopCall op a1 a2 = PCall (PCall (PIdentifier op) a1) a2
+mkInfixCall op a1 a2 = PCall (PCall (PIdentifier op) a1) a2
 
 mkCalls f args = foldl PCall (PCall f (head args)) (tail args)
 
@@ -84,7 +84,7 @@ Stmts  :: { [Expr] }
         | Stmt ';' Stmts   { $1 : $3 }
 
 Expr   :: { Expr }
-        : BinOp            { $1 }
+        : Infix            { $1 }
         | List             { $1 }
         | Assign           { $1 }
         | Func             { $1 }
@@ -104,7 +104,7 @@ Call   :: { Expr }
         | Expr '`' Expr Expr    { PCall (PCall $3 $1) $4 }
 
 Assign :: { Expr }
-        : id '=' Expr      { PAssign (PIdentifier $1) $3 }
+        : id '=' Expr                  { PAssign (PIdentifier $1) $3 }
 
 -- differentiate between standard and function blocks
 StandardBlock :: { Expr }
@@ -116,8 +116,8 @@ FuncBlock :: { Expr }
 List   :: { Expr }
 List    : '[' Exprs ']'    { PList $2 }
 
-BinOp  :: { Expr }
-        : Expr operator Expr  { mkBinopCall $2 $1 $3 }
+Infix  :: { Expr }
+        : Expr operator Expr  { mkInfixCall $2 $1 $3 }
 
 Type   :: { Type }
         : boolTy           { PBoolType }
