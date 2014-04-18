@@ -84,8 +84,7 @@ Stmts  :: { [Expr] }
         | Stmt ';' Stmts   { $1 : $3 }
 
 Expr   :: { Expr }
-        : Infix            { $1 }
-        | List             { $1 }
+        : List             { $1 }
         | Assign           { $1 }
         | Func             { $1 }
         | Call             { $1 }
@@ -102,6 +101,7 @@ Exprs   : {- nothing -}    { [] }
 Call   :: { Expr }
         : Expr '(' Exprs ')'    { mkCalls $1 $3 }
         | Expr '`' Expr Expr    { PCall (PCall $3 $1) $4 }
+        | Expr operator Expr    { mkInfixCall $2 $1 $3 } -- infix operator
 
 Assign :: { Expr }
         : id '=' Expr                  { PAssign (PIdentifier $1) $3 }
@@ -115,9 +115,6 @@ FuncBlock :: { Expr }
 
 List   :: { Expr }
 List    : '[' Exprs ']'    { PList $2 }
-
-Infix  :: { Expr }
-        : Expr operator Expr  { mkInfixCall $2 $1 $3 }
 
 Type   :: { Type }
         : boolTy           { PBoolType }
@@ -158,10 +155,10 @@ Parameter :: { Type }
 --            : '|' TypeList '|' '->' Type { mkFuncType $2 $5 }
 
 -- just type
-TypeList :: { [Type] }
-          : {- nothing -}      { [] }
-          | Type               { [$1] }
-          | Type ',' TypeList  { $1 : $3 }
+-- TypeList :: { [Type] }
+--           : {- nothing -}      { [] }
+--           | Type               { [$1] }
+--           | Type ',' TypeList  { $1 : $3 }
 
 -- primitive types
 Term     :: { Expr }

@@ -54,7 +54,6 @@ data Token
   | TString     AlexPosn String
   | TKeyword    AlexPosn String
   | TOperator   AlexPosn String
-  | TBinOp      AlexPosn String
   | TEOF        AlexPosn
   deriving (Eq,Show)
 
@@ -68,7 +67,6 @@ tok2posn (TString     p _) = p
 tok2posn (TBool       p _) = p
 tok2posn (TKeyword    p _) = p
 tok2posn (TOperator   p _) = p
-tok2posn (TBinOp      p _) = p
 tok2posn (TEOF        p  ) = p
 
 }
