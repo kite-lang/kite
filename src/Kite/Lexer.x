@@ -10,7 +10,7 @@ $digit			= 0-9
 $alpha			= [$downcase $upcase]
 $alphaNum		= [$alpha $digit]
 $symbols		= [\(\)\{\}\[\]\;\,\:]
-$operatorSymbols        = [\+\-\/\*\%\=\|\&\<\>\!\~\`\#\.]
+$operatorSymbols        = [\+\-\/\*\%\=\|\&\<\>\!\~\`\#\.\:]
 
 @keywords		= return | import | if | then | else | yolo
 @operators		= [$operatorSymbols]+

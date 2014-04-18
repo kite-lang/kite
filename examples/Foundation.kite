@@ -73,6 +73,14 @@ last = |xs| -> {
     else head (xs)
 }
 
+-- concatenation
+-- [a] -> [a] -> [a]
+{++} = |l, r| -> {
+  if empty (l)
+    then r
+    else (head (l)) : (tail (l) ++ r)
+}
+
 -- [a] -> [a]
 init = |xs| -> {
   if empty (xs)
