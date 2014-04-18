@@ -7,6 +7,9 @@ import Kite.Parser
 
 type Source = String
 
+reserved = ["while", "for"]
+kitePrefix = "KITE_"
+
 runtime = readFile "js/kt_runtime.js"
 
 codegen :: Expr -> IO Source
@@ -14,7 +17,6 @@ codegen expr = do
   r <- runtime
   let r' = filter (not . (=='\n')) r
   return (emit expr ++ r' ++ "main();")
---codegen expr = liftM2 (++)  runtime (return (emit expr))
 
 emit :: Expr -> Source
 
@@ -23,7 +25,10 @@ emit (PFloat val) = show val
 emit (PString val) = "\"" ++ val ++ "\""
 emit (PBool val) = if val then "true" else "false"
 
-emit (PIdentifier ide) = ide
+emit (PIdentifier ide) =
+  if ide `elem` reserved
+    then kitePrefix ++ ide
+    else ide
 
 emit (PList elems) = printf "[%s]" (emitAll "," elems)
 
@@ -31,11 +36,11 @@ emit (PIf cond conseq alt) =
   printf "KT_IF(function() { return %s; })(function() { return %s; })(function() { return %s; })" (emit cond) (emit conseq) (emit alt)
 
 emit (PFunc (PFuncType param _) body) =
-  let PTypeArg _ (PIdentifier ide) = param
-  in printf "(function(%s) {%s})" ide (emit body)
+  let PTypeArg _ ide = param
+  in printf "(function(%s) {%s})" (emit ide) (emit body)
 
-emit (PAssign (PIdentifier ide) expr) =
-  printf "var %s = %s" ide (emit expr)
+emit (PAssign ide expr) =
+  printf "var %s = %s" (emit ide) (emit expr)
 
 emit (PBlock _ exprs) =
   emitAll ";" exprs

@@ -9,8 +9,14 @@ slice  = |xs, from, to| -> {
 
 print = |str| -> { str }
 
--- utils
+-- functional
 id = |x| -> { x }
+
+compose = |f, g| -> {
+  |x| -> { 
+    f (g (x)) 
+  }
+}
 
 not = |p| -> {
   if p then False else True
@@ -18,7 +24,17 @@ not = |p| -> {
 
 even = |x| -> { x % 2 == 0 }
 
-odd = |x| -> { not (even (x)) }
+odd = not `compose even
+
+until = |p, f, x| -> {
+  if p (x)
+    then x
+    else until (p, f, f (x))
+}
+
+while = |p, f, x| -> {
+  until (not `compose p, f, x)
+}
 
 -- list functions
 empty = |xs| -> {
@@ -85,20 +101,36 @@ drop = |n, xs| -> {
     else drop (n - 1, tail (xs))
 }
 
+and = |xs| -> {
+  fold (|acc, x| -> { acc && x }, True, xs)
+  --fold ((&&), True, xs)
+}
+
+or = |xs| -> {
+  fold (|acc, x| -> { acc || x }, False, xs)
+  --fold ((||), False, xs)
+}
+
 all = |p, xs| -> {
-  fold (|acc, x| -> { acc && p (x) }, True, xs)
+  (and `compose map (p)) (xs)
 }
 
 any = |p, xs| -> {
-  fold (|acc, x| -> { acc || p (x) }, False, xs)
+  (or `compose map (p)) (xs)
 }
 
 flatten = |xs| -> {
   fold1 (|ls, x| -> { ls ++ x }, xs)
+  --fold1 ((++), xs)
+}
+
+flip = |f, x, y| -> {
+  f (y, x)
 }
 
 contains = |el, xs| -> {
   any (|x| -> { x == el}, xs)
+  --any ((==)(el), xs)
 }
 
 rangeStep = |from, to, step| -> {
@@ -152,22 +184,4 @@ minimum = |xs| -> {
 
 maximum = |xs| -> {
   fold1 (max, xs)
-}
-
--- some testing
-isPrime = |n, ps| -> {
-  if n == 2
-    then True
-    else not (any (|x| -> { (n % x) == 0 }, ps))
-}
-
-primes = |lim| -> {
-  fold (|ps, n| -> { if isPrime (n, ps) then [n] ++ ps else ps }, [2], rangeStep(3, lim, 2))
-}
-
-main = |a| -> {
-  print (sort ([4, 5, 3, 7, 5, 0]))
-  print (flatten ([[1, 2], [3, 4]]))
-  print (length (primes (250)))
-  print (reverse ([1, 2, 3, 4]))
 }

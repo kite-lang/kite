@@ -1,0 +1,20 @@
+#include "Foundation.kite"
+
+isPrime = |n, ps| -> {
+  if n == 2
+    then True
+    else not (any (|x| -> { (n % x) == 0 }, ps))
+}
+
+primes = |lim| -> {
+  f = |ps, n| -> { if isPrime (n, ps) then [n] ++ ps else ps }
+  fold (f, [2], rangeStep(3, lim, 2))
+}
+
+main = |a| -> {
+  print (sort ([4, 5, 3, 7, 5, 0]))
+  print (flatten ([[1, 2], [3, 4]]))
+  print (length (primes (250)))
+  print (reverse ([1, 2, 3, 4]))
+  print ((reverse `compose map (id))([4, 8, 3, 1, 9, 0]))
+}
