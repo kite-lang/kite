@@ -48,12 +48,12 @@ runTC expr f = runState (runErrorT f) Environment { sym = [initSymbols],
 
 mkIndexSignature n = let t = PFreeType ("lt" ++ n) in PFuncType (PListType t) (PFuncType PIntegerType t)
 mkConsSignature n = let t = PFreeType ("ltt" ++ n) in PFuncType t (PFuncType (PListType t) (PListType t))
-mkBinopSignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t t)
+mkArithSignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t t)
 mkEqualitySignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t PBoolType)
 
 initSymbols =
   let ops = ["+", "-", "*", "/", "%"]
-      opSigs = map (\(op, n) -> (op, mkBinopSignature (show n))) (zip ops [0 .. length ops])
+      opSigs = map (\(op, n) -> (op, mkArithSignature (show n))) (zip ops [0 .. length ops])
   in Map.fromList (opSigs `union` [("<=", mkEqualitySignature (show $ length ops + 1)),
                                    ("==", mkEqualitySignature (show $ length ops + 2)),
                                    ("#", mkIndexSignature (show $ length ops + 3)),

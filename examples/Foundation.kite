@@ -184,15 +184,14 @@ reverse = |xs| -> {
     else reverse (tail (xs)) ++ [head (xs)]
 }
 
-
 -- quicksort
 -- [a] -> [a]
 sort = |xs| -> {
   if empty (xs)
     then []
     else sort (filter (flip ((<)) (head (xs)), tail (xs)))
-         ++ [head (xs)]
-         ++ sort (filter (flip ((>=)) (head (xs)), tail (xs)))
+         ++ head (xs)
+         : sort (filter (flip ((>=)) (head (xs)), tail (xs)))
 }
 
 --- Numeric

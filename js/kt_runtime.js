@@ -11,12 +11,8 @@ var slice = function (xs){
 
 var KT_COLON = function (x) {
     return function (xs) {
-        var len = xs.length;
-        /* TODO: this isn't a deep clone, also, this is ridicously inefficient */
-        var clone = [];
-        for (var i = 0; i < len; i++) {
-            clone.push(xs[i]);
-        }
+        /* TODO: this isn't a deep clone */
+        var clone = xs.slice(0);
         clone.unshift(x);
         return clone;
     };
