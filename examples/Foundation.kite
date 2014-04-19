@@ -200,6 +200,12 @@ sort = |xs| -> {
 
 --- Numeric
 
+{^} = |n, exp| -> {
+  if exp == 0
+    then 1
+    else n * n ^ (exp - 1)
+}
+
 -- [a] -> a
 sum = |xs| -> {
   fold ((+), 0, xs)

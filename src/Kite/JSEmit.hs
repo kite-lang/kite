@@ -25,6 +25,7 @@ opNames = [('+', "KT_PLUS"),
            ('.', "KT_DOT"),
            (':', "KT_COLON"),
            ('\'', "KT_PRIME"),
+           ('^', "KT_HAT"),
            ('#', "KT_POUND")]
 
 codegen :: Expr -> IO Source
