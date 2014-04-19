@@ -11,7 +11,7 @@ executable           kite
   main-is:           Main.hs
   hs-source-dirs:    src
   build-tools:       alex, happy
-  build-depends:     base, array, cmdargs, pretty-show, containers, mtl
+  build-depends:     base, array, cmdargs, pretty-show, containers, mtl, cpphs, file-embed, bytestring
 
 test-suite           test
   type:              exitcode-stdio-1.0

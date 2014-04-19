@@ -1,16 +1,19 @@
+{-# LANGUAGE TemplateHaskell #-}
+
 module Kite.JSEmit where
 
 import Control.Monad
 import Data.Maybe
+import Data.FileEmbed
 import Text.Printf
-
+import qualified Data.ByteString.Char8 as Ch
 import Kite.Parser
 
 type Source = String
 
 reserved = ["while", "for"]
 kitePrefix = "KITE_"
-runtime = readFile "js/kt_runtime.js"
+runtime = $(embedFile "js/kt_runtime.js")
 opNames = [('+', "KT_PLUS"),
            ('-', "KT_MINUS"),
            ('*', "KT_STAR"),
@@ -30,8 +33,7 @@ opNames = [('+', "KT_PLUS"),
 
 codegen :: Expr -> IO Source
 codegen expr = do
-  r <- runtime
-  let r' = filter (not . (=='\n')) r
+  let r' = filter (not . (=='\n')) (Ch.unpack runtime)
   return (r' ++ emit expr ++ "main();")
 
 emit :: Expr -> Source

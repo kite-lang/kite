@@ -35,9 +35,11 @@ main = do
   let ast = Kt.parse tokens
   when parOutput (prettyPrint ast)
 
-  let analysis = Kt.analyze debugOutput ast
-  case analysis of
-    Right _ -> Kjs.codegen ast >>= putStrLn
-    Left err -> putStrLn ("Error: " ++ show err)
+  Kt.kite input >>= putStrLn
+
+  -- let analysis = Kt.analyze debugOutput ast
+  -- case analysis of
+  --   Right _ -> Kjs.codegen ast >>= putStrLn
+  --   Left err -> putStrLn ("Error: " ++ show err)
 
   where prettyPrint = putStrLn . ppShow
