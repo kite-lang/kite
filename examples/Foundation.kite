@@ -1,6 +1,6 @@
+--- Functional
 
--- Functional
-
+-- a -> a
 id = |x| -> { x }
 
 -- composition
@@ -16,42 +16,49 @@ flip = |f, x, y| -> {
   f (y, x)
 }
 
+--- Boolean
+
 -- Bool -> Bool
 not = |p| -> {
   if p then False else True
 }
 
--- Equality (built in: <=)
-
+-- Bool -> Bool -> Bool
 {&&} = |l, r| -> {
   if l then r else False
 }
 
+-- Bool -> Bool -> Bool
 {||} = |l, r| -> {
   if l then True else r
 }
 
-{==} = |l, r| -> {
-  (l <= r) && (r <= l)
-}
+--- Equality (built in: ==)
 
-{!=} = |l, r| -> {
+-- a -> a -> Bool
+{/=} = |l, r| -> {
   not (l == r)
 }
 
+--- Ordering (built in: <=)
+
+-- a -> a -> Bool
 {<} = |l, r| -> {
   not (r <= l)
 }
 
+-- a -> a -> Bool
 {>} = |l, r| -> {
-  (r <= l) && (r != l)
+  (r <= l) && (r /= l)
 }
 
+-- a -> a -> Bool
 {>=} = |l, r| -> {
   (l > r) || (l == r)
 }
 
--- Lists
+--- Lists
+-- union, intersect, takeWhile, dropWhile, find, delete, deleteBy
 
 -- [a] -> Bool
 empty = |xs| -> {
@@ -200,6 +207,7 @@ sort = |xs| -> {
 
 --- Numeric
 
+-- Int -> Int -> Int
 {^} = |n, exp| -> {
   if exp == 0
     then 1
@@ -208,12 +216,12 @@ sort = |xs| -> {
 
 -- [a] -> a
 sum = |xs| -> {
-  fold ((+), 0, xs)
+  fold1 ((+), xs)
 }
 
--- a -> a -> a
+-- [a] -> a
 product = |xs| -> {
-  fold ((*), 1, xs)
+  fold1 ((*), xs)
 }
 
 -- a -> a -> a
@@ -254,7 +262,7 @@ abs = |n| -> {
     else n
 }
 
--- Misc
+--- Misc
 
 -- (a -> Bool) -> (a -> a) -> a -> a
 until = |p, f, x| -> {

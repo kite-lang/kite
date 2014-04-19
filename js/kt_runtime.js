@@ -1,4 +1,3 @@
-
 var print = function (str) { console.log(str); };
 var length = function (xs) { return xs.length; };
 var slice = function (xs){
@@ -19,6 +18,22 @@ var KT_PERCENT = function  (l) { return function (r) { return l % r;};};
 var KT_POUND = function  (arr) { return function (idx) { return arr[idx];}; };
 
 var KT_LTKT_EQ = function  (l) { return function (r) { return l <= r;};};
+var KT_EQKT_EQ = function  (l) { return function (r) {
+    /* check type of lhs only as types are trusted */
+    if (Object.prototype.toString.call( l ) === '[object Array]') {
+        var llen = l.length;
+        var rlen = l.length;
+        /* early return if lengths differ  */
+        if (llen != rlen) return false;
+        /* recursively match each element */
+        var eq = true;
+        for (var i = 0; i < llen; i++) {
+            eq = eq && KT_EQKT_EQ(l[i])(r[i]);
+        }
+        return eq;
+    }
+    else return l === r;
+};};
 
 var KT_COLON = function (x) {
     return function (xs) {
