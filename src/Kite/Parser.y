@@ -118,7 +118,7 @@ Call   :: { Expr }
 
 Assign :: { Expr }
         : id '=' Expr                  { PAssign (PIdentifier $1) $3 }
-        | '[' operator ']' '=' Expr    { PAssign (PIdentifier $2) $5 }
+        | '{' operator '}' '=' Expr    { PAssign (PIdentifier $2) $5 }
 
 -- differentiate between standard and function blocks
 StandardBlock :: { Expr }

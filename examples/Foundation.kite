@@ -73,8 +73,8 @@ tail = |xs| -> {
 -- [a] -> a
 last = |xs| -> {
   if length (xs) == 1
-    then last (tail (xs))
-    else head (xs)
+    then head (xs)
+    else (last . tail) (xs)
 }
 
 -- concatenation
@@ -163,7 +163,7 @@ flatten = |xs| -> {
 
 -- a -> [a] -> Bool
 contains = |el, xs| -> {
-  any ((==)(el), xs)
+  any ((== el), xs)
 }
 
 -- Int -> Int -> Int -> [Int]
@@ -185,7 +185,7 @@ range = |from, to| -> {
 reverse = |xs| -> {
   if empty (xs)
     then []
-    else reverse (tail (xs)) ++ [head (xs)]
+    else (reverse . tail) (xs) ++ [head (xs)]
 }
 
 -- quicksort
@@ -193,21 +193,21 @@ reverse = |xs| -> {
 sort = |xs| -> {
   if empty (xs)
     then []
-    else sort (filter (flip ((<)) (head (xs)), tail (xs)))
+    else sort (filter ((head (xs) <), tail (xs)))
          ++ head (xs)
-         : sort (filter (flip ((>=)) (head (xs)), tail (xs)))
+         : sort (filter ((head (xs) >=), tail (xs)))
 }
 
 --- Numeric
 
 -- [a] -> a
 sum = |xs| -> {
-  fold (|acc, n| -> { acc + n }, 0, xs)
+  fold ((+), 0, xs)
 }
 
 -- a -> a -> a
 product = |xs| -> {
-  fold (|acc, n| -> { acc * n }, 1, xs)
+  fold ((*), 1, xs)
 }
 
 -- a -> a -> a
@@ -231,7 +231,7 @@ maximum = |xs| -> {
 }
 
 -- Int -> Bool
-even = (==) (0) . flip ((%)) (2)
+even = (== 0) . (% 2)
 
 -- Int -> Bool
 odd = not . even
