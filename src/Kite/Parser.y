@@ -5,6 +5,11 @@ import Kite.Lexer
 import Text.Printf
 
 mkInfixCall op a1 a2 = PCall (PCall (PIdentifier op) a1) a2
+-- TODO: "partial infix right" can probably be done cleaner
+mkPartialRightInfixCall op rhs = PFunc (PFuncType (PTypeArg (PFreeType "t") (PIdentifier "lhs"))
+                                                  (PFreeType "t"))
+                                       (PReturn (PCall (PCall (PIdentifier op) (PIdentifier "lhs")) rhs))
+mkPartialLeftInfixCall op lhs = PCall (PIdentifier op) lhs
 
 --TODO: clean parameterless functions up
 mkCalls f args =
@@ -107,11 +112,13 @@ Exprs   : {- nothing -}    { [] }
 Call   :: { Expr }
         : Expr '(' Exprs ')'    { mkCalls $1 $3 }
         | Expr '`' Expr Expr    { PCall (PCall $3 $1) $4 }
-        | Expr operator Expr    { mkInfixCall $2 $1 $3 } -- infix operator
+        | Expr operator Expr    { mkInfixCall $2 $1 $3 } -- infix
+        | '(' Expr operator ')'    { mkPartialLeftInfixCall $3 $2 } -- partial left infix
+        | '(' operator Expr ')'    { mkPartialRightInfixCall $2 $3 } -- partial right infix
 
 Assign :: { Expr }
         : id '=' Expr                  { PAssign (PIdentifier $1) $3 }
-        | '{' operator '}' '=' Expr    { PAssign (PIdentifier $2) $5 }
+        | '[' operator ']' '=' Expr    { PAssign (PIdentifier $2) $5 }
 
 -- differentiate between standard and function blocks
 StandardBlock :: { Expr }
@@ -181,6 +188,7 @@ Term     :: { Expr }
 
 -- error handling
 happyError (x:xs) = error $ "Parse error: " ++ (show . posn2str . tok2posn) x
+happyError _ = error $ "Parse error: unexpected end of file"
 
 posn2str (AlexPn _ line col) = "line " ++ show line ++ ", column " ++ show col
 
