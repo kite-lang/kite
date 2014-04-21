@@ -4,12 +4,16 @@ import Data.List
 import Kite.Lexer
 import Text.Printf
 
+--- Desugaring
+
 mkInfixCall op a1 a2 = PCall (PCall (PIdentifier op) a1) a2
 -- TODO: "partial infix right" can probably be done cleaner
 mkPartialRightInfixCall op rhs = PFunc (PFuncType (PTypeArg (PFreeType "t") (PIdentifier "lhs"))
                                                   (PFreeType "t"))
                                        (PReturn (PCall (PCall (PIdentifier op) (PIdentifier "lhs")) rhs))
 mkPartialLeftInfixCall op lhs = PCall (PIdentifier op) lhs
+
+mkCharList str = PList (map PChar str)
 
 --TODO: clean parameterless functions up
 mkCalls f args =
@@ -40,11 +44,12 @@ mkFuncBlock exprs =
         int                { TInteger _ $$ }
         float              { TFloat _ $$ }
         string             { TString _ $$ }
+        char               { TChar _ $$ }
         bool               { TBool _ $$ }
 
         intTy              { TType _ "Int" }
         floatTy            { TType _ "Float" }
-        stringTy           { TType _ "String" }
+        charTy             { TType _ "Char" }
         boolTy             { TType _ "Bool" }
         id                 { TIdentifier _ $$ }
 
@@ -134,7 +139,7 @@ Type   :: { Type }
         : boolTy           { PBoolType }
         | intTy            { PIntegerType }
         | floatTy          { PFloatType }
-        | stringTy         { PStringType }
+        | charTy           { PCharType }
         | '[' Type ']'     { PListType $2 }
 --        | FuncType         { $1 }
         | id               { PFreeType $1 }
@@ -180,7 +185,8 @@ Term     :: { Expr }
           : int              { PInteger $1 }
           | bool             { PBool $1 }
           | float            { PFloat $1 }
-          | string           { PString $1 }
+          | string           { mkCharList $1 }
+          | char             { PChar $1 }
           | id               { PIdentifier $1 }
           | '(' operator ')' { PIdentifier $2 }
 
@@ -207,7 +213,7 @@ data Expr = PList [Expr]
           | PInteger Int
           | PFloat Float
           | PBool Bool
-          | PString String
+          | PChar Char
           | PIdentifier String
           | PVoid
           deriving (Show, Eq)
@@ -217,7 +223,7 @@ data Type = PListType Type
           | PBoolType
           | PIntegerType
           | PFloatType
-          | PStringType
+          | PCharType
           | PTypeArg Type Expr -- PIdentifier!
           | PFreeType String
           | PVoidType
@@ -230,7 +236,7 @@ instance Show Type where
   show PIntegerType          = "Int"
   show PVoidType             = "Void"
   show PFloatType            = "Float"
-  show PStringType           = "String"
+  show PCharType             = "Char"
   show (PFreeType id)        = id
   show (PTypeArg te ty)      = printf "%s: %s" (show ty) (show te)
 }

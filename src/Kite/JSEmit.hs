@@ -41,8 +41,9 @@ emit :: Expr -> Source
 emit PVoid = ""
 emit (PInteger val) = show val
 emit (PFloat val) = show val
-emit (PString val) = "\"" ++ val ++ "\""
+emit (PChar val) = '\'' : val : "'"
 emit (PBool val) = if val then "true" else "false"
+
 
 emit (PIdentifier ide) =
   let ide' = if ide `elem` reserved
@@ -50,6 +51,11 @@ emit (PIdentifier ide) =
                else ide
   in concatMap replace ide'
   where replace c = fromMaybe [c] (lookup c opNames)
+
+-- special case for list of chars, emit as js string
+emit (PList elems@(PChar _ : _)) =
+  let str = foldl (\acc (PChar x) -> acc ++ [x]) [] elems
+    in printf "\"%s\"" str
 
 emit (PList elems) = printf "[%s]" (emitAll "," elems)
 

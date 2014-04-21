@@ -15,6 +15,7 @@ $operatorSymbols        = [\+\-\/\*\%\=\|\&\<\>\!\~\`\#\.\:\^]
 @keywords		= return | import | if | then | else | yolo
 @operators		= [$operatorSymbols]+
 @string                 = \" (. # \")* \"
+@char                   = \' (. # \") \'
 @identifier		= $downcase [$alphaNum \_ \' \! \?]*
 @bool			= "True" | "False"
 @type			= $upcase [$alphaNum]*
@@ -34,6 +35,7 @@ kite :-
   $symbols		{ tok (\p s -> TSymbol p (head s)) }
 
   @string               { tok (\p s -> TString p $ (tail . init) s) }
+  @char                 { tok (\p s -> TChar p (read s)) }
   @identifier		{ tok (\p s -> TIdentifier p s) }
   @type			{ tok (\p s -> TType p s) }
 
@@ -52,6 +54,7 @@ data Token
   | TFloat      AlexPosn Float
   | TBool       AlexPosn Bool
   | TString     AlexPosn String
+  | TChar       AlexPosn Char
   | TKeyword    AlexPosn String
   | TOperator   AlexPosn String
   | TEOF        AlexPosn
@@ -64,6 +67,7 @@ tok2posn (TType       p _) = p
 tok2posn (TInteger    p _) = p
 tok2posn (TFloat      p _) = p
 tok2posn (TString     p _) = p
+tok2posn (TChar       p _) = p
 tok2posn (TBool       p _) = p
 tok2posn (TKeyword    p _) = p
 tok2posn (TOperator   p _) = p

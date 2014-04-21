@@ -171,7 +171,7 @@ infer :: TypeEnvironment -> Expr -> TC (Substitution, Type)
 
 infer _ (PInteger _) = return (nullSubst, PIntegerType)
 infer _ (PFloat _) = return (nullSubst, PFloatType)
-infer _ (PString _) = return (nullSubst, PStringType)
+infer _ (PChar _) = return (nullSubst, PCharType)
 infer _ (PBool _) = return (nullSubst, PBoolType)
 infer _ (PVoid) = return (nullSubst, PVoidType)
 
@@ -287,7 +287,7 @@ unify :: Type -> Type -> TC Substitution
 -- primitive base cases
 unify PIntegerType PIntegerType = return nullSubst
 unify PFloatType PFloatType = return nullSubst
-unify PStringType PStringType = return nullSubst
+unify PCharType PCharType = return nullSubst
 unify PBoolType PBoolType = return nullSubst
 unify PVoidType PVoidType = return nullSubst
 
