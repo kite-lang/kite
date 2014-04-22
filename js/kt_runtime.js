@@ -51,3 +51,7 @@ var KT_IF = function (cond) {
         };
     };
 };
+
+var KT_arguments = function (none) {
+    return process.argv;
+};

@@ -16,7 +16,7 @@ readFileEncoding enc file = do
 
 options file = do
   cwd <- getCurrentDirectory
-  let full = dropFileName $ joinPath [cwd, file]
+  let full = dropFileName $ cwd </> file
   case Cpphs.parseOptions [file, "-I" ++ full, "--noline"] of
     Right opts -> return opts
     Left err -> error err

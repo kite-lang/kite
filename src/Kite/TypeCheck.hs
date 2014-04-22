@@ -61,7 +61,8 @@ initSymbols =
                                    (":", mkConsSignature (show $ length ops + 4)),
                                    ("length", PFuncType (PListType (PFreeType "tlength")) PIntegerType),
                                    ("slice", PFuncType (PListType (PFreeType "tslice")) (PFuncType PIntegerType (PFuncType PIntegerType (PListType (PFreeType "tslice"))))),
-                                   ("print", PFuncType (PFreeType "tprint") (PFreeType "tprint"))])
+                                   ("print", PFuncType (PFreeType "tprint") (PFreeType "tprint")),
+                                   ("arguments", PFuncType PVoidType (PListType PCharType))])
 
 typeCheck :: Bool -> Expr -> Either TypeError Expr
 typeCheck debug expr = do

@@ -3,7 +3,7 @@
 Functions as first-class citizens. All functions take one argument. No named functions, only lambdas bound to names.
 
 ## Minimal built-ins
-<=, basic arithmetic, list index, list cons
+<=, ==, basic arithmetic, list index, list cons
 
 ## Infixes are just functions
 Succint partial application of infixes
@@ -19,8 +19,14 @@ Shift-reduce parsing via Happy. Grammar in BNF format.
 The responsibilities of the parser (desugaring).
 
 
-# Type inference
-## Hindley-Milner
+# Static analysis
+
+## Variable usage
+
+## Type inference
+
+### Hindley-Milner
+
 Basically uses extended lambda calculus. Easier to understand and implement if using one-parameter functions, thus using higher-order functions to simulate multi-parameter functions. Invites us to allow partial application.
 
 Functional style implementation uses substitutions instead of mutable global state.
