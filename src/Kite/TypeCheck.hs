@@ -5,6 +5,7 @@ module Kite.TypeCheck where
 
 import Debug.Trace
 import Kite.Parser
+import Kite.Syntax
 
 import Data.Maybe
 import Data.List

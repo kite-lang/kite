@@ -2,6 +2,7 @@
 module Kite.Parser where
 import Data.List
 import Kite.Lexer
+import Kite.Syntax
 import Text.Printf
 
 --- Desugaring
@@ -191,52 +192,9 @@ Term     :: { Expr }
           | '(' operator ')' { PIdentifier $2 }
 
 {
-
 -- error handling
 happyError (x:xs) = error $ "Parse error: " ++ (show . posn2str . tok2posn) x
 happyError _ = error $ "Parse error: unexpected end of file"
 
 posn2str (AlexPn _ line col) = "line " ++ show line ++ ", column " ++ show col
-
-data BlockType = StandardBlock
-               | FuncBlock
-               deriving (Show, Eq)
-
-data Expr = PList [Expr]
-          | PBlock BlockType [Expr]
-          | PIf Expr Expr Expr
-          | PAssign Expr Expr -- PIdentifier!
-          | PFunc Type Expr -- PFuncType!
-          | PCall Expr Expr -- PIdentifier!
-          | PReturn Expr
-
-          | PInteger Int
-          | PFloat Float
-          | PBool Bool
-          | PChar Char
-          | PIdentifier String
-          | PVoid
-          deriving (Show, Eq)
-
-data Type = PListType Type
-          | PFuncType Type Type
-          | PBoolType
-          | PIntegerType
-          | PFloatType
-          | PCharType
-          | PTypeArg Type Expr -- PIdentifier!
-          | PFreeType String
-          | PVoidType
-          deriving (Eq)
-
-instance Show Type where
-  show (PListType ty)        = printf "[%s]" $ show ty
-  show (PFuncType param ret) = printf "(%s -> %s)" (show param) (show ret)
-  show PBoolType             = "Bool"
-  show PIntegerType          = "Int"
-  show PVoidType             = "Void"
-  show PFloatType            = "Float"
-  show PCharType             = "Char"
-  show (PFreeType id)        = id
-  show (PTypeArg te ty)      = printf "%s: %s" (show ty) (show te)
 }

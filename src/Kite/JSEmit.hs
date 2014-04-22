@@ -5,14 +5,17 @@ module Kite.JSEmit where
 import Control.Monad
 import Data.Maybe
 import Data.FileEmbed
-import Text.Printf
 import qualified Data.ByteString.Char8 as Ch
+import Text.Printf
+
 import Kite.Parser
+import Kite.Syntax
 
 type Source = String
 
-reserved = ["while", "for"]
-kitePrefix = "KITE_"
+reserved = ["while", "for", "arguments"]
+kitePrefix = "KT_"
+
 runtime = $(embedFile "js/kt_runtime.js")
 opNames = [('+', "KT_PLUS"),
            ('-', "KT_MINUS"),
