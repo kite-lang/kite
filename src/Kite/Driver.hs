@@ -1,26 +1,37 @@
-module Kite.Driver (lex, parse, analyze, kite) where
+{-# LANGUAGE NoMonomorphismRestriction #-}
+module Kite.Driver (runKite) where
 
 import Prelude hiding (lex)
+
+import Text.Show.Pretty
+
 import Kite.Lexer
 import Kite.Parser
-import Kite.JSEmit
 import Kite.TypeCheck
 import Kite.Preprocessor
+import Control.Monad
+import qualified Kite.JSEmit as Kjs
 
 lex = alexScanTokens
 parse = kiteparser
 analyze = typeCheck
 process = preprocess
 
-kite file = do
-  p <- process file
-  print p
-  case (analyze False . parse . lex) p of
-     Right ast -> codegen ((parse . lex) p)
-     Left err -> return $ "meh " ++ show err
+-- ev: eval, db: debug, js: emit js, lx: lex output, pr: parser output
+runKite db js lx pr source = do
+  p <- process source
 
--- kitef file = do
---   p <- process file
---   case kited file of
---     Right ast -> codegen ((parse . lex) p) >>= print
---     Left err -> print $ "meh " ++ show err
+  let tokens = lex p
+  when lx (prettyPrint tokens)
+
+  let ast = parse tokens
+  when pr (prettyPrint ast)
+
+  let analysis = analyze db ast
+  case analysis of
+    Right _ -> case js of
+      True -> Kjs.codegen ast >>= putStrLn
+      False -> putStrLn "No emitter selected. Use kite --help to view available emitters."
+    Left err -> putStrLn ("Error: " ++ show err)
+
+  where prettyPrint = putStrLn . ppShow

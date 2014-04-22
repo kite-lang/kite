@@ -52,9 +52,6 @@ free (PListType t)         = free t
 free (PFuncType param ret) = free param `union` free ret
 free (PTypeArg t _)        = free t
 
-isFree (PFreeType _) = True
-isFree _ = False
-
 prettyType tmap t@(PFreeType _) =
   case find ((==t) . fst) tmap of
     Just a -> snd a

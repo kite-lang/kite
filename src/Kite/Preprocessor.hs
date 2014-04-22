@@ -1,4 +1,4 @@
-module Kite.Preprocessor (preprocess) where
+module Kite.Preprocessor (preprocess, lolwat) where
 
 import qualified Language.Preprocessor.Cpphs as Cpphs
 import System.Directory
@@ -22,9 +22,8 @@ options file = do
     Left err -> error err
 
 include file = do
-  source <- readFile file
   enc <- readFileEncoding (Encoding Nothing) file
   opts <- options file
-  Cpphs.runCpphs opts source enc
+  Cpphs.runCpphs opts file enc
 
 preprocess = include

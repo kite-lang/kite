@@ -1,18 +1,19 @@
 {-# LANGUAGE DeriveDataTypeable, RecordWildCards, NoMonomorphismRestriction #-}
 module Main where
 
-import qualified Kite.Driver as Kt
+import Kite.Driver
 import qualified Kite.JSEmit as Kjs
 
 import System.Console.CmdArgs
 import Control.Monad
-import Text.Show.Pretty
+import Kite.Preprocessor
 
 data KiteArgs = KiteArgs {
   input :: String,
   eval :: Bool,
   lexOutput :: Bool,
   parOutput :: Bool,
+  jsEmit :: Bool,
   debugOutput :: Bool
   } deriving (Data, Typeable, Show)
 
@@ -21,25 +22,13 @@ kiteArgs = cmdArgsMode $ KiteArgs {
   eval = False &= help "Evaluate expression",
   lexOutput = False &= help "Emit lexer output",
   parOutput = False &= help "Emit parser output",
-  debugOutput = False &= help "Output debug information"}
+  debugOutput = False &= help "Output debug information",
+  jsEmit = False &= help "Emit JavaScript"}
            &= summary "Kite compiler v0.0.1"
 
 main = do
   KiteArgs {..} <- cmdArgsRun kiteArgs
 
-  inp <- if eval then return input else readFile input
+  --inp <- readFile input
 
-  let tokens = Kt.lex inp
-  when lexOutput (prettyPrint tokens)
-
-  let ast = Kt.parse tokens
-  when parOutput (prettyPrint ast)
-
-  Kt.kite input >>= putStrLn
-
-  -- let analysis = Kt.analyze debugOutput ast
-  -- case analysis of
-  --   Right _ -> Kjs.codegen ast >>= putStrLn
-  --   Left err -> putStrLn ("Error: " ++ show err)
-
-  where prettyPrint = putStrLn . ppShow
+  runKite debugOutput jsEmit lexOutput parOutput input
