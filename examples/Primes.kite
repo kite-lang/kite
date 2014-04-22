@@ -1,0 +1,10 @@
+#include "Foundation.kite"
+
+isPrime = |n, ps| -> {
+  (n == 2) || not (any ((== 0) . (n %), ps))
+}
+
+primes = |lim| -> {
+  f = |ps, n| -> { if isPrime (n, ps) then n : ps else ps }
+  fold (f, [2], rangeStep(3, lim, 2))
+}

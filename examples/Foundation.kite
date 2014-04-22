@@ -58,7 +58,6 @@ not = |p| -> {
 }
 
 --- Lists
--- union, intersect, takeWhile, dropWhile, find, delete, deleteBy
 
 -- [a] -> Bool
 empty = |xs| -> {
@@ -89,7 +88,7 @@ last = |xs| -> {
 {++} = |l, r| -> {
   if empty (l)
     then r
-    else (head (l)) : (tail (l) ++ r)
+    else head (l) : (tail (l) ++ r)
 }
 
 -- [a] -> [a]
@@ -169,9 +168,47 @@ flatten = |xs| -> {
 }
 
 -- a -> [a] -> Bool
-contains = |el, xs| -> {
+contains = |xs, el| -> {
   any ((== el), xs)
 }
+
+-- [a] -> [a]
+reverse = |xs| -> {
+  if empty (xs)
+    then []
+    else (reverse . tail) (xs) ++ [head (xs)]
+}
+
+-- union, intersect, takeWhile, dropWhile, find, delete, deleteBy
+union = |xs, xs'| -> {
+  f = |acc, x| -> {
+    if acc `contains x
+      then acc
+      else x : acc
+  }
+  fold (f, xs', xs)
+}
+
+intersect = |xs, xs'| -> {
+  f = |acc, x| -> {
+    if xs `contains x
+      then x : acc
+      else acc
+  }
+  fold (f, [], xs')
+}
+
+-- quicksort
+-- [a] -> [a]
+sort = |xs| -> {
+  if empty (xs)
+    then []
+    else sort (filter ((head (xs) <), tail (xs)))
+         ++ head (xs)
+         : sort (filter ((head (xs) >=), tail (xs)))
+}
+
+--- List utilities
 
 -- Int -> Int -> Int -> [Int]
 rangeStep = |from, to, step| -> {
@@ -188,24 +225,16 @@ range = |from, to| -> {
   rangeStep (from, to, 1)
 }
 
--- [a] -> [a]
-reverse = |xs| -> {
-  if empty (xs)
-    then []
-    else (reverse . tail) (xs) ++ [head (xs)]
-}
-
--- quicksort
--- [a] -> [a]
-sort = |xs| -> {
-  if empty (xs)
-    then []
-    else sort (filter ((head (xs) <), tail (xs)))
-         ++ head (xs)
-         : sort (filter ((head (xs) >=), tail (xs)))
-}
-
 --- Numeric
+
+-- Float -> Float
+-- sqrt = |n| -> {
+--   x0 = if n < 10 then 200.0 else 600.0
+--   inner = |i, n'| -> {
+
+--   }
+--   inner
+-- }
 
 -- Int -> Int -> Int
 {^} = |n, exp| -> {

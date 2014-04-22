@@ -1,20 +1,27 @@
 #include "Foundation.kite"
+#include "Primes.kite"
+#include "Geom.kite"
 
-isPrime = |n, ps| -> {
-  if n == 2
-    then True
-    else not (any ((==) (0) . (%) (n), ps))
-}
-
-primes = |lim| -> {
-  f = |ps, n| -> { if isPrime (n, ps) then n : ps else ps }
-  fold (f, [2], rangeStep(3, lim, 2))
+ticker' = -> {
+  a = 0
+  -> {
+    print (a)
+    a = a + 1
+  }
 }
 
 main = -> {
-  print (sort ([4, 5, 3, 7, 5, 0]))
-  print (flatten ([[1, 2], [3, 4]]))
-  print (length (primes (250)))
-  print (reverse ([1, 2, 3, 4]))
-  print ((reverse . sort) ([4, 5, 3, 7, 5, 0]))
+  -- print (sort ([4, 5, 3, 7, 5, 0]))
+  -- print (flatten ([[1, 2], [3, 4]]))
+  -- print (length (primes (250)))
+  -- print (reverse ([1, 2, 3, 4]))
+  -- print (1 : 2 : [])
+  -- print (product ([1, 2, 3, 4]))
+  -- tick = ticker' ()
+  -- tick ()
+  -- tick ()
+  p1 = point2(1, 2)
+  p2 = point2(3, 4)
+  print (ycor2 (midpoint (p1, p2)))
+  -- zcor3(p3)
 }

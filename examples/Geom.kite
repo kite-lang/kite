@@ -1,0 +1,37 @@
+#include "Foundation.kite"
+
+pair = |a, b| -> { |pick| -> { if pick == 0 then a else b } }
+fst = |p| -> { p(0) }
+snd = |p| -> { p(1) }
+
+--- Point
+point2 = pair
+
+xcor2 = |pt| -> { fst (pt) }
+ycor2 = |pt| -> { snd (pt) }
+
+-- point3 = |x, y, z| -> { pair (x, (pair (y, z))) }
+
+-- xcor3 = |pt| -> { fst (pt) }
+-- ycor3 = |pt| -> { fst (fst (pt)) }
+-- zcor3 = |pt| -> { snd (fst (pt)) }
+
+--- Segment
+segment = pair
+
+startSeg = |seg| -> { fst (seg) }
+endSeg = |seg| -> { snd (seg) }
+
+seglen = |seg| -> {
+  dx = (xcor2 . startSeg) (seg) - (xcor2 . endSeg) (seg)
+  dy = (ycor2 . startSeg) (seg) - (ycor2 . endSeg) (seg)
+  --sqrt ((dx ^ 2) + (dy ^ 2))
+  7
+}
+
+-- usage
+midpoint = |p1, p2| -> {
+  dx = xcor2 (p2) - xcor2 (p1)
+  dy = ycor2 (p2) - ycor2 (p1)
+  point2 (dx / 2, dy / 2)
+}

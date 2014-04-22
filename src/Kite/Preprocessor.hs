@@ -1,4 +1,4 @@
-module Kite.Preprocessor (preprocess, lolwat) where
+module Kite.Preprocessor (preprocess) where
 
 import qualified Language.Preprocessor.Cpphs as Cpphs
 import System.Directory
