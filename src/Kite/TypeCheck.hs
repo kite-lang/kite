@@ -103,7 +103,12 @@ popSymFrame = do
   put env{sym = tail (sym env)}
 
 instance Show Environment where
-  show env = "Top symbol frame\n" ++ foldl (\acc (n, v) -> acc ++ n ++ ":\t" ++ show v ++ "\n") "" (Map.toList . head . sym $ env)
+  show env =
+    let syms = Map.toList $ head . sym $ env
+        len = maximum (map (length . fst) syms)
+        spaces = repeat ' '
+        symstr = foldl (\acc (n, v) -> printf "%s%s%s%s\n" acc n (take (1 + len - length n) spaces) (show v)) "" syms
+    in "Top symbol frame\n" ++ symstr
 
 -- the monad in which all the state is kept and errors are thrown
 type TC a = ErrorT TypeError (State Environment) a

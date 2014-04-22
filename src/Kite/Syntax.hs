@@ -71,6 +71,7 @@ prettyType tmap (PFuncType tp tr) = printf "(%s -> %s)" (prettyType tmap tp) (pr
 prettyType _ (PTypeArg t ide)     = printf "%s: %s" (show ide) (show t)
 
 instance Show Type where
+  -- compound types
   show lt@(PListType _) = 
     let frees = nub (free lt)
         tmap = foldl (\acc t -> (t, [chr $ length acc + 97]) : acc) [] frees
@@ -80,10 +81,6 @@ instance Show Type where
     let frees = nub (free ft)
         tmap = foldl (\acc t -> (t, [chr $ length acc + 97]) : acc) [] frees
     in prettyType tmap ft
-  show t@PBoolType             = prettyType [] t
-  show t@PIntegerType          = prettyType [] t
-  show t@PVoidType             = prettyType [] t
-  show t@PFloatType            = prettyType [] t
-  show t@PCharType             = prettyType [] t
-  show t@(PFreeType _)         = prettyType [] t
-  show t@(PTypeArg _ _)        = prettyType [] t
+
+  -- monotypes
+  show t             = prettyType [] t
