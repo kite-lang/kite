@@ -8,6 +8,12 @@ data BlockType = StandardBlock
                | FuncBlock
                deriving (Show, Eq)
 
+data Pattern = PatList String String
+             | PatEmptyList
+             | PatPrimitive Expr
+             | PatOtherwise
+             deriving (Show, Eq)
+
 data Expr = PList [Expr]
           | PBlock BlockType [Expr]
           | PTuple [Expr]
@@ -16,6 +22,7 @@ data Expr = PList [Expr]
           | PFunc Type Expr -- PFuncType!
           | PCall Expr Expr -- PIdentifier!
           | PReturn Expr
+          | PMatch Expr [(Pattern, Expr)]
 
           | PInteger Int
           | PFloat Float
@@ -36,7 +43,7 @@ data Type = PListType Type
           | PFreeType String
           | PVoidType
           deriving (Eq)
-                   
+
 --- Pretty printing
 
 -- free types in nodes

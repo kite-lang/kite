@@ -20,9 +20,12 @@ var KT_POUND = function  (arr) { return function (idx) { return arr[idx];}; };
 var KT_LTKT_EQ = function  (l) { return function (r) { return l <= r;};};
 var KT_EQKT_EQ = function  (l) { return function (r) {
     /* check type of lhs only as types are trusted */
-    if (Object.prototype.toString.call( l ) === '[object Array]') {
+    if (KT_isArray(l)) {
+        /* early return if both not list  */
+        if (!KT_isArray(r)) return false;
+
         var llen = l.length;
-        var rlen = l.length;
+        var rlen = r.length;
         /* early return if lengths differ  */
         if (llen != rlen) return false;
         /* recursively match each element */
@@ -44,12 +47,37 @@ var KT_COLON = function (x) {
     };
 };
 
-var KT_IF = function (cond) {
+var KT_isArray = function (e) { return Object.prototype.toString.call( e ) === '[object Array]'; };
+
+var KT_if = function (cond) {
     return function (conseq) {
         return function (alt) {
             if (cond()) return conseq(); else return alt();
         };
     };
+};
+
+var KT_match = function (val, patterns) {
+    for (var i = 0; i < patterns.length; i++) {
+        var pattern = patterns[i];
+        switch (pattern.type) {
+        case 'simple':
+            if (KT_EQKT_EQ(val)(pattern.expr())) return pattern.conseq();
+            break;
+
+        case 'list':
+            if (KT_isArray(val) && val.length > 0) {
+                return pattern.conseq(val[0], val.slice(1));
+            }
+            break;
+
+        case 'otherwise':
+            return pattern.conseq();
+            break;
+        }
+    }
+
+    throw "Non-exhaustive pattern";
 };
 
 var KT_arguments = function (none) {

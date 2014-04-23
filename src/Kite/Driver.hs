@@ -35,9 +35,9 @@ runKite ev db js lx pr source = do
 
   let analysis = analyze db ast
   case analysis of
-    Right _ -> case js of
-      True -> Kjs.codegen ast >>= putStrLn
-      False -> putStrLn "No emitter selected. Use kite --help to view available emitters."
+    Right _ -> if js
+                 then Kjs.codegen ast >>= putStrLn
+                 else putStrLn "No emitter selected. Use kite --help to view available emitters."
     Left err -> putStrLn ("Error: " ++ show err)
 
   where prettyPrint = putStrLn . ppShow

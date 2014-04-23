@@ -234,6 +234,23 @@ infer env (PList elems) = do
                             ) (nullSubst, fresh) elems
   return (sElems, PListType (apply sElems tElems))
 
+
+infer env (PMatch expr patterns) = do
+  fresh <- freshFtv "t"
+  (sElems, tElems) <- foldM (\(s, t) (pattern, val) -> do
+                                let TypeEnvironment e = env
+                                    env' = case pattern of
+                                      PatList hd tl -> do
+                                        let hdt = (hd, Scheme [] fresh)
+                                            tlt = (tl, Scheme [] (PListType fresh))
+                                        TypeEnvironment (Map.fromList [hdt, tlt] `Map.union` e)
+                                      _ -> env
+                                (se, te) <- infer (apply s env') val
+                                s' <- unify te t
+                                return (se `composeSubst` s' `composeSubst` s, te)
+                            ) (nullSubst, fresh) patterns
+  return (sElems, apply sElems tElems)
+
 infer env (PIf cond conseq alt) = do
   (s0, tyCond) <- infer env cond
 

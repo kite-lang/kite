@@ -9,10 +9,10 @@ $upcase			= A-Z
 $digit			= 0-9
 $alpha			= [$downcase $upcase]
 $alphaNum		= [$alpha $digit]
-$symbols		= [\(\)\{\}\[\]\;\,\:]
+$symbols		= [\(\)\{\}\[\]\;\,\:\_]
 $operatorSymbols        = [\+\-\/\*\%\=\|\&\<\>\!\~\`\#\.\:\^]
 
-@keywords		= return | import | if | then | else | yolo
+@keywords		= return | import | if | then | else | yolo | match
 @operators		= [$operatorSymbols]+
 @string                 = \" (. # \")* \"
 @char                   = \' (. # \") \'

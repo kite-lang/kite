@@ -4,6 +4,7 @@ module Kite.JSEmit where
 
 import Control.Monad
 import Data.Maybe
+import Data.List
 import Data.FileEmbed
 import qualified Data.ByteString.Char8 as Ch
 import Text.Printf
@@ -37,7 +38,7 @@ opNames = [('+', "KT_PLUS"),
 codegen :: Expr -> IO Source
 codegen expr = do
   let r' = filter (not . (=='\n')) (Ch.unpack runtime)
-  return (r' ++ emit expr ++ "main();")
+  return (r' ++ emit expr ++ ";main();")
 
 emit :: Expr -> Source
 
@@ -46,7 +47,6 @@ emit (PInteger val) = show val
 emit (PFloat val) = show val
 emit (PChar val) = '\'' : val : "'"
 emit (PBool val) = if val then "true" else "false"
-
 
 emit (PIdentifier ide) =
   let ide' = if ide `elem` reserved
@@ -63,7 +63,7 @@ emit (PList elems@(PChar _ : _)) =
 emit (PList elems) = printf "[%s]" (emitAll "," elems)
 
 emit (PIf cond conseq alt) =
-  printf "KT_IF(function() { return %s; })(function() { return %s; })(function() { return %s; })" (emit cond) (emit conseq) (emit alt)
+  printf "KT_if(function() { return %s; })(function() { return %s; })(function() { return %s; })" (emit cond) (emit conseq) (emit alt)
 
 emit (PFunc (PFuncType param _) body) =
   let PTypeArg _ ide = param
@@ -81,5 +81,12 @@ emit (PReturn expr) =
 emit (PCall expr arg) =
   printf "%s(%s)" (emit expr) (emit arg)
 
+emit (PMatch expr pats) =
+  printf "KT_match(%s,%s)" (emit expr) ("[" ++ intercalate "," (map emitPattern pats) ++ "]")
+
+emitPattern (PatList hd tl, val) = printf "{ type: 'list', conseq: function (%s, %s) { return %s } }" hd tl (emit val)
+emitPattern (PatPrimitive expr, val) = printf "{ type: 'simple', expr:function(){ return %s}, conseq: function () { return %s } }" (emit expr) (emit val)
+emitPattern (PatOtherwise, val) = printf "{ type: 'otherwise', conseq: function () { return %s } }" (emit val)
+
 emitAll :: String -> [Expr] -> Source
-emitAll delim = foldl (\acc x -> acc ++ emit x ++ delim) ""
+emitAll delim = intercalate delim . map emit

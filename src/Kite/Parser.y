@@ -67,6 +67,7 @@ mkFuncBlock exprs =
         then               { TKeyword _ "then" }
         else               { TKeyword _ "else" }
         yolo               { TKeyword _ "yolo" }
+        match              { TKeyword _ "match" }
 
         '('                { TSymbol _ '(' }
         ')'                { TSymbol _ ')' }
@@ -77,6 +78,7 @@ mkFuncBlock exprs =
         ','                { TSymbol _ ',' }
         ':'                { TSymbol _ ':' }
         ';'                { TSymbol _ ';' }
+        '_'                { TSymbol _ '_' }
 
 %right in
 %nonassoc '&&' '||'
@@ -102,6 +104,7 @@ Stmts  :: { [Expr] }
 
 Expr   :: { Expr }
         : List             { $1 }
+        | Match            { $1 }
         | Assign           { $1 }
         | Func             { $1 }
         | Call             { $1 }
@@ -113,6 +116,21 @@ Exprs  :: { [Expr] }
 Exprs   : {- nothing -}    { [] }
         | Expr             { [$1] }
         | Expr ',' Exprs   { $1 : $3 }
+
+--- Pattern matching
+
+Match :: { Expr }
+       : match Expr '{' Patterns '}'           { PMatch $2 $4 }
+
+Pattern :: { (Pattern, Expr) }
+         : id ',' id           '->' Expr       { (PatList $1 $3,   $5) }
+         | Expr                '->' Expr       { (PatPrimitive $1, $3) }
+         | '_'                 '->' Expr       { (PatOtherwise,    $3) }
+
+Patterns  :: { [(Pattern, Expr)] }
+Patterns   : {- nothing -}      { [] }
+        | Pattern               { [$1] }
+        | Pattern ',' Patterns  { $1 : $3 }
 
 -- expression rules
 Call   :: { Expr }
