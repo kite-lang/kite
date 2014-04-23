@@ -50,10 +50,6 @@
                          (mapconcat 'identity args " "))
 ))
         (buffer (get-buffer kite-compiled-buffer-name)))
-    (message (format "%s -e %s %s"
-                     (concatenate 'string kite-command " ")
-                     (shell-quote-argument (buffer-substring start end))
-                     (mapconcat 'identity args " ")))
     (display-buffer buffer)
     (with-current-buffer buffer
       (erase-buffer)
