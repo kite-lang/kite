@@ -4,6 +4,13 @@
 -- a -> a
 id = |x| -> { x }
 
+length = |xs| -> {
+  match xs {
+    [] -> 0,
+    x,xs -> 1 + length (xs)
+  }
+}
+
 -- composition
 -- (b -> c) -> (a -> b) -> (a -> c)
 {.} = |f, g| -> {
@@ -62,71 +69,82 @@ not = |p| -> {
 
 -- [a] -> Bool
 empty = |xs| -> {
-  length (xs) == 0
+  match xs {
+    [] -> True,
+    _ -> False
+  }
 }
 
 -- [a] -> a
 head = |xs| -> {
-  xs # 0
+  match xs {
+    [] -> [], -- TODO: needs an error
+    x,xs -> x
+  }
 }
 
 -- [a] -> [a]
 tail = |xs| -> {
-  if empty (xs)
-    then []
-    else slice (xs, 1, length (xs))
+  match xs {
+    [] -> [], -- TODO: needs an error
+    x,xs -> xs
+  }
+}
+
+-- [a] -> [a]
+init = |xs| -> {
+  match xs {
+    x,xs -> if empty (xs) then [] else x : init (xs)
+  }
 }
 
 -- [a] -> a
 last = |xs| -> {
-  if length (xs) == 1
-    then head (xs)
-    else (last . tail) (xs)
+  match xs {
+    x,xs -> if empty (xs) then x else last (xs)
+  }
 }
 
 -- concatenation
 -- [a] -> [a] -> [a]
 {++} = |l, r| -> {
-  if empty (l)
-    then r
-    else head (l) : (tail (l) ++ r)
-}
-
--- [a] -> [a]
-init = |xs| -> {
-  if empty (xs)
-    then []
-    else slice (xs, 0, length (xs) - 1)
+  match l {
+    [] -> r,
+    x,xs -> x : (xs ++ r)
+  }
 }
 
 -- (a -> b) -> [a] -> [b]
-map = |f, xs| -> {
-  if empty (xs)
-    then []
-    else f (head (xs)) : map (f, tail (xs))
+map = |f, ls| -> {
+  match ls {
+    [] -> [],
+    x,xs -> f (x) : map (f, xs)
+  }
 }
 
 -- (a -> b -> a) -> a -> [b] -> a
 fold = |f, acc, xs| -> {
-  if empty (xs)
-    then acc
-    else fold (f, f (acc, head (xs)), tail (xs))
+  match xs {
+    [] -> acc,
+    x,xs -> fold (f, f (acc, x), xs)
+  }
 }
 
 -- (a -> b -> a) -> [b] -> a
 fold1 = |f, xs| -> {
   if empty (xs)
-    then head (xs) -- TODO: needs an error function
+    then head (xs)
     else fold (f, head (xs), tail (xs))
 }
 
 -- (a -> Bool) -> [a] -> [a]
-filter = |f, xs| -> {
-  if empty (xs)
-    then []
-    else if f (head (xs))
-           then head (xs) : filter (f, tail (xs))
-           else filter (f, tail (xs))
+filter = |f, ls| -> {
+  match ls {
+    []    -> [],
+    x,xs  -> if f (x)
+               then x : filter (f, xs)
+               else filter (f, xs)
+  }
 }
 
 -- Int -> [a] -> [a]
@@ -175,9 +193,10 @@ contains = |xs, el| -> {
 
 -- [a] -> [a]
 reverse = |xs| -> {
-  if empty (xs)
-    then []
-    else (reverse . tail) (xs) ++ [head (xs)]
+  match xs {
+    []    -> [],
+    x,xs  -> (reverse . tail) (xs) ++ [x]
+  }
 }
 
 -- union, intersect, takeWhile, dropWhile, find, delete, deleteBy

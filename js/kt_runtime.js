@@ -1,12 +1,4 @@
 var print = function (str) { console.log(str); };
-var length = function (xs) { return xs.length; };
-var slice = function (xs){
-    return function(from) {
-        return function(to) {
-            return xs.slice(from, to);
-        };
-    };
-};
 
 var KT_PLUS = function  (l) { return function (r) { return l + r; };};
 var KT_MINUS = function  (l) { return function (r) { return l - r; };};
