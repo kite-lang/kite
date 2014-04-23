@@ -1,3 +1,4 @@
+
 --- Functional
 
 -- a -> a
@@ -203,9 +204,9 @@ intersect = |xs, xs'| -> {
 sort = |xs| -> {
   if empty (xs)
     then []
-    else sort (filter ((head (xs) <), tail (xs)))
+    else sort (filter ((< (head (xs))), tail (xs)))
          ++ head (xs)
-         : sort (filter ((head (xs) >=), tail (xs)))
+         : sort (filter ((>= (head (xs))), tail (xs)))
 }
 
 --- List utilities
@@ -215,7 +216,7 @@ rangeStep = |from, to, step| -> {
   inner = |from, to, ls| -> {
     if from > to
       then ls
-      else from : inner (from + step, to, ls)
+      else from : inner (step + from, to, ls)
   }
   inner(from, to, [])
 }

@@ -31,4 +31,4 @@ main = do
 
   --inp <- readFile input
 
-  runKite debugOutput jsEmit lexOutput parOutput input
+  runKite eval debugOutput jsEmit lexOutput parOutput input
