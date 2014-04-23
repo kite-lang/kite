@@ -57,7 +57,6 @@ initSymbols =
       opSigs = map (\(op, n) -> (op, mkArithSignature (show n))) (zip ops [0 .. length ops])
   in Map.fromList (opSigs `union` [("<=", mkEqualitySignature (show $ length ops + 1)),
                                    ("==", mkEqualitySignature (show $ length ops + 2)),
-                                   ("#", mkIndexSignature (show $ length ops + 3)),
                                    (":", mkConsSignature (show $ length ops + 4)),
                                    ("print", PFuncType (PFreeType "tprint") (PFreeType "tprint")),
                                    ("arguments", PFuncType PVoidType (PListType PCharType))])

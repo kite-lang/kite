@@ -67,6 +67,14 @@ not = |p| -> {
 
 --- Lists
 
+-- [a] -> Int -> a
+{#} = |xs, idx| -> {
+  match xs {
+    -- [] -> -- panic ("List index too large") TODO: error
+    x,xs -> if idx == 0 then x else xs # (idx - 1)
+  }
+}
+
 -- [a] -> Bool
 empty = |xs| -> {
   match xs {

@@ -7,8 +7,6 @@ var KT_SLASH = function  (l) { return function (r) { return l / r;};};
 
 var KT_PERCENT = function  (l) { return function (r) { return l % r;};};
 
-var KT_POUND = function  (arr) { return function (idx) { return arr[idx];}; };
-
 var KT_LTKT_EQ = function  (l) { return function (r) { return l <= r;};};
 var KT_EQKT_EQ = function  (l) { return function (r) {
     /* check type of lhs only as types are trusted */
