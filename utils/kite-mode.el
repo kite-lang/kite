@@ -15,7 +15,10 @@
     (define-key map (kbd "C-c C-r") 'kite-compile-region)
     (define-key map (kbd "C-c C-p C-r")
       (lambda (start end) (interactive "r") (kite-compile-region start end "-p")))
+    (define-key map (kbd "C-c C-j")
+      (lambda () (interactive) (kite-compile-current-buffer " -j | node ")))
     map)
+
   "Keymap for Kite major mode.")
 
 (defcustom kite-compiled-buffer-name "*kite-compiled*"
@@ -41,13 +44,17 @@
   (get-buffer-create kite-compiled-buffer-name)
 
   (let ((result (shell-command-to-string
-                 (format "%s -e %s"
-                         (concatenate 'string kite-command " " (mapconcat 'identity args " "))
-                         (shell-quote-argument (buffer-substring start end)))))
+                 (format "%s -e %s %s"
+                         (concatenate 'string kite-command " ")
+                         (shell-quote-argument (buffer-substring start end))
+                         (mapconcat 'identity args " "))
+))
         (buffer (get-buffer kite-compiled-buffer-name)))
-
+    (message (format "%s -e %s %s"
+                     (concatenate 'string kite-command " ")
+                     (shell-quote-argument (buffer-substring start end))
+                     (mapconcat 'identity args " ")))
     (display-buffer buffer)
-
     (with-current-buffer buffer
       (erase-buffer)
       (insert result)))
