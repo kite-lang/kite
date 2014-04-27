@@ -35,7 +35,6 @@ mkFuncBlock exprs =
   case last exprs of
     PReturn _ -> PBlock FuncBlock exprs
     _ -> PBlock FuncBlock (init exprs ++ [PReturn (last exprs)])
-
 }
 
 %name kiteparser
@@ -104,6 +103,7 @@ Stmts  :: { [Expr] }
 
 Expr   :: { Expr }
         : List             { $1 }
+        --| Tuple            { $1 }
         | Match            { $1 }
         | Assign           { $1 }
         | Func             { $1 }
@@ -122,12 +122,12 @@ Exprs   : {- nothing -}    { [] }
 Match :: { Expr }
        : match Expr '{' Patterns '}'           { PMatch $2 $4 }
 
-Pattern :: { (Pattern, Expr) }
-         : id ',' id           '->' Expr       { (PatList $1 $3,   $5) }
-         | Expr                '->' Expr       { (PatPrimitive $1, $3) }
-         | '_'                 '->' Expr       { (PatOtherwise,    $3) }
+Pattern :: { PatternCase }
+         : id ',' id           '->' Expr       { (PatListCons $1 $3, $5) }
+         | Expr                '->' Expr       { (PatPrimitive $1,   $3) }
+         | '_'                 '->' Expr       { (PatOtherwise,      $3) }
 
-Patterns  :: { [(Pattern, Expr)] }
+Patterns  :: { [PatternCase] }
 Patterns   : {- nothing -}      { [] }
         | Pattern               { [$1] }
         | Pattern ',' Patterns  { $1 : $3 }
@@ -152,16 +152,20 @@ FuncBlock :: { Expr }
            : '{' Stmts '}'    { mkFuncBlock $2 }
 
 List   :: { Expr }
-List    : '[' Exprs ']'    { PList $2 }
+List    : '[' Exprs ']'      { PList $2 }
+
+-- Tuple   :: { Expr }
+-- Tuple    : '(' Exprs ')'     { PTuple $2 }
 
 Type   :: { Type }
-        : boolTy           { PBoolType }
-        | intTy            { PIntegerType }
-        | floatTy          { PFloatType }
-        | charTy           { PCharType }
-        | '[' Type ']'     { PListType $2 }
+        : boolTy             { PBoolType }
+        | intTy              { PIntegerType }
+        | floatTy            { PFloatType }
+        | charTy             { PCharType }
+--        | '(' TupleTypes ')' { PTupleType $2 }
+        | '[' Type ']'       { PListType $2 }
 --        | FuncType         { $1 }
-        | id               { PFreeType $1 }
+        | id                 { PFreeType $1 }
 
 -- support both single expr and blocks
 If     :: { Expr }
@@ -177,6 +181,12 @@ Func   :: { Expr }
 FuncSignature :: { ([Type], Type) }
          : '|' Parameters '|' '->'       { ($2, PFreeType "t") }
          | '|' Parameters '|' '->' Type  { ($2, $5) }
+
+-- list of types
+-- TupleTypes :: { [Type] }
+--          : {- nothing -}        { [] }
+--          | Type ',' Type        { [$1, $3] }
+--          | Type ',' TupleTypes  { $1 : $3 }
 
 -- named arguments
 Parameters :: { [Type] }

@@ -11,19 +11,21 @@ import Kite.Lexer
 import Kite.Parser
 import Kite.TypeCheck
 import Kite.Preprocessor
+--import Kite.Analyzer
+
 import Control.Monad
 import qualified Kite.JSEmit as Kjs
 
 lex = alexScanTokens
 parse = kiteparser
-analyze = typeCheck
+--analyze = typeCheck
 process = preprocess
 foundation = $(embedFile "lib/Foundation.kite")
 
 -- ev: eval, db: debug, js: emit js, lx: lex output, pr: parser output
 runKite ev db js lx pr source = do
   p <- if ev then return source else process source
-  let p' = (Ch.unpack foundation) ++ p
+  let p' = Ch.unpack foundation ++ p
   
   --p <- p' ++ if ev then return source else process source
 
@@ -33,7 +35,7 @@ runKite ev db js lx pr source = do
   let ast = parse tokens
   when pr (prettyPrint ast)
 
-  let analysis = analyze db ast
+  let analysis = typeCheck db ast
   case analysis of
     Right _ -> if js
                  then Kjs.codegen ast >>= putStrLn

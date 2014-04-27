@@ -45,21 +45,21 @@ throwAE ide exp got = throwError . ArityError $ printf
 runTC expr f = runState (runErrorT f) Environment { sym = [initSymbols],
                                                     symCount = Map.size initSymbols,
                                                     ast = expr,
+                                                    onlyFree = False,
                                                     returns = [] }
 
-mkIndexSignature n = let t = PFreeType ("lt" ++ n) in PFuncType (PListType t) (PFuncType PIntegerType t)
-mkConsSignature n = let t = PFreeType ("ltt" ++ n) in PFuncType t (PFuncType (PListType t) (PListType t))
+mkConsSignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType (PListType t) (PListType t))
 mkArithSignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t t)
 mkEqualitySignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t PBoolType)
 
 initSymbols =
-  let ops = ["+", "-", "*", "/", "%"]
-      opSigs = map (\(op, n) -> (op, mkArithSignature (show n))) (zip ops [0 .. length ops])
-  in Map.fromList (opSigs `union` [("<=", mkEqualitySignature (show $ length ops + 1)),
-                                   ("==", mkEqualitySignature (show $ length ops + 2)),
-                                   (":", mkConsSignature (show $ length ops + 4)),
-                                   ("print", PFuncType (PFreeType "tprint") (PFreeType "tprint")),
-                                   ("arguments", PFuncType PVoidType (PListType PCharType))])
+  let arithOps = ["+", "-", "*", "/", "%"]
+      arithSigs = map (\(op, n) -> (op, mkArithSignature (show n))) (zip arithOps [0 .. length arithOps])
+  in Map.fromList (arithSigs `union` [("<=", mkEqualitySignature "5"),
+                                      ("==", mkEqualitySignature "6"),
+                                      (":", mkConsSignature "7"),
+                                      ("print", PFuncType (PFreeType "8") PVoidType),
+                                      ("arguments", PFuncType PVoidType (PListType (PListType PCharType)))])
 
 typeCheck :: Bool -> Expr -> Either TypeError Expr
 typeCheck debug expr = do
@@ -80,6 +80,7 @@ type Stack = [Frame]
 data Environment = Environment { sym :: Stack,
                                  symCount :: Int,
                                  ast :: Expr,
+                                 onlyFree :: Bool, -- TODO: hack to infer pattern matches
                                  returns :: [[Type]] }
 
 -- environment manipulation
@@ -128,6 +129,7 @@ instance Types TypeEnvironment where
 instance Types Type where
   ftv (PFreeType ide) = Set.singleton ide
   ftv (PListType t) = ftv t
+  ftv (PTupleType ts) = ftv ts
   ftv (PFuncType tParam tRet) = ftv tParam `Set.union` ftv tRet
   ftv _ = Set.empty
   apply s (PFreeType ide) = fromMaybe (PFreeType ide) (Map.lookup ide s)
@@ -170,6 +172,7 @@ type Substitution = Map.Map Name Type
 nullSubst = Map.empty
 
 composeSubst s1 s2 = Map.map (apply s1) s2 `Map.union` s1
+(<+>) = composeSubst
 
 infer :: TypeEnvironment -> Expr -> TC (Substitution, Type)
 
@@ -189,7 +192,7 @@ infer env (PBlock FuncBlock exprs) = do
 
   (s, t) <- foldM (\(s, _) expr -> do
                       (s', t) <- infer (apply s env) expr
-                      return (s `composeSubst` s', t)
+                      return (s <+> s', t)
                   ) (nullSubst, PVoidType) exprs
   -- e <- get
   -- let rets = returns e
@@ -204,14 +207,18 @@ infer env (PBlock FuncBlock exprs) = do
   return (s, apply s t)
 
 infer (TypeEnvironment env) (PIdentifier ide) = do
-  symEnv <- get
-  case Map.lookup ide env of
-    Just f -> do
-      t <- instantiate f
-      return (nullSubst, t)
-    Nothing -> case findit (sym symEnv) of
-      Just t' -> return (nullSubst, t')
-      Nothing -> throwRE $ printf "Reference to undefined variable '%s'." ide
+  e <- get
+  if onlyFree e
+    then freshFtv "t" >>= return . (,) nullSubst
+    else do
+    symEnv <- get
+    case Map.lookup ide env of
+      Just f -> do
+        t <- instantiate f
+        return (nullSubst, t)
+      Nothing -> case findit (sym symEnv) of
+        Just t' -> return (nullSubst, t')
+        Nothing -> throwRE $ printf "Reference to undefined variable '%s'." ide
 
   where findit stack =
           if null stack
@@ -226,45 +233,66 @@ infer env (PList elems) = do
   fresh <- freshFtv "t"
   (sElems, tElems) <- foldM (\(s, t) e -> do
                                 (se, te) <- infer (apply s env) e
-                                s' <- unify te t
-                                return (se `composeSubst` s' `composeSubst` s, te)
+                                s' <- unify te t "Varying types in list, saw %s and %s"
+                                return (se <+> s' <+> s, te)
                             ) (nullSubst, fresh) elems
   return (sElems, PListType (apply sElems tElems))
 
+infer env (PTuple members) = do
+  fresh <- freshFtv "t"
+  tElems <- mapM (\t -> do
+                     (se, te) <- infer env t
+                     return te
+                 ) members
+  return (nullSubst, PTupleType tElems)
 
 infer env (PMatch expr patterns) = do
-  fresh <- freshFtv "t"
-  (sElems, tElems) <- foldM (\(s, t) (pattern, val) -> do
-                                let TypeEnvironment e = env
+  freshCon <- freshFtv "t1"
+  freshPat <- freshFtv "t2"
+  (sExpr, tExpr) <- infer env expr
+  ((sElems, sPat), (tConseq, tPat)) <- foldM (\((s, p), (tc, tp)) (pattern, val) -> do
+                                let TypeEnvironment en = env
                                     env' = case pattern of
-                                      PatList hd tl -> do
-                                        let hdt = (hd, Scheme [] fresh)
-                                            tlt = (tl, Scheme [] (PListType fresh))
-                                        TypeEnvironment (Map.fromList [hdt, tlt] `Map.union` e)
+                                      PatListCons hd tl -> do
+                                        let hdt = (hd, Scheme [] freshPat)
+                                            tlt = (tl, Scheme [] (PListType freshPat))
+                                        TypeEnvironment (Map.fromList [hdt, tlt] `Map.union` en)
                                       _ -> env
+                                (sp, tp') <- case pattern of
+                                      PatPrimitive ex -> do
+                                        e <- get
+                                        put e { onlyFree = True }
+                                        (sPat, tyPat) <- infer env ex
+                                        unify tyPat tExpr "Wrong type of pattern expression, saw %s, expected %s"
+                                        put e { onlyFree = False }
+                                        return (sPat, apply sPat tyPat)
+                                      PatListCons _ _ -> do
+                                        sP <- unify tExpr (PListType freshPat) "Wrong type of pattern expression, saw %s, expected %s"
+                                        return (sP, apply s tExpr)
+                                      _ -> return (nullSubst, freshPat)
+
+
                                 (se, te) <- infer (apply s env') val
-                                s' <- unify te t
-                                return (se `composeSubst` s' `composeSubst` s, te)
-                            ) (nullSubst, fresh) patterns
-  return (sElems, apply sElems tElems)
+
+                                s' <- unify te tc "Types in pattern don't match, saw %s and %s"
+                                return ((se <+> s' <+> s, sp <+> p), (te, tp'))
+                            ) ((nullSubst, nullSubst), (freshCon, (apply sExpr tExpr))) patterns
+  return (sPat <+> sElems <+> sExpr, apply (sElems <+> sPat) tConseq)
 
 infer env (PIf cond conseq alt) = do
   (s0, tyCond) <- infer env cond
 
-  s1 <- unify tyCond PBoolType
-
-  when (apply s1 tyCond /= PBoolType)
-    (throwTE $ printf "Expected if-condition to be of type Bool, got %s." (show tyCond))
+  s1 <- unify tyCond PBoolType "Expected Bool in if-condition, saw %s"
 
   (s2, tyConseq) <- infer env conseq
 
   (s3, tyAlt) <- infer env alt
 
-  let s = s2 `composeSubst` s3
+  let s = s2 <+> s3
 
-  s4 <- unify (apply s tyAlt) (apply s tyConseq)
+  s4 <- unify (apply s tyAlt) (apply s tyConseq) "Consequent and alternative of if-expression must match, saw %s and %s"
 
-  return (s0 `composeSubst` s1 `composeSubst` s2 `composeSubst` s3 `composeSubst` s4, apply s4 tyConseq)
+  return (s0 <+> s1 <+> s2 <+> s3 <+> s4, apply s4 tyConseq)
 
 -- TODO: check return type(?)
 infer env (PFunc (PFuncType param ret) body) = do
@@ -280,9 +308,12 @@ infer env (PCall expr arg) = do
   (sFn, tFn) <- infer (apply sArg env) expr
 
   fresh <- freshFtv "t"
-  s3 <- unify (PFuncType (apply sFn tArg) fresh) (apply sFn tFn)
+  let err = case expr of
+        PIdentifier ide -> "Argument does not match parameter in function '" ++ ide ++ "', saw %s, expected %s"
+        _ -> "Argument does not match parameter, saw %s, expected %s"
+  s3 <- unify (PFuncType (apply sFn tArg) fresh) (apply sFn tFn) err
 
-  let s = sFn `composeSubst` sArg `composeSubst` s3
+  let s = sFn <+> sArg <+> s3
   return (s, apply s fresh)
 
 infer (TypeEnvironment env) (PAssign (PIdentifier ide) expr) = do
@@ -303,30 +334,30 @@ infer env (PReturn expr) = do
   put env'{ returns = new : returns env'}
   return (s, t)
 
-unify :: Type -> Type -> TC Substitution
+unify :: Type -> Type -> String -> TC Substitution
 
 -- primitive base cases
-unify PIntegerType PIntegerType = return nullSubst
-unify PFloatType PFloatType = return nullSubst
-unify PCharType PCharType = return nullSubst
-unify PBoolType PBoolType = return nullSubst
-unify PVoidType PVoidType = return nullSubst
+unify PIntegerType PIntegerType _ = return nullSubst
+unify PFloatType PFloatType     _ = return nullSubst
+unify PCharType PCharType       _ = return nullSubst
+unify PBoolType PBoolType       _ = return nullSubst
+unify PVoidType PVoidType       _ = return nullSubst
 
 -- free type with any type
-unify ta (PFreeType ide) = varBind ide ta
-unify (PFreeType ide) tb = varBind ide tb
+unify ta (PFreeType ide) _ = varBind ide ta
+unify (PFreeType ide) tb _ = varBind ide tb
 
 -- lists
-unify (PListType ta) (PListType tb) = unify ta tb
+unify (PListType ta) (PListType tb) err = unify ta tb err
 
 -- functions
-unify (PFuncType paramA ra) (PFuncType paramB rb) = do
-  sParam <- unify paramB paramA
-  s2 <- unify (apply sParam ra) (apply sParam rb)
-  return (s2 `composeSubst` sParam)
+unify (PFuncType paramA ra) (PFuncType paramB rb) err = do
+  sParam <- unify paramB paramA err
+  s2 <- unify (apply sParam ra) (apply sParam rb) err
+  return (s2 <+> sParam)
 
 -- if nothing matched it's an error
-unify ta tb = throwTE $ printf "Type mismatch in unification (%s and %s)" (show ta) (show tb)
+unify ta tb err = throwTE $ printf err (show ta) (show tb)
 
 varBind :: Name -> Type -> TC Substitution
 varBind ide t | t == PFreeType ide = return nullSubst

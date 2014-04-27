@@ -72,6 +72,10 @@ not = |p| -> {
   match xs {
     -- [] -> -- panic ("List index too large") TODO: error
     x,xs -> if idx == 0 then x else xs # (idx - 1)
+    -- [], _           -> panic,
+    -- x:xs, i | i < 0 -> panic,
+    -- x:xs, 0         -> x,
+    -- x:xs, i         -> xs # (i - 1)
   }
 }
 
