@@ -90,7 +90,7 @@ empty = |xs| -> {
 -- [a] -> a
 head = |xs| -> {
   match xs {
-    [] -> [], -- TODO: needs an error
+    -- [] -> [], -- TODO: needs an error
     x,xs -> x
   }
 }
