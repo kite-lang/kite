@@ -21,3 +21,11 @@ cabal.config
 Lexer.hs
 Parser.hs
 Parser.info
+
+# latex
+report/*.aux
+report/*.log
+report/*.out
+report/*.pdf
+report/*.toc
+report/auto
