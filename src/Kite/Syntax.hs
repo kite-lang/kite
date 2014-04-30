@@ -62,10 +62,10 @@ free (PTupleType ts)       = concatMap free ts
 free (PFuncType param ret) = free param `union` free ret
 free (PTypeArg t _)        = free t
 
-prettyType tmap t@(PFreeType _) =
+prettyType tmap t@(PFreeType ide) =
   case find ((==t) . fst) tmap of
     Just a -> snd a
-    Nothing -> error "Unbound type"
+    Nothing -> ide
 
 prettyType _ PBoolType    = "Bool"
 prettyType _ PIntegerType = "Int"
