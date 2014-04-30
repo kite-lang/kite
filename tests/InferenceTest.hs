@@ -1,6 +1,9 @@
 module InferenceTest (inferenceTests) where
 
 import qualified Data.Map as Map
+
+import Prelude hiding (lex)
+
 import Data.List
 import Control.Monad.Error
 
@@ -8,14 +11,16 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 import Kite.Lexer
-import Kite.Parser
+import Kite.Syntax
 import Kite.TypeCheck
+import Kite.Driver hiding (parse)
 
 fn    = PFuncType
 free  = PFreeType
 bool  = PBoolType
 int   = PIntegerType
-str   = PStringType
+char  = PCharType
+str   = PListType PCharType
 ls    = PListType
 float = PFloatType
 
@@ -26,7 +31,7 @@ nullEnvironment = Environment { sym = [Map.empty],
                                 symCount = 0 }
 
 parse prog = do
-  env <- case (typeCheck False . kiteparser . alexScanTokens) prog of
+  env <- case (typeCheck False . parse . lex) prog of
     Right env' -> return env'
     Left err -> error (show err) >> return nullEnvironment
   Map.assocs $ head (sym env)
@@ -71,46 +76,47 @@ inferenceTests = testGroup "Inference test"
       "ls = [1, 2]"
       ("ls", ls int)
 
-    , test "Infer type of index expr"
-      "head = |xs| -> { return xs # 0 }"
-      --TODO: fix these tx vars, it's impossible to track
-      ("head", fn [ls (free "t4")] (free "t4"))
+    -- , test "Infer type of index expr"
+    --   "head = |xs| -> { return xs # 0 }"
+    --   --TODO: fix these tx vars, it's impossible to track
+    --   ("head", fn [ls (free "t4")] (free "t4"))
     ]
 
   , testGroup "Function"
-    [ test "Simple function"
-      "id = |e| -> { return e }"
-      ("id", fn [free "t2"] (free "t2"))
+    [ -- test "Simple function"
+      -- "id = |e| -> { return e }"
+      -- ("id", fn [free "t2"] (free "t2"))
 
-    , testExt "Apply polymorhpic function to value"
+    -- , testExt "Apply polymorhpic function to value"
+      testExt "Apply polymorhpic function to value"
       "foo = id(2)"
       ("foo", int)
     ]
 
-  , testGroup "Higher order functions"
-    [ test "Free function and free param"
-      "apply = |f, x| -> { return f(x) }"
-      ("apply", fn [fn [free "t3"] (free "t5"), free "t3"] (free "t5"))
+  -- , testGroup "Higher order functions"
+  --   [ test "Free function and free param"
+  --     "apply = |f, x| -> { return f(x) }"
+  --     ("apply", fn [fn [free "t3"] (free "t5"), free "t3"] (free "t5"))
 
-    , test "Free function and free param"
-      "apply = |f, x| -> { return f(x) }\
-      \fn =  |x| -> { return [x] }\
-      \val = apply(fn, 1)"
-      ("apply", fn [fn [free "t3"] (free "t5"), free "t3"] (free "t5"))
+  --   , test "Free function and free param"
+  --     "apply = |f, x| -> { return f(x) }\
+  --     \fn =  |x| -> { return [x] }\
+  --     \val = apply(fn, 1)"
+  --     ("apply", fn [fn [free "t3"] (free "t5"), free "t3"] (free "t5"))
 
 
-    , testExt "Application of returned function (HoF)"
-      "id = |x| -> { return x}\
-      \one = id(|x| -> { return x})(1)"
-      ("one", int)
+  --   , testExt "Application of returned function (HoF)"
+  --     "id = |x| -> { return x}\
+  --     \one = id(|x| -> { return x})(1)"
+  --     ("one", int)
 
-    , testExt "Multiple nested applications of returned functions (HoF)"
-      "id = |x| -> { return x }\
-      \one = id(|x| -> { \
-      \    return |y| -> {\
-      \       return x + y\
-      \    }\
-      \})(1)(1)"
-     ("one", int)
-    ]
+  --   , testExt "Multiple nested applications of returned functions (HoF)"
+  --     "id = |x| -> { return x }\
+  --     \one = id(|x| -> { \
+  --     \    return |y| -> {\
+  --     \       return x + y\
+  --     \    }\
+  --     \})(1)(1)"
+  --    ("one", int)
+  --   ]
   ]

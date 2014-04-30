@@ -1,5 +1,11 @@
 {-# LANGUAGE NoMonomorphismRestriction, TemplateHaskell #-}
-module Kite.Driver (runKite) where
+module Kite.Driver (
+  runKite
+, lex
+, parse
+, process
+, foundation
+) where
 
 import Prelude hiding (lex)
 
@@ -16,17 +22,17 @@ import Kite.Preprocessor
 import Control.Monad
 import qualified Kite.JSEmit as Kjs
 
-lex = alexScanTokens
-parse = kiteparser
+lex        = alexScanTokens
+parse      = kiteparser
 --analyze = typeCheck
-process = preprocess
+process    = preprocess
 foundation = $(embedFile "lib/Foundation.kite")
 
 -- ev: eval, db: debug, js: emit js, lx: lex output, pr: parser output
 runKite ev db js lx pr source = do
   p <- if ev then return source else process source
   let p' = Ch.unpack foundation ++ p
-  
+
   --p <- p' ++ if ev then return source else process source
 
   let tokens = lex p'
