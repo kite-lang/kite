@@ -129,12 +129,13 @@ instance Types TypeEnvironment where
 instance Types Type where
   ftv (PFreeType ide) = Set.singleton ide
   ftv (PListType t) = ftv t
-  ftv (PTupleType ts) = ftv ts
+  ftv (PPairType ta tb) = ftv ta `Set.union` ftv tb
   ftv (PFuncType tParam tRet) = ftv tParam `Set.union` ftv tRet
   ftv _ = Set.empty
   apply s (PFreeType ide) = fromMaybe (PFreeType ide) (Map.lookup ide s)
   apply s (PFuncType tParam tRet) = PFuncType (apply s tParam) (apply s tRet)
   apply s (PListType t) = PListType (apply s t)
+  apply s (PPairType a b) = PPairType (apply s a) (apply s b)
   apply s t = t
 
 instance Types a => Types [a] where
@@ -238,15 +239,15 @@ infer env (PList elems) = do
                             ) (nullSubst, fresh) elems
   return (sElems, PListType (apply sElems tElems))
 
-infer env (PTuple members) = do
-  fresh <- freshFtv "t"
-  tElems <- mapM (\t -> do
-                     (se, te) <- infer env t
-                     return te
-                 ) members
-  return (nullSubst, PTupleType tElems)
+infer env (PPair a b) = do
+  (sa, ta) <- infer env a
+  (sb, tb) <- infer env b
+
+  return (sa <+> sb, PPairType (apply sa ta) (apply sb tb))
 
 infer env (PMatch expr patterns) = do
+  fpat1 <- freshFtv "tp1"
+  fpat2 <- freshFtv "tp2" -- fails if defined after freshCon and freshPat, W.T.F.?
   freshCon <- freshFtv "t1"
   freshPat <- freshFtv "t2"
   (sExpr, tExpr) <- infer env expr
@@ -257,7 +258,14 @@ infer env (PMatch expr patterns) = do
                                         let hdt = (hd, Scheme [] freshPat)
                                             tlt = (tl, Scheme [] (PListType freshPat))
                                         TypeEnvironment (Map.fromList [hdt, tlt] `Map.union` en)
+
+                                      PatPair a b -> do
+                                        let ta = (a, Scheme [] fpat1)
+                                            tb = (b, Scheme [] fpat2)
+                                        TypeEnvironment (Map.fromList [ta, tb] `Map.union` en)
+
                                       _ -> env
+
                                 (sp, tp') <- case pattern of
                                       PatPrimitive ex -> do
                                         e <- get
@@ -266,23 +274,28 @@ infer env (PMatch expr patterns) = do
                                         unify tyPat tExpr "Wrong type of pattern expression, saw %s, expected %s"
                                         put e { onlyFree = False }
                                         return (sPat, apply sPat tyPat)
+
                                       PatListCons _ _ -> do
                                         sP <- unify tExpr (PListType freshPat) "Wrong type of pattern expression, saw %s, expected %s"
                                         return (sP, apply s tExpr)
-                                      _ -> return (nullSubst, freshPat)
 
+                                      PatPair _ _ -> do
+                                        sP <- unify tExpr (PPairType fpat1 fpat2) "Wrong type of pattern expression, saw %s, expected %s"
+                                        return (sP, apply s tExpr)
+
+                                      _ -> return (nullSubst, freshPat)
 
                                 (se, te) <- infer (apply s env') val
 
                                 s' <- unify te tc "Types in pattern don't match, saw %s and %s"
                                 return ((se <+> s' <+> s, sp <+> p), (te, tp'))
-                            ) ((nullSubst, nullSubst), (freshCon, (apply sExpr tExpr))) patterns
+                            ) ((nullSubst, nullSubst), (freshCon, apply sExpr tExpr)) patterns
   return (sPat <+> sElems <+> sExpr, apply (sElems <+> sPat) tConseq)
 
 infer env (PIf cond conseq alt) = do
   (s0, tyCond) <- infer env cond
 
-  s1 <- unify tyCond PBoolType "Expected Bool in if-condition, saw %s"
+  s1 <- unify tyCond PBoolType "Wrong type in if-condition, saw %s, expected %s"
 
   (s2, tyConseq) <- infer env conseq
 
@@ -347,8 +360,14 @@ unify PVoidType PVoidType       _ = return nullSubst
 unify ta (PFreeType ide) _ = varBind ide ta
 unify (PFreeType ide) tb _ = varBind ide tb
 
--- lists
+-- list
 unify (PListType ta) (PListType tb) err = unify ta tb err
+
+-- pair
+unify (PPairType ta tb) (PPairType ta' tb') err = do
+  sa <- unify ta ta' err
+  sb <- unify tb tb' err
+  return (sa <+> sb)
 
 -- functions
 unify (PFuncType paramA ra) (PFuncType paramB rb) err = do

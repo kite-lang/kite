@@ -61,6 +61,9 @@ var KT_match = function (val, patterns) {
             }
             break;
 
+        case 'pair':
+            return pattern.conseq(val[0], val[1]);
+
         case 'otherwise':
             return pattern.conseq();
             break;

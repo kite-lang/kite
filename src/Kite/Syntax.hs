@@ -9,7 +9,7 @@ data BlockType = StandardBlock
                deriving (Show, Eq)
 
 data Pattern = PatListCons String String
-             | PatEmptyList
+             | PatPair String String
              | PatPrimitive Expr
              | PatOtherwise
              deriving (Show, Eq)
@@ -18,7 +18,7 @@ type PatternCase = (Pattern, Expr)
 
 data Expr = PList [Expr]
           | PBlock BlockType [Expr]
-          | PTuple [Expr]
+          | PPair Expr Expr
           | PIf Expr Expr Expr
           | PAssign Expr Expr -- PIdentifier!
           | PFunc Type Expr -- PFuncType!
@@ -35,7 +35,7 @@ data Expr = PList [Expr]
           deriving (Show, Eq)
 
 data Type = PListType Type
-          | PTupleType [Type]
+          | PPairType Type Type
           | PFuncType Type Type
           | PBoolType
           | PIntegerType
@@ -58,7 +58,7 @@ free PFloatType   = []
 free PCharType    = []
 
 free (PListType t)         = free t
-free (PTupleType ts)       = concatMap free ts
+free (PPairType ta tb)     = free ta `union` free tb
 free (PFuncType param ret) = free param `union` free ret
 free (PTypeArg t _)        = free t
 
@@ -73,9 +73,8 @@ prettyType _ PVoidType    = "Void"
 prettyType _ PFloatType   = "Float"
 prettyType _ PCharType    = "Char"
 
-prettyType tmap (PTupleType ts) =
-  let pts = intercalate ", " (map (prettyType tmap) ts)
-  in printf "(%s)" pts
+prettyType tmap (PPairType ta tb) =
+  printf "(%s, %s)" (prettyType tmap ta) (prettyType tmap tb)
 
 prettyType tmap (PListType t) =
   printf "[%s]" $ prettyType tmap t

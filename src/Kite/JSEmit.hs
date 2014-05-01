@@ -62,6 +62,8 @@ emit (PList elems@(PChar _ : _)) =
 
 emit (PList elems) = printf "[%s]" (emitAll "," elems)
 
+emit (PPair a b) = emit (PList [a, b])
+
 emit (PIf cond conseq alt) =
   printf "KT_if(function() { return %s; })(function() { return %s; })(function() { return %s; })" (emit cond) (emit conseq) (emit alt)
 
@@ -84,6 +86,7 @@ emit (PCall expr arg) =
 emit (PMatch expr pats) =
   printf "KT_match(%s,%s)" (emit expr) ("[" ++ intercalate "," (map emitPattern pats) ++ "]")
 
+emitPattern (PatPair a b, val) = printf "{ type: 'pair', conseq: function (%s, %s) { return %s } }" a b (emit val)
 emitPattern (PatListCons hd tl, val) = printf "{ type: 'list', conseq: function (%s, %s) { return %s } }" hd tl (emit val)
 emitPattern (PatPrimitive expr, val) = printf "{ type: 'simple', expr:function(){ return %s}, conseq: function () { return %s } }" (emit expr) (emit val)
 emitPattern (PatOtherwise, val) = printf "{ type: 'otherwise', conseq: function () { return %s } }" (emit val)

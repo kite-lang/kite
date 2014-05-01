@@ -73,7 +73,7 @@ Stmts  :: { [Expr] }
 
 Expr   :: { Expr }
         : List             { $1 }
-        --| Tuple            { $1 }
+        | Pair             { $1 }
         | Match            { $1 }
         | Assign           { $1 }
         | Func             { $1 }
@@ -93,9 +93,10 @@ Match :: { Expr }
        : match Expr '{' Patterns '}'           { PMatch $2 $4 }
 
 Pattern :: { PatternCase }
-         : id ',' id           '->' Expr       { (PatListCons $1 $3, $5) }
-         | Expr                '->' Expr       { (PatPrimitive $1,   $3) }
-         | '_'                 '->' Expr       { (PatOtherwise,      $3) }
+         : id ',' id             '->' Expr       { (PatListCons $1 $3, $5) }
+         | '(' id ',' id ')'     '->' Expr       { (PatPair     $2 $4, $7) }
+         | Expr                  '->' Expr       { (PatPrimitive $1,   $3) }
+         | '_'                   '->' Expr       { (PatOtherwise,      $3) }
 
 Patterns  :: { [PatternCase] }
 Patterns   : {- nothing -}      { [] }
@@ -124,18 +125,18 @@ FuncBlock :: { Expr }
 List   :: { Expr }
 List    : '[' Exprs ']'      { PList $2 }
 
--- Tuple   :: { Expr }
--- Tuple    : '(' Exprs ')'     { PTuple $2 }
+Pair   :: { Expr }
+Pair    : '(' Expr ',' Expr ')'     { PPair $2 $4 }
 
 Type   :: { Type }
         : boolTy             { PBoolType }
         | intTy              { PIntegerType }
         | floatTy            { PFloatType }
         | charTy             { PCharType }
---        | '(' TupleTypes ')' { PTupleType $2 }
+        | '(' Type ',' Type ')' { PPairType $2 $4 }
         | '[' Type ']'       { PListType $2 }
---        | FuncType         { $1 }
         | id                 { PFreeType $1 }
+--        | FuncType         { $1 }
 
 -- support both single expr and blocks
 If     :: { Expr }
@@ -151,12 +152,6 @@ Func   :: { Expr }
 FuncSignature :: { ([Type], Type) }
          : '|' Parameters '|' '->'       { ($2, PFreeType "t") }
          | '|' Parameters '|' '->' Type  { ($2, $5) }
-
--- list of types
--- TupleTypes :: { [Type] }
---          : {- nothing -}        { [] }
---          | Type ',' Type        { [$1, $3] }
---          | Type ',' TupleTypes  { $1 : $3 }
 
 -- named arguments
 Parameters :: { [Type] }
