@@ -65,6 +65,25 @@ not = |p| -> {
   (l > r) || (l == r)
 }
 
+
+--- Pairs
+
+asPair = |a, b| -> {
+  (a, b)
+}
+
+fst = |p| -> {
+  match p {
+    (a , b) -> a
+  }
+}
+
+snd = |p| -> {
+  match p {
+    (a , b) -> b
+  }
+}
+
 --- Lists
 
 -- [a] -> Int -> a
