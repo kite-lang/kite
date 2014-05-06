@@ -193,33 +193,27 @@ drop = |n, xs| -> {
 }
 
 -- [Bool] -> Bool
-and = |xs| -> {
-  fold ((&&), True, xs)
-}
+and = fold ((&&), True)
 
 -- [Bool] -> Bool
-or = |xs| -> {
-  fold ((||), False, xs)
+or = fold ((||), False)
+
+-- (a -> Bool) -> [a] -> Bool
+all = |p| -> {
+  and . map (p)
 }
 
 -- (a -> Bool) -> [a] -> Bool
-all = |p, xs| -> {
-  (and . map (p)) (xs)
-}
-
--- (a -> Bool) -> [a] -> Bool
-any = |p, xs| -> {
-  (or . map (p)) (xs)
+any = |p| -> {
+  or . map (p)
 }
 
 -- [[a]] -> [a]
-flatten = |xs| -> {
-  fold1 ((++), xs)
-}
+flatten = fold1 ((++))
 
 -- a -> [a] -> Bool
-contains = |xs, el| -> {
-  any ((== el), xs)
+contains = |el| -> {
+  any ((el==))
 }
 
 -- [a] -> [a]
@@ -295,14 +289,10 @@ range = |from, to| -> {
 }
 
 -- [a] -> a
-sum = |xs| -> {
-  fold1 ((+), xs)
-}
+sum = fold1 ((+))
 
 -- [a] -> a
-product = |xs| -> {
-  fold1 ((*), xs)
-}
+product = fold1 ((*))
 
 -- a -> a -> a
 min = |a, b| -> {
@@ -315,14 +305,10 @@ max = |a, b| -> {
 }
 
 -- [a] -> a
-minimum = |xs| -> {
-  fold1 (min, xs)
-}
+minimum = fold1 (min)
 
 -- [a] -> a
-maximum = |xs| -> {
-  fold1 (max, xs)
-}
+maximum = fold1 (max)
 
 -- Int -> Bool
 even = (== 0) . (% 2)
@@ -331,9 +317,7 @@ even = (== 0) . (% 2)
 odd = not . even
 
 -- Int -> Int
-negate = |n| -> {
-  0 - n
-}
+negate = (0-)
 
 -- Int -> Int
 abs = |n| -> {
