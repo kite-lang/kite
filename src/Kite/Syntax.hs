@@ -8,7 +8,7 @@ data BlockType = StandardBlock
                | FuncBlock
                deriving (Show, Eq)
 
-data Pattern = PatListCons String String
+data Pattern = PatCons String String
              | PatPair String String
              | PatPrimitive Expr
              | PatOtherwise

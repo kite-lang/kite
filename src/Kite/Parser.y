@@ -93,7 +93,7 @@ Match :: { Expr }
        : match Expr '{' Patterns '}'           { PMatch $2 $4 }
 
 Pattern :: { PatternCase }
-         : id ',' id             '->' Expr       { (PatListCons $1 $3, $5) }
+         : id ',' id             '->' Expr       { (PatCons $1 $3, $5) }
          | '(' id ',' id ')'     '->' Expr       { (PatPair     $2 $4, $7) }
          | Expr                  '->' Expr       { (PatPrimitive $1,   $3) }
          | '_'                   '->' Expr       { (PatOtherwise,      $3) }

@@ -254,7 +254,7 @@ infer env (PMatch expr patterns) = do
   ((sElems, sPat), (tConseq, tPat)) <- foldM (\((s, p), (tc, tp)) (pattern, val) -> do
                                 let TypeEnvironment en = env
                                     env' = case pattern of
-                                      PatListCons hd tl -> do
+                                      PatCons hd tl -> do
                                         let hdt = (hd, Scheme [] freshPat)
                                             tlt = (tl, Scheme [] (PListType freshPat))
                                         TypeEnvironment (Map.fromList [hdt, tlt] `Map.union` en)
@@ -268,14 +268,14 @@ infer env (PMatch expr patterns) = do
 
                                 (sp, tp') <- case pattern of
                                       PatPrimitive ex -> do
-                                        e <- get
-                                        put e { onlyFree = True }
+                                        --e <- get
+                                        --put e { onlyFree = True }
                                         (sPat, tyPat) <- infer env ex
-                                        unify tyPat tExpr "Wrong type of pattern expression, saw %s, expected %s"
-                                        put e { onlyFree = False }
-                                        return (sPat, apply sPat tyPat)
+                                        ss <- unify (apply sPat tyPat) tExpr "Wrong type of pattern expression, saw %s, expected %s"
+                                        --put e { onlyFree = False }
+                                        return (ss, apply sPat tyPat)
 
-                                      PatListCons _ _ -> do
+                                      PatCons _ _ -> do
                                         sP <- unify tExpr (PListType freshPat) "Wrong type of pattern expression, saw %s, expected %s"
                                         return (sP, apply s tExpr)
 
@@ -288,7 +288,8 @@ infer env (PMatch expr patterns) = do
                                 (se, te) <- infer (apply s env') val
 
                                 s' <- unify te tc "Types in pattern don't match, saw %s and %s"
-                                return ((se <+> s' <+> s, sp <+> p), (te, tp'))
+                                --ss <- unify tp' tp "Wrong match-pattern type"
+                                return ((se <+> s' <+> s, p <+> sp), (te, tp'))
                             ) ((nullSubst, nullSubst), (freshCon, apply sExpr tExpr)) patterns
   return (sPat <+> sElems <+> sExpr, apply (sElems <+> sPat) tConseq)
 
