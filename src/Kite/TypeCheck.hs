@@ -4,11 +4,11 @@
 module Kite.TypeCheck where
 
 import Debug.Trace
-import Kite.Parser
 import Kite.Syntax
 
 import Data.Maybe
 import Data.List
+import Control.Monad
 import Control.Monad.State
 import Control.Monad.Error
 import qualified Data.Map as Map
@@ -28,8 +28,15 @@ instance Error TypeError where
   noMsg = UnknownError
   strMsg = TypeError
 
+printTrace :: [String] -> TC ()
+printTrace stack = mapM_ (\m -> trace m $ return ()) (take 10 stack)
+
 throwTE :: String -> TC a
-throwTE = throwError . TypeError
+throwTE m = do
+  env <- get
+  let stack = evalTrace env
+  printTrace stack
+  (throwError . TypeError) m
 
 throwRE :: String -> TC a
 throwRE = throwError . ReferenceError
@@ -45,6 +52,7 @@ throwAE ide exp got = throwError . ArityError $ printf
 runTC expr f = runState (runErrorT f) Environment { sym = [initSymbols],
                                                     symCount = Map.size initSymbols,
                                                     ast = expr,
+                                                    evalTrace = [],
                                                     onlyFree = False,
                                                     returns = [] }
 
@@ -80,10 +88,15 @@ type Stack = [Frame]
 data Environment = Environment { sym :: Stack,
                                  symCount :: Int,
                                  ast :: Expr,
+                                 evalTrace :: [String],
                                  onlyFree :: Bool, -- TODO: hack to infer pattern matches
                                  returns :: [[Type]] }
 
 -- environment manipulation
+pushTrace x = do
+  env <- get
+  put env{evalTrace = x : evalTrace env}
+
 pushReturnFrame = do
   env <- get
   put env{returns = [] : returns env}
@@ -91,6 +104,10 @@ pushReturnFrame = do
 popReturnFrame = do
   env <- get
   put env{returns = tail (returns env)}
+
+popTrace = do
+  env <- get
+  put env{evalTrace = tail (evalTrace env)}
 
 pushSymFrame = do
   env <- get
@@ -208,19 +225,19 @@ infer env (PBlock FuncBlock exprs) = do
   return (s, apply s t)
 
 infer (TypeEnvironment env) (PIdentifier ide) = do
+  pushTrace ("Identifier " ++ ide)
   e <- get
   if onlyFree e
-    then freshFtv "t" >>= return . (,) nullSubst
+    then liftM ((,) nullSubst) (freshFtv "t")
     else do
     symEnv <- get
-    case Map.lookup ide env of
-      Just f -> do
-        t <- instantiate f
-        return (nullSubst, t)
+    ty <- case Map.lookup ide env of
+      Just f -> instantiate f
       Nothing -> case findit (sym symEnv) of
-        Just t' -> return (nullSubst, t')
+        Just t' -> return t'
         Nothing -> throwRE $ printf "Reference to undefined variable '%s'." ide
-
+    popTrace
+    return (nullSubst, ty)
   where findit stack =
           if null stack
           then Nothing
@@ -231,21 +248,27 @@ infer (TypeEnvironment env) (PIdentifier ide) = do
                   else val
 
 infer env (PList elems) = do
+  pushTrace $ "List: " ++ show elems
   fresh <- freshFtv "t"
   (sElems, tElems) <- foldM (\(s, t) e -> do
                                 (se, te) <- infer (apply s env) e
                                 s' <- unify te t "Varying types in list, saw %s and %s"
                                 return (se <+> s' <+> s, te)
                             ) (nullSubst, fresh) elems
+  popTrace
   return (sElems, PListType (apply sElems tElems))
 
-infer env (PPair a b) = do
+infer env pair@(PPair a b) = do
+  pushTrace $ "Pair: " ++ show pair
+
   (sa, ta) <- infer env a
   (sb, tb) <- infer env b
 
+  popTrace
   return (sa <+> sb, PPairType (apply sa ta) (apply sb tb))
 
 infer env (PMatch expr patterns) = do
+  pushTrace $ "Match: " ++ show expr
   fpat1 <- freshFtv "tp1"
   fpat2 <- freshFtv "tp2" -- fails if defined after freshCon and freshPat, W.T.F.?
   freshCon <- freshFtv "t1"
@@ -291,9 +314,11 @@ infer env (PMatch expr patterns) = do
                                 --ss <- unify tp' tp "Wrong match-pattern type"
                                 return ((se <+> s' <+> s, p <+> sp), (te, tp'))
                             ) ((nullSubst, nullSubst), (freshCon, apply sExpr tExpr)) patterns
+  popTrace
   return (sPat <+> sElems <+> sExpr, apply (sElems <+> sPat) tConseq)
 
 infer env (PIf cond conseq alt) = do
+  pushTrace $ "If: " ++ show cond
   (s0, tyCond) <- infer env cond
 
   s1 <- unify tyCond PBoolType "Wrong type in if-condition, saw %s, expected %s"
@@ -306,31 +331,47 @@ infer env (PIf cond conseq alt) = do
 
   s4 <- unify (apply s tyAlt) (apply s tyConseq) "Consequent and alternative of if-expression must match, saw %s and %s"
 
+  popTrace
+
   return (s0 <+> s1 <+> s2 <+> s3 <+> s4, apply s4 tyConseq)
 
 -- TODO: check return type(?)
 infer env (PFunc (PFuncType param ret) body) = do
+  pushTrace $ "Lambda: " ++ show (PFuncType param ret)
+
   tParam <- freshFtv "t"
   let PTypeArg _ (PIdentifier ide) = param
       TypeEnvironment env' = remove env ide
       env'' = TypeEnvironment (Map.insert ide (Scheme [] tParam) env')
   (s1, t1) <- infer env'' body
+
+  popTrace
+
   return (s1, apply s1 (PFuncType tParam t1))
 
 infer env (PCall expr arg) = do
+  case expr of
+    PIdentifier ide -> pushTrace $ "Apply: '" ++ ide ++ "'"
+    _ -> pushTrace "Apply"
+
   (sArg, tArg) <- infer env arg
   (sFn, tFn) <- infer (apply sArg env) expr
 
   fresh <- freshFtv "t"
   let err = case expr of
-        PIdentifier ide -> "Argument does not match parameter in function '" ++ ide ++ "', saw %s, expected %s"
+        PIdentifier ide -> "Argument does not match parameter in function '" ++ ide ++ "', expected %s, saw %s"
         _ -> "Argument does not match parameter, saw %s, expected %s"
   s3 <- unify (PFuncType (apply sFn tArg) fresh) (apply sFn tFn) err
 
   let s = sFn <+> sArg <+> s3
+
+  popTrace
+
   return (s, apply s fresh)
 
 infer (TypeEnvironment env) (PAssign (PIdentifier ide) expr) = do
+  pushTrace $ "Bind: " ++ ide
+
   fresh <- freshFtv "rec"
   insertSym ide fresh
 
@@ -338,6 +379,9 @@ infer (TypeEnvironment env) (PAssign (PIdentifier ide) expr) = do
 
   removeSym ide
   insertSym ide (apply s1 t1)
+
+  popTrace
+
   return (s1, apply s1 t1)
 
 infer env (PReturn expr) = do
@@ -346,6 +390,7 @@ infer env (PReturn expr) = do
   let top = head (returns env')
       new = t : top
   put env'{ returns = new : returns env'}
+
   return (s, t)
 
 unify :: Type -> Type -> String -> TC Substitution
