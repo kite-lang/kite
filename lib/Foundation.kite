@@ -211,6 +211,11 @@ any = |p| -> {
 -- [[a]] -> [a]
 flatten = fold1 ((++))
 
+-- ([a] -> [b]) -> [[a]] -> [b]
+flatMap = |f| -> {
+  flatten . map (f)
+}
+
 -- a -> [a] -> Bool
 contains = |el| -> {
   any ((el==))
