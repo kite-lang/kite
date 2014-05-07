@@ -67,11 +67,11 @@ emit (PPair a b) = emit (PList [a, b])
 emit (PIf cond conseq alt) =
   printf "KT_if(function() { return %s; })(function() { return %s; })(function() { return %s; })" (emit cond) (emit conseq) (emit alt)
 
-emit (PFunc (PFuncType param _) body) =
+emit (PLambda (PLambdaType param _) body) =
   let PTypeArg _ ide = param
   in printf "(function(%s) {%s})" (emit ide) (emit body)
 
-emit (PAssign ide expr) =
+emit (PBind ide expr) =
   printf "%s = %s" (emit ide) (emit expr)
 
 emit (PBlock _ exprs) =
@@ -80,7 +80,7 @@ emit (PBlock _ exprs) =
 emit (PReturn expr) =
   "return " ++ emit expr
 
-emit (PCall expr arg) =
+emit (PApply expr arg) =
   printf "%s(%s)" (emit expr) (emit arg)
 
 emit (PMatch expr pats) =

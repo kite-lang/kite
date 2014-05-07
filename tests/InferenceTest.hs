@@ -15,7 +15,7 @@ import Kite.Syntax
 import Kite.TypeCheck
 import Kite.Driver hiding (parse)
 
-fn    = PFuncType
+fn    = PLambdaType
 free  = PFreeType
 bool  = PBoolType
 int   = PIntegerType

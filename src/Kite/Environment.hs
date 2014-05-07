@@ -106,9 +106,9 @@ popSymFrame = do
 ------------------------
 -- Built-in functions --
 ------------------------
-mkConsSignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType (PListType t) (PListType t))
-mkArithSignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t t)
-mkEqualitySignature n = let t = PFreeType ("t" ++ n) in PFuncType t (PFuncType t PBoolType)
+mkConsSignature n = let t = PFreeType ("t" ++ n) in PLambdaType t (PLambdaType (PListType t) (PListType t))
+mkArithSignature n = let t = PFreeType ("t" ++ n) in PLambdaType t (PLambdaType t t)
+mkEqualitySignature n = let t = PFreeType ("t" ++ n) in PLambdaType t (PLambdaType t PBoolType)
 
 initSymbols =
   let arithOps = ["+", "-", "*", "/", "%"]
@@ -116,8 +116,8 @@ initSymbols =
   in Map.fromList (arithSigs `union` [("<=", mkEqualitySignature "5"),
                                       ("==", mkEqualitySignature "6"),
                                       (":", mkConsSignature "7"),
-                                      ("print", PFuncType (PFreeType "8") PVoidType),
-                                      ("arguments", PFuncType PVoidType (PListType (PListType PCharType)))])
+                                      ("print", PLambdaType (PFreeType "8") PVoidType),
+                                      ("arguments", PLambdaType PVoidType (PListType (PListType PCharType)))])
 
 
 --------------------
@@ -155,10 +155,10 @@ instance Types Type where
   ftv (PFreeType ide) = Set.singleton ide
   ftv (PListType t) = ftv t
   ftv (PPairType ta tb) = ftv ta `Set.union` ftv tb
-  ftv (PFuncType tParam tRet) = ftv tParam `Set.union` ftv tRet
+  ftv (PLambdaType tParam tRet) = ftv tParam `Set.union` ftv tRet
   ftv _ = Set.empty
   apply s (PFreeType ide) = fromMaybe (PFreeType ide) (Map.lookup ide s)
-  apply s (PFuncType tParam tRet) = PFuncType (apply s tParam) (apply s tRet)
+  apply s (PLambdaType tParam tRet) = PLambdaType (apply s tParam) (apply s tRet)
   apply s (PListType t) = PListType (apply s t)
   apply s (PPairType a b) = PPairType (apply s a) (apply s b)
   apply s t = t

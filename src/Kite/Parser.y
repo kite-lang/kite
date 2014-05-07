@@ -106,14 +106,14 @@ Patterns   : {- nothing -}      { [] }
 -- expression rules
 Call   :: { Expr }
         : Expr '(' Exprs ')'    { mkCalls $1 $3 }
-        | Expr '`' Expr Expr    { PCall (PCall $3 $1) $4 }
+        | Expr '`' Expr Expr    { PApply (PApply $3 $1) $4 }
         | Expr operator Expr    { mkInfixCall $2 $1 $3 } -- infix
         | '(' Expr operator ')'    { mkPartialLeftInfixCall $3 $2 } -- partial left infix
         | '(' operator Expr ')'    { mkPartialRightInfixCall $2 $3 } -- partial right infix
 
 Assign :: { Expr }
-        : id '=' Expr                  { PAssign (PIdentifier $1) $3 }
-        | '{' operator '}' '=' Expr    { PAssign (PIdentifier $2) $5 }
+        : id '=' Expr                  { PBind (PIdentifier $1) $3 }
+        | '{' operator '}' '=' Expr    { PBind (PIdentifier $2) $5 }
 
 -- differentiate between standard and function blocks
 StandardBlock :: { Expr }

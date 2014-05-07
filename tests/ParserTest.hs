@@ -6,7 +6,6 @@ import Test.Tasty.HUnit
 import Kite.Lexer
 import Kite.Parser
 
-
 parserTests = testGroup "Parser"
   [ testCase "Integer" $
       kiteparser [Integer 3] @?= PTerm (PInteger 3)
@@ -34,10 +33,10 @@ parserTests = testGroup "Parser"
         Type "Float",
         Symbol '{', Integer 2, Symbol ';', Symbol '}'
         ] @?=
-      PAssign
-      (PFuncType [PPrimType "Int"] (PPrimType "Float")) (PIdentifier "foo")
-      (PFunc
-       (PFuncType
+      PBind
+      (PLambdaType [PPrimType "Int"] (PPrimType "Float")) (PIdentifier "foo")
+      (PLambda
+       (PLambdaType
         [PTypeArg (PPrimType "Int") (PIdentifier "a")]
         (PPrimType "Float"))
        (PBlock [PTerm (PInteger 2)]))

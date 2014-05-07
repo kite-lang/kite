@@ -20,9 +20,9 @@ data Expr = PList [Expr]
           | PBlock BlockType [Expr]
           | PPair Expr Expr
           | PIf Expr Expr Expr
-          | PAssign Expr Expr -- PIdentifier!
-          | PFunc Type Expr -- PFuncType!
-          | PCall Expr Expr -- PIdentifier!
+          | PBind Expr Expr -- PIdentifier!
+          | PLambda Type Expr -- PLambdaType!
+          | PApply Expr Expr -- PIdentifier!
           | PReturn Expr
           | PMatch Expr [PatternCase]
 
@@ -36,7 +36,7 @@ data Expr = PList [Expr]
 
 data Type = PListType Type
           | PPairType Type Type
-          | PFuncType Type Type
+          | PLambdaType Type Type
           | PBoolType
           | PIntegerType
           | PFloatType
@@ -59,7 +59,7 @@ free PCharType    = []
 
 free (PListType t)         = free t
 free (PPairType ta tb)     = free ta `union` free tb
-free (PFuncType param ret) = free param `union` free ret
+free (PLambdaType param ret) = free param `union` free ret
 free (PTypeArg t _)        = free t
 
 prettyType tmap t@(PFreeType ide) =
@@ -79,10 +79,10 @@ prettyType tmap (PPairType ta tb) =
 prettyType tmap (PListType t) =
   printf "[%s]" $ prettyType tmap t
 
-prettyType tmap (PFuncType tp@(PFuncType _ _) tr) =
+prettyType tmap (PLambdaType tp@(PLambdaType _ _) tr) =
   printf "(%s) -> %s" (prettyType tmap tp) (prettyType tmap tr)
 
-prettyType tmap (PFuncType tp tr) =
+prettyType tmap (PLambdaType tp tr) =
   printf "%s -> %s" (prettyType tmap tp) (prettyType tmap tr)
 
 prettyType _ (PTypeArg t ide) =
@@ -95,7 +95,7 @@ instance Show Type where
         tmap = foldl (\acc t -> (t, [chr $ length acc + 97]) : acc) [] frees
     in prettyType tmap lt
 
-  show ft@(PFuncType _ _) =
+  show ft@(PLambdaType _ _) =
     let frees = nub (free ft)
         tmap = foldl (\acc t -> (t, [chr $ length acc + 97]) : acc) [] frees
     in prettyType tmap ft

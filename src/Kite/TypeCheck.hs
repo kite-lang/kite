@@ -171,8 +171,8 @@ infer env (PIf cond conseq alt) = do
   return (s0 <+> s1 <+> s2 <+> s3 <+> s4, apply s4 tyConseq)
 
 -- TODO: check return type(?)
-infer env (PFunc (PFuncType param ret) body) = do
-  pushTrace $ "Lambda: " ++ show (PFuncType param ret)
+infer env (PLambda (PLambdaType param ret) body) = do
+  pushTrace $ "Lambda: " ++ show (PLambdaType param ret)
 
   tParam <- freshFtv "t"
   let PTypeArg _ (PIdentifier ide) = param
@@ -182,9 +182,9 @@ infer env (PFunc (PFuncType param ret) body) = do
 
   popTrace
 
-  return (s1, apply s1 (PFuncType tParam t1))
+  return (s1, apply s1 (PLambdaType tParam t1))
 
-infer env (PCall expr arg) = do
+infer env (PApply expr arg) = do
   case expr of
     PIdentifier ide -> pushTrace $ "Apply: '" ++ ide ++ "'"
     _ -> pushTrace "Apply"
@@ -196,7 +196,7 @@ infer env (PCall expr arg) = do
   let err = case expr of
         PIdentifier ide -> "Argument does not match parameter in function '" ++ ide ++ "', expected %s, saw %s"
         _ -> "Argument does not match parameter, saw %s, expected %s"
-  s3 <- unify (PFuncType (apply sFn tArg) fresh) (apply sFn tFn) err
+  s3 <- unify (PLambdaType (apply sFn tArg) fresh) (apply sFn tFn) err
 
   let s = sFn <+> sArg <+> s3
 
@@ -204,7 +204,7 @@ infer env (PCall expr arg) = do
 
   return (s, apply s fresh)
 
-infer (TypeEnvironment env) (PAssign (PIdentifier ide) expr) = do
+infer (TypeEnvironment env) (PBind (PIdentifier ide) expr) = do
   pushTrace $ "Bind: " ++ ide
 
   fresh <- freshFtv "rec"
@@ -254,7 +254,7 @@ unify (PPairType ta tb) (PPairType ta' tb') err = do
   return (sa <+> sb)
 
 -- functions
-unify (PFuncType paramA ra) (PFuncType paramB rb) err = do
+unify (PLambdaType paramA ra) (PLambdaType paramB rb) err = do
   sParam <- unify paramB paramA err
   s2 <- unify (apply sParam ra) (apply sParam rb) err
   return (s2 <+> sParam)
