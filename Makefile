@@ -1,22 +1,41 @@
 # kite - the kite programming language
 
-GEN = src/Kite/Lexer.hs src/Kite/Parser.hs
+SHELL = /bin/sh
 
 DESTDIR = /usr/local
 BUILDDIR = dist/build
+
+GENFLS = src/Kite/Lexer.hs src/Kite/Parser.hs
+GENLEX = alex src/Kite/Lexer.x -o src/Kite/Lexer.hs
+GENPAR = happy src/Kite/Parser.y -o src/Kite/Parser.hs
+
+src/Kite/Lexer.hs:
+	$(shell ${GENLEX})
+
+src/Kite/Parser.hs:
+	$(shell ${GENPAR})
 
 all: clean generate build
 
 clean:
 	@echo Cleaning...
 	@cabal clean
-	@rm -f ${GEN}
 	@echo
 
-generate:
+generate: ${GENFLS}
 	@echo Generating...
-	@alex src/Kite/Lexer.x -o src/Kite/Lexer.hs
-	@happy src/Kite/Parser.y -o src/Kite/Parser.hs
+	@if (( $(shell stat -c %Y src/Kite/Lexer.x) > \
+	$(shell stat -c %Y src/Kite/Lexer.hs) )); then \
+		${GENLEX}; \
+	else \
+		echo 'Lexer: nothing changed'; \
+	fi
+	@if (( $(shell stat -c %Y src/Kite/Parser.y) > \
+	$(shell stat -c %Y src/Kite/Parser.hs) )); then \
+		${GENPAR}; \
+	else \
+		echo 'Parser: nothing changed'; \
+	fi
 	@echo
 
 build: clean generate
@@ -42,4 +61,4 @@ test:
 	@cabal test
 	@echo
 
-.PHONY: all clean generate build test
+.PHONY: all clean generate build install uninstall test
