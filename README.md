@@ -19,14 +19,22 @@ Wanna know more about the design and other features? See the [wiki](https://gith
 
         make
 
- * Optionally, install globally by putting an executable in `/usr/loca/bin` (requires root privileges).
+ * Optionally, install globally by putting an executable in `/usr/local/bin` (requires root privileges).
 
         make install
 
 ## Examples
+For a quick example, try running one of the test files by emitting `JavaScript` and piping it to `Node.js`:
+
+    kite -j examples/Test.kite | node
+
 Read more about the syntax in the [wiki](https://github.com/altschuler/kite/wiki/Syntax) and see example files under the directory [examples](https://github.com/altschuler/kite/tree/master/examples).
 
 ## Known issues
+ * The type checker is a little buggy. See [issue](https://github.com/altschuler/kite/issues/18).
+
+## Contribution
+Feel free to submit a pull request or issue! We are open to ideas and all kinds of feedback.
 
 ## Authors
  * [Simon Altschuler](https://github.com/altschuler)
