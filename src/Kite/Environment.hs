@@ -27,10 +27,27 @@ instance Error TypeError where
   noMsg = UnknownError
   strMsg = TypeError
 
+printTrace :: [String] -> TC ()
+printTrace stack = mapM_ (\m -> trace m $ return ()) (take 10 stack)
+
+throwTE :: String -> TC a
+throwTE m = do
+  env <- get
+  let stack = evalTrace env
+  printTrace stack
+  (throwError . TypeError) m
+
+throwRE :: String -> TC a
+throwRE = throwError . ReferenceError
+
+throwAE :: String -> Int -> Int -> TC a
+throwAE ide exp got = throwError . ArityError $ printf
+                      "Function '%s' got too %s arguments. Expected %d, got %d."
+                      ide (if exp > got then "few" else "many") exp got
+
 -----------------------------
 -- Environment state types --
 -----------------------------
-
 type Name = String
 type Frame = Map.Map Name Type
 type Stack = [Frame]
@@ -119,27 +136,6 @@ initSymbols =
                                       ("print", PLambdaType (PFreeType "8") PVoidType),
                                       ("arguments", PLambdaType PVoidType (PListType (PListType PCharType)))])
 
-
---------------------
--- Error handling --
---------------------
-printTrace :: [String] -> TC ()
-printTrace stack = mapM_ (\m -> trace m $ return ()) (take 10 stack)
-
-throwTE :: String -> TC a
-throwTE m = do
-  env <- get
-  let stack = evalTrace env
-  printTrace stack
-  (throwError . TypeError) m
-
-throwRE :: String -> TC a
-throwRE = throwError . ReferenceError
-
-throwAE :: String -> Int -> Int -> TC a
-throwAE ide exp got = throwError . ArityError $ printf
-                      "Function '%s' got too %s arguments. Expected %d, got %d."
-                      ide (if exp > got then "few" else "many") exp got
 -----------------
 -- Types class --
 -----------------
