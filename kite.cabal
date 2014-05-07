@@ -1,5 +1,5 @@
 name:                kite
-version:             0.0.1
+version:             0.5.0
 license:             MIT
 build-type:          Simple
 cabal-version:       >=1.9.2
