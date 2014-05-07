@@ -9,24 +9,24 @@ Wanna know more about the design and other features? See the [wiki](https://gith
 ## Installation
  * Get the source.
 
-        git clone https://github.com/altschuler/kite.git
+        # git clone https://github.com/altschuler/kite.git
 
  * Make sure you have `cabal` installed, and then install dependencies.
 
-        cabal install
+        # cabal install
 
  * Build files with `make`. This will put an executable in `~/.cabal/bin`, which will work for your user, given that you have the directory in your `PATH`.
 
-        make
+        # make
 
  * Optionally, install globally by putting an executable in `/usr/local/bin` (requires root privileges).
 
-        make install
+        $ make install
 
 ## Examples
 For a quick example, try running one of the test files by emitting `JavaScript` and piping it to `Node.js`:
 
-    kite -j examples/Test.kite | node
+    # kite -j examples/Test.kite | node
 
 Read more about the syntax in the [wiki](https://github.com/altschuler/kite/wiki/Syntax) and see example files under the directory [examples](https://github.com/altschuler/kite/tree/master/examples).
 
