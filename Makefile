@@ -2,10 +2,14 @@
 
 GEN = src/Kite/Lexer.hs src/Kite/Parser.hs
 
+DESTDIR = /usr/local
+BUILDDIR = dist/build
+
 all: clean generate build
 
 clean:
 	@echo Cleaning...
+	@cabal clean
 	@rm -f ${GEN}
 	@echo
 
@@ -20,6 +24,16 @@ build: clean generate
 	@cabal configure
 	@cabal build
 	@echo
+
+install:
+	@echo Installing...
+	@mkdir -p ${DESTDIR}/bin
+	@cp -f ${BUILDDIR}/kite/kite ${DESTDIR}/bin
+	@chmod 755 ${DESTDIR}/bin/kite
+
+uninstall:
+	@echo Uninstalling...
+	@rm -f ${DESTDIR}/bin/kite
 
 test:
 	@echo Testing...
