@@ -84,6 +84,7 @@ infer (TypeEnvironment env) (PIdentifier ide) = do
 
 infer env (PList elems) = do
   pushTrace $ "List: " ++ show elems
+
   fresh <- freshFtv "t"
   (sElems, tElems) <- foldM (\(s, t) e -> do
                                 (se, te) <- infer (apply s env) e
@@ -104,6 +105,7 @@ infer env pair@(PPair a b) = do
 
 infer env (PMatch expr patterns) = do
   pushTrace $ "Match: " ++ show expr
+
   fpat1 <- freshFtv "tp1"
   fpat2 <- freshFtv "tp2" -- fails if defined after freshCon and freshPat, W.T.F.?
   freshCon <- freshFtv "t1"
@@ -196,13 +198,14 @@ infer env (PApply expr arg) = do
   let err = case expr of
         PIdentifier ide -> "Argument does not match parameter in function '" ++ ide ++ "', expected %s, saw %s"
         _ -> "Argument does not match parameter, saw %s, expected %s"
-  s3 <- unify (PLambdaType (apply sFn tArg) fresh) (apply sFn tFn) err
 
-  let s = sFn <+> sArg <+> s3
+  s3 <- unify (apply sFn tFn) (PLambdaType tArg fresh) err
+
+  let s = s3 <+> sFn <+> sArg
 
   popTrace
 
-  return (s, apply s fresh)
+  return (s, apply s3 fresh)
 
 infer (TypeEnvironment env) (PBind (PIdentifier ide) expr) = do
   pushTrace $ "Bind: " ++ ide
@@ -257,7 +260,7 @@ unify (PPairType ta tb) (PPairType ta' tb') err = do
 unify (PLambdaType paramA ra) (PLambdaType paramB rb) err = do
   sParam <- unify paramB paramA err
   s2 <- unify (apply sParam ra) (apply sParam rb) err
-  return (s2 <+> sParam)
+  return (sParam <+> s2)
 
 -- if nothing matched it's an error
 unify ta tb err = throwTE $ printf err (show ta) (show tb)
