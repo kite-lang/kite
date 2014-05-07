@@ -5,7 +5,7 @@ cabal-version:       >=1.9.2
 
 source-repository    head
   type:              git
-  location:          https://github.com/altschuler/kite
+  location:          git@github.com:altschuler/kite.git
 
 executable           kite
   main-is:           Main.hs
