@@ -1,4 +1,12 @@
-var print = function (str) { console.log(str); };
+var print = function (str) {
+    var out = str;
+    if (KT_isArray(str)
+        && str.length > 0
+        && Object.prototype.toString.call(str[0]) === '[object String]') {
+        out = str.join('');
+    }
+    console.log(out);
+};
 
 var KT_PLUS = function  (l) { return function (r) { return l + r; };};
 var KT_MINUS = function  (l) { return function (r) { return l - r; };};
@@ -37,7 +45,9 @@ var KT_COLON = function (x) {
     };
 };
 
-var KT_isArray = function (e) { return Object.prototype.toString.call( e ) === '[object Array]'; };
+var KT_isArray = function (e) {
+    return Object.prototype.toString.call(e) === '[object Array]';
+};
 
 var KT_if = function (cond) {
     return function (conseq) {
@@ -70,7 +80,7 @@ var KT_match = function (val, patterns) {
         }
     }
 
-    throw "Non-exhaustive pattern";
+    throw "Non-exhaustive pattern" + ", pattern.type: " + pattern.type + ", val: " + val;
 };
 
 var KT_arguments = function (none) {

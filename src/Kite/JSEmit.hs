@@ -55,11 +55,6 @@ emit (PIdentifier ide) =
   in concatMap replace ide'
   where replace c = fromMaybe [c] (lookup c opNames)
 
--- special case for list of chars, emit as js string
-emit (PList elems@(PChar _ : _)) =
-  let str = foldl (\acc (PChar x) -> acc ++ [x]) [] elems
-    in printf "\"%s\"" str
-
 emit (PList elems) = printf "[%s]" (emitAll "," elems)
 
 emit (PPair a b) = emit (PList [a, b])
