@@ -161,7 +161,7 @@ Parameters :: { [Type] }
 
 -- func literal parameter
 Parameter :: { Type }
-         : id              { PTypeArg (PFreeType "t") (PIdentifier $1) }
+         : id              { PTypeArg (PFreeType ("t" ++ $1)) (PIdentifier $1) }
          | id ':' Type     { PTypeArg $3 (PIdentifier $1) }
 
 -- func signature

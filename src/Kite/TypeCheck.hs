@@ -196,8 +196,8 @@ infer env (PApply expr arg) = do
 
   fresh <- freshFtv "t"
   let err = case expr of
-        PIdentifier ide -> "Argument does not match parameter in function '" ++ ide ++ "', expected %s, saw %s"
-        _ -> "Argument does not match parameter, saw %s, expected %s"
+        PIdentifier ide -> "Argument does not match parameter in function '" ++ ide ++ "', saw %s, expected %s"
+        _ -> "Argument does not match parameter, expected %s, saw %s"
 
   s3 <- unify (apply sFn tFn) (PLambdaType tArg fresh) err
 

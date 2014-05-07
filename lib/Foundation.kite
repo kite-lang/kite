@@ -246,14 +246,18 @@ intersect = |xs| -> {
 }
 
 -- quicksort
--- [a] -> [a]
-sort = |xs| -> {
-  if empty (xs)
-    then []
-    else sort (filter ((< (head (xs))), tail (xs)))
-         ++ head (xs)
-         : sort (filter ((>= (head (xs))), tail (xs)))
+-- (a -> a -> Bool) -> [a] -> [a]
+sortBy = |cmp, xs| -> {
+  match xs {
+    []   -> [],
+    x,xs -> sortBy (cmp, filter (cmp (x), xs))
+         ++ x
+         : sortBy (cmp, filter (not . cmp (x), xs))
+  }
 }
+
+-- [a] -> [a]
+sort = sortBy ((<))
 
 --- List utilities
 
