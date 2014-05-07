@@ -5,55 +5,42 @@ SHELL = /bin/sh
 DESTDIR = /usr/local
 BUILDDIR = dist/build
 
-GENFLS = src/Kite/Lexer.hs src/Kite/Parser.hs
-GENLEX = alex src/Kite/Lexer.x -o src/Kite/Lexer.hs
-GENPAR = happy src/Kite/Parser.y -o src/Kite/Parser.hs
+LEX = src/Kite/Lexer
+PAR = src/Kite/Parser
+GENLEX = alex $(LEX).x -o $(LEX).hs
+GENPAR = happy $(PAR).y -o $(PAR).hs
 
-all: generate build
+all: build
 
-src/Kite/Lexer.hs:
-	$(shell ${GENLEX})
+$(LEX).hs: $(LEX).x
+	@echo Generating lexer...
+	$(shell $(GENLEX))
 
-src/Kite/Parser.hs:
-	$(shell ${GENPAR})
+$(PAR).hs: $(PAR).y
+	@echo Generating parser...
+	$(shell $(GENPAR))
+	@echo
 
 clean:
 	@echo Cleaning...
 	@cabal clean
+	@rm -f $(LEX).hs $(PAR).hs
 	@echo
 
-generate: ${GENFLS}
-	@echo Generating...
-	@if (( $(shell stat -c %Y src/Kite/Lexer.x) > \
-	$(shell stat -c %Y src/Kite/Lexer.hs) )); then \
-		echo "Lexer: generated"; \
-		${GENLEX}; \
-	else \
-		echo 'Lexer: nothing changed'; \
-	fi
-	@if (( $(shell stat -c %Y src/Kite/Parser.y) > \
-	$(shell stat -c %Y src/Kite/Parser.hs) )); then \
-		echo "Parser: generated"; \
-		${GENPAR}; \
-	else \
-		echo 'Parser: nothing changed'; \
-	fi
-	@echo
-
-build: generate
+build: $(LEX).hs $(PAR).hs
 	@echo Building...
 	@cabal configure
 	@cabal build
 
 install:
 	@echo Installing...
-	@mkdir -p ${DESTDIR}/bin
-	@cp -f ${BUILDDIR}/kite/kite ${DESTDIR}/bin
-	@chmod 755 ${DESTDIR}/bin/kite
+	@mkdir -p $(DESTDIR)/bin
+	@cp -f $(BUILDDIR)/kite/kite $(DESTDIR)/bin
+	@chmod 755 $(DESTDIR)/bin/kite
 
 uninstall:
 	@echo Uninstalling...
-	@rm -f ${DESTDIR}/bin/kite
+	@rm -f $(DESTDIR)/bin/kite
 
 test:
 	@echo Testing...
