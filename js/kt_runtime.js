@@ -1,11 +1,19 @@
 var print = function (str) {
-    var out = str;
-    if (KT_isArray(str)
-        && str.length > 0
-        && Object.prototype.toString.call(str[0]) === '[object String]') {
-        out = str.join('');
-    }
-    console.log(out);
+    var _print = function (str) {
+        var out = str;
+        if (KT_isArray(str) && str.length > 0) {
+            if (Object.prototype.toString.call(str[0]) === '[object String]') {
+                out = str.join('');
+            } else {
+                for (var i = 0; i < str.length; i++) {
+                    out[i] = _print(str[i]);
+                }
+            }
+        }
+        return out;
+    };
+
+    console.log(_print(str));
 };
 
 var KT_PLUS = function  (l) { return function (r) { return l + r; };};
