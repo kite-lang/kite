@@ -217,7 +217,7 @@ flatMap = |f| -> {
 }
 
 -- a -> [a] -> Bool
-contains = |el| -> {
+elem = |el| -> {
   any ((el==))
 }
 
@@ -230,22 +230,19 @@ reverse = |xs| -> {
 }
 
 -- union, intersect, takeWhile, dropWhile, find, delete, deleteBy
-union = |xs, xs'| -> {
-  f = |acc, x| -> {
-    if acc `contains x
-      then acc
-      else x : acc
-  }
-  fold (f, xs', xs)
-}
+union = (flip . fold) (|acc, x| -> {
+  if x `elem acc
+    then acc
+    else x : acc
+})
 
-intersect = |xs, xs'| -> {
+intersect = |xs| -> {
   f = |acc, x| -> {
-    if xs `contains x
+    if x `elem xs
       then x : acc
       else acc
   }
-  fold (f, [], xs')
+  fold (f, [])
 }
 
 -- quicksort
