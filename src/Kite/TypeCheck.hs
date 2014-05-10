@@ -219,7 +219,7 @@ infer env (PApply expr arg) = do
 
   return (s3 <+> sFn <+> sArg, apply s3 fresh)
 
-infer (TypeEnvironment env) (PBind (PIdentifier ide) expr) = do
+infer (TypeEnvironment env) (PBind ide expr) = do
   pushTrace $ "Bind: " ++ ide
 
   fresh <- freshTypeVar "rec"

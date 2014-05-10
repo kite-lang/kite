@@ -94,9 +94,9 @@ Expr   :: { Expr }
         : List             { $1 }
         | Pair             { $1 }
         | Match            { $1 }
-        | Assign           { $1 }
-        | Func             { $1 }
-        | Call             { $1 }
+        | Bind             { $1 }
+        | Lambda           { $1 }
+        | Apply            { $1 }
         | If               { $1 }
         | Term             { $1 }
         | '(' Expr ')'     { $2 }
@@ -106,7 +106,7 @@ Exprs   : {- nothing -}    { [] }
         | Expr             { [$1] }
         | Expr ',' Exprs   { $1 : $3 }
 
-Call   :: { Expr }
+Apply   :: { Expr }
         : Expr '(' Exprs ')'    { mkCalls $1 $3 }
         -- infix function application
         | Expr '`' Expr Expr    { PApply (PApply $3 $1) $4 }
@@ -117,9 +117,9 @@ Call   :: { Expr }
         -- partial right infix
         | '(' operator Expr ')'    { mkPartialRightInfixCall $2 $3 }
 
-Assign :: { Expr }
-        : id '=' Expr                  { PBind (PIdentifier $1) $3 }
-        | '{' operator '}' '=' Expr    { PBind (PIdentifier $2) $5 }
+Bind :: { Expr }
+        : id '=' Expr                  { PBind $1 $3 }
+        | '{' operator '}' '=' Expr    { PBind $2 $5 }
 
 Block :: { Expr }
            : '{' BlockExprs '}'   { mkBlock $2 }
@@ -155,11 +155,11 @@ If     :: { Expr }
 
 --- Lambdas
 
-Func   :: { Expr }
-        : FuncSignature Block        { mkFunc (fst $1) $2 }
+Lambda   :: { Expr }
+        : LambdaSignature Block        { mkFunc (fst $1) $2 }
         | '->' Block                 { mkFunc [] $2 }
 
-FuncSignature :: { ([Type], Type) }
+LambdaSignature :: { ([Type], Type) }
          : '|' Parameters '|' '->'       { ($2, PTypeVar "t") }
          | '|' Parameters '|' '->' Type  { ($2, $5) }
 

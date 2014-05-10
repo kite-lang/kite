@@ -19,9 +19,9 @@ data Expr = PList [Expr]
           | PBlock [Expr]
           | PPair Expr Expr
           | PIf Expr Expr Expr
-          | PBind Expr Expr -- PIdentifier!
+          | PBind String Expr
           | PLambda Type Expr -- PLambdaType!
-          | PApply Expr Expr -- PIdentifier!
+          | PApply Expr Expr
           | PReturn Expr
           | PMatch Expr [PatternCase]
 

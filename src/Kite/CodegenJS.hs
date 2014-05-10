@@ -39,10 +39,19 @@ codegen :: [Decl] -> IO Source
 codegen decls = do
   let r' = filter (not . (=='\n')) (Ch.unpack runtime)
   let emitted = foldl (\full (PDecl ide expr) ->
-                        let decl = printf "var %s = %s" (emit (PIdentifier ide)) (emit expr)
+                        let decl = printf "var %s = %s" (safeId ide) (emit expr)
                         in full ++ "\n" ++ decl
                         ) "" decls
   return (r' ++ emitted ++ ";main();")
+
+-- convert a string to a valid js identifier
+safeId str =
+  let safe = if str `elem` reserved
+             then kitePrefix ++ str
+             else str
+  in concatMap replace safe
+
+  where replace c = fromMaybe [c] (lookup c opNames)
 
 emit :: Expr -> Source
 
@@ -52,12 +61,7 @@ emit (PFloat val) = show val
 emit (PChar val) = '\'' : val : "'"
 emit (PBool val) = if val then "true" else "false"
 
-emit (PIdentifier ide) =
-  let ide' = if ide `elem` reserved
-               then kitePrefix ++ ide
-               else ide
-  in concatMap replace ide'
-  where replace c = fromMaybe [c] (lookup c opNames)
+emit (PIdentifier ide) = safeId ide
 
 emit (PList elems) = printf "[%s]" (emitAll "," elems)
 
@@ -71,7 +75,7 @@ emit (PLambda (PLambdaType param _) body) =
   in printf "(function(%s) {%s})" (emit ide) (emit body)
 
 emit (PBind ide expr) =
-  printf "%s = %s" (emit ide) (emit expr)
+  printf "%s = %s" (safeId ide) (emit expr)
 
 emit (PBlock exprs) =
   emitAll ";" exprs
