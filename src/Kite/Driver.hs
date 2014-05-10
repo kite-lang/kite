@@ -38,13 +38,13 @@ runKite exfnd ev db js lx pr source = do
   let tokens = lex p'
   when lx (prettyPrint tokens)
 
-  let ast = parse tokens
-  when pr (prettyPrint ast)
+  let decls = parse tokens
+  when pr (prettyPrint decls)
 
-  let analysis = typeCheck db ast
+  let analysis = typeCheck db decls
   case analysis of
     Right _ -> if js
-                 then Kjs.codegen ast >>= putStrLn
+                 then Kjs.codegen decls >>= putStrLn
                  else putStrLn "No emitter selected. Use kite --help to view available emitters."
     Left err -> putStrLn ("Error: " ++ show err)
 

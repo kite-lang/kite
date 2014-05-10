@@ -54,7 +54,6 @@ type Stack = [Frame]
 
 data Environment = Environment { sym :: Stack,
                                  symCount :: Int,
-                                 ast :: Expr,
                                  evalTrace :: [String],
                                  -- TODO: hack to infer pattern matches
                                  onlyFree :: Bool,
@@ -77,17 +76,17 @@ newtype TypeEnvironment = TypeEnvironment (Map.Map String Scheme)
 -- the monad in which all the state is kept and errors are thrown
 type TC a = ErrorT TypeError (State Environment) a
 
-runTC expr f = runState (runErrorT f) Environment { sym = [initSymbols],
-                                                    symCount = Map.size initSymbols,
-                                                    ast = expr,
-                                                    evalTrace = [],
-                                                    onlyFree = False,
-                                                    returns = [] }
+runTC f = runState (runErrorT f) Environment { sym = [initSymbols],
+                                               symCount = Map.size initSymbols,
+                                               evalTrace = [],
+                                               onlyFree = False,
+                                               returns = [] }
 
 ------------------
 -- Substitution --
 ------------------
 type Substitution = Map.Map Name Type
+
 nullSubst = Map.empty
 
 composeSubst s1 s2 = Map.map (apply s1) s2 `Map.union` s1

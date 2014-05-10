@@ -10,19 +10,33 @@ import Kite.Environment
 import Data.Maybe
 import Control.Monad
 import Control.Monad.State
+import qualified Data.Set as Set
 import qualified Data.Map as Map
 import Text.Printf
 
 ---------------
 -- Interface --
 ---------------
-typeCheck :: Bool -> Expr -> Either TypeError Expr
-typeCheck debug expr = do
-  let (r, env) = runTC expr (infer (TypeEnvironment Map.empty) expr)
+typeCheck :: Bool -> [Decl] -> Either TypeError [Decl]
+typeCheck debug decls = do
+  let (r, env) = runTC $ typeCheckDecls decls
   when debug (traceShow env $ return ())
   case r of
-    Right _ -> Right $ ast env
+    Right _ -> Right decls
     Left err -> Left err
+
+typeCheckDecls :: [Decl] -> TC ()
+typeCheckDecls decls = do
+  forM_ decls (\(PDecl ide expr) -> do
+                  fresh <- freshTypeVar "tdecl"
+                  insertSym ide fresh
+
+                  (s, t) <- infer (TypeEnvironment Map.empty) expr
+
+                  removeSym ide
+                  insertSym ide (apply s t)
+              )
+  return ()
 
 --------------------
 -- Type inference --
@@ -35,11 +49,11 @@ infer _ (PChar _) = return (nullSubst, PCharType)
 infer _ (PBool _) = return (nullSubst, PBoolType)
 infer _ (PVoid) = return (nullSubst, PVoidType)
 
-infer env (PBlock StandardBlock exprs) = do
-  forM_ exprs (infer env)
-  return (nullSubst, PBoolType)
+-- infer env (PBlock StandardBlock exprs) = do
+--   forM_ exprs (infer env)
+--   return (nullSubst, PBoolType)
 
-infer env (PBlock FuncBlock exprs) = do
+infer env (PBlock exprs) = do
   pushSymFrame
   pushReturnFrame
 

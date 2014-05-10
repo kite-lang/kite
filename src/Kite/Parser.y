@@ -1,5 +1,6 @@
 {
 module Kite.Parser where
+
 import Data.List
 import Kite.Lexer
 import Kite.Syntax
@@ -45,8 +46,6 @@ import Text.Printf
         '{'                { TSymbol _ '{' }
         '}'                { TSymbol _ '}' }
         ','                { TSymbol _ ',' }
-        ':'                { TSymbol _ ':' }
-        ';'                { TSymbol _ ';' }
         '_'                { TSymbol _ '_' }
 
 %right in
@@ -57,35 +56,20 @@ import Text.Printf
 
 %%
 
-Program :: { Expr }
-         : Stmts           { PBlock StandardBlock $1 }
+--- Top level
 
-Stmt   :: { Expr }
-        : Expr             { $1 }
-        | StandardBlock    { $1 }
-        | return Expr      { PReturn $2 }
+Program :: { [Decl] }
+         : Decls { $1 }
 
-Stmts  :: { [Expr] }
+Decl   :: { Decl }
+        : id '=' Expr               { PDecl $1 $3 }
+        | '{' operator '}' '=' Expr { PDecl $2 $5 }
+
+Decls  :: { [Decl] }
         : {- nothing -}    { [] }
-        | Stmt             { [$1] }
-        | Stmt Stmts       { $1 : $2 }
-        | Stmt ';' Stmts   { $1 : $3 }
+        | Decl             { [$1] }
+        | Decl Decls       { $1 : $2 }
 
-Expr   :: { Expr }
-        : List             { $1 }
-        | Pair             { $1 }
-        | Match            { $1 }
-        | Assign           { $1 }
-        | Func             { $1 }
-        | Call             { $1 }
-        | If               { $1 }
-        | Term             { $1 }
-        | '(' Expr ')'     { $2 }
-
-Exprs  :: { [Expr] }
-Exprs   : {- nothing -}    { [] }
-        | Expr             { [$1] }
-        | Expr ',' Exprs   { $1 : $3 }
 
 --- Pattern matching
 
@@ -103,30 +87,57 @@ Patterns   : {- nothing -}      { [] }
         | Pattern               { [$1] }
         | Pattern ',' Patterns  { $1 : $3 }
 
--- expression rules
+
+--- Expressions
+
+Expr   :: { Expr }
+        : List             { $1 }
+        | Pair             { $1 }
+        | Match            { $1 }
+        | Assign           { $1 }
+        | Func             { $1 }
+        | Call             { $1 }
+        | If               { $1 }
+        | Term             { $1 }
+        | '(' Expr ')'     { $2 }
+
+Exprs  :: { [Expr] }
+Exprs   : {- nothing -}    { [] }
+        | Expr             { [$1] }
+        | Expr ',' Exprs   { $1 : $3 }
+
 Call   :: { Expr }
         : Expr '(' Exprs ')'    { mkCalls $1 $3 }
+        -- infix function application
         | Expr '`' Expr Expr    { PApply (PApply $3 $1) $4 }
-        | Expr operator Expr    { mkInfixCall $2 $1 $3 } -- infix
-        | '(' Expr operator ')'    { mkPartialLeftInfixCall $3 $2 } -- partial left infix
-        | '(' operator Expr ')'    { mkPartialRightInfixCall $2 $3 } -- partial right infix
+        -- infix operator
+        | Expr operator Expr    { mkInfixCall $2 $1 $3 }
+        -- partial left infix
+        | '(' Expr operator ')'    { mkPartialLeftInfixCall $3 $2 }
+        -- partial right infix
+        | '(' operator Expr ')'    { mkPartialRightInfixCall $2 $3 }
 
 Assign :: { Expr }
         : id '=' Expr                  { PBind (PIdentifier $1) $3 }
         | '{' operator '}' '=' Expr    { PBind (PIdentifier $2) $5 }
 
--- differentiate between standard and function blocks
-StandardBlock :: { Expr }
-               : '{' Stmts '}'    { PBlock StandardBlock $2 }
+Block :: { Expr }
+           : '{' BlockExprs '}'   { mkBlock $2 }
 
-FuncBlock :: { Expr }
-           : '{' Stmts '}'    { mkFuncBlock $2 }
+-- TODO: WHAT THE FUCK!?
+BlockExpr :: { Expr }
+      : Expr { $1 }
+
+BlockExprs  :: { [Expr] }
+BlockExprs   : {- nothing -}         { [] }
+             | BlockExpr             { [$1] }
+             | BlockExpr BlockExprs  { $1 : $2 }
 
 List   :: { Expr }
-List    : '[' Exprs ']'      { PList $2 }
+List    : '[' Exprs ']'           { PList $2 }
 
 Pair   :: { Expr }
-Pair    : '(' Expr ',' Expr ')'     { PPair $2 $4 }
+Pair    : '(' Expr ',' Expr ')'   { PPair $2 $4 }
 
 Type   :: { Type }
         : boolTy             { PBoolType }
@@ -136,45 +147,33 @@ Type   :: { Type }
         | '(' Type ',' Type ')' { PPairType $2 $4 }
         | '[' Type ']'       { PListType $2 }
         | id                 { PTypeVar $1 }
---        | FuncType         { $1 }
 
--- support both single expr and blocks
+-- TODO: support both single expr and blocks
 If     :: { Expr }
         : if Expr then Expr else Expr    { PIf $2 $4 $6 }
-        | if Expr then StandardBlock else StandardBlock  { PIf $2 $4 $6 }
 
--- functions
+
+--- Lambdas
+
 Func   :: { Expr }
-        : FuncSignature FuncBlock        { mkFunc (fst $1) $2 }
-        | '->' FuncBlock                 { mkFunc [] $2 }
+        : FuncSignature Block        { mkFunc (fst $1) $2 }
+        | '->' Block                 { mkFunc [] $2 }
 
--- func literal
 FuncSignature :: { ([Type], Type) }
          : '|' Parameters '|' '->'       { ($2, PTypeVar "t") }
          | '|' Parameters '|' '->' Type  { ($2, $5) }
 
--- named arguments
 Parameters :: { [Type] }
            : {- nothing -}             { [] }
            | Parameter                 { [$1] }
            | Parameter ',' Parameters  { $1 : $3 }
 
--- func literal parameter
 Parameter :: { Type }
          : id              { PTypeArg (PTypeVar ("t" ++ $1)) (PIdentifier $1) }
-         | id ':' Type     { PTypeArg $3 (PIdentifier $1) }
 
--- func signature
--- FuncType  :: { Type }
---            : '|' TypeList '|' '->' Type { mkFuncType $2 $5 }
 
--- just type
--- TypeList :: { [Type] }
---           : {- nothing -}      { [] }
---           | Type               { [$1] }
---           | Type ',' TypeList  { $1 : $3 }
+--- Primitives
 
--- primitive types
 Term     :: { Expr }
           : int              { PInteger $1 }
           | bool             { PBool $1 }

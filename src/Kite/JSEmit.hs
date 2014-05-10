@@ -35,10 +35,14 @@ opNames = [('+', "KT_PLUS"),
            ('^', "KT_HAT"),
            ('#', "KT_POUND")]
 
-codegen :: Expr -> IO Source
-codegen expr = do
+codegen :: [Decl] -> IO Source
+codegen decls = do
   let r' = filter (not . (=='\n')) (Ch.unpack runtime)
-  return (r' ++ emit expr ++ ";main();")
+  let emitted = foldl (\full (PDecl ide expr) ->
+                        let decl = printf "var %s = %s" (emit (PIdentifier ide)) (emit expr)
+                        in full ++ "\n" ++ decl
+                        ) "" decls
+  return (r' ++ emitted ++ ";main();")
 
 emit :: Expr -> Source
 
@@ -69,7 +73,7 @@ emit (PLambda (PLambdaType param _) body) =
 emit (PBind ide expr) =
   printf "%s = %s" (emit ide) (emit expr)
 
-emit (PBlock _ exprs) =
+emit (PBlock exprs) =
   emitAll ";" exprs
 
 emit (PReturn expr) =

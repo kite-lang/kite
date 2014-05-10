@@ -4,10 +4,6 @@ import Text.Printf
 import Data.List
 import Data.Char
 
-data BlockType = StandardBlock
-               | FuncBlock
-               deriving (Show, Eq)
-
 data Pattern = PatCons String String
              | PatPair String String
              | PatPrimitive Expr
@@ -16,8 +12,11 @@ data Pattern = PatCons String String
 
 type PatternCase = (Pattern, Expr)
 
+data Decl = PDecl String Expr
+            deriving (Show)
+
 data Expr = PList [Expr]
-          | PBlock BlockType [Expr]
+          | PBlock [Expr]
           | PPair Expr Expr
           | PIf Expr Expr Expr
           | PBind Expr Expr -- PIdentifier!

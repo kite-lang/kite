@@ -26,7 +26,7 @@ mkFunc params body =
                   ) (ini, 'a') restParams
   in fns body
 
-mkFuncBlock exprs =
+mkBlock exprs =
   case last exprs of
-    PReturn _ -> PBlock FuncBlock exprs
-    _ -> PBlock FuncBlock (init exprs ++ [PReturn (last exprs)])
+    PReturn _ -> PBlock exprs
+    _ -> PBlock (init exprs ++ [PReturn (last exprs)])
