@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Kite.JSEmit where
+module Kite.CodegenJS where
 
 import Control.Monad
 import Data.Maybe

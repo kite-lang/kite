@@ -2,7 +2,7 @@
 module Main where
 
 import Kite.Driver
-import qualified Kite.JSEmit as Kjs
+import Kite.Codegen
 
 import System.Console.CmdArgs
 import Control.Monad
@@ -15,7 +15,7 @@ data KiteArgs = KiteArgs {
   parOutput :: Bool,
   debugOutput :: Bool,
   noFoundation :: Bool,
-  jsEmit :: Bool
+  target :: CodegenTarget
   } deriving (Data, Typeable, Show)
 
 kiteArgs = cmdArgsMode $ KiteArgs {
@@ -25,12 +25,10 @@ kiteArgs = cmdArgsMode $ KiteArgs {
   parOutput = False &= help "Emit parser output",
   debugOutput = False &= help "Output debug information",
   noFoundation = False &= help "Exclude the Foundation standard library",
-  jsEmit = False &= help "Emit JavaScript"}
+  target = JavaScript &= help "Compilation target"}
            &= summary "Kite compiler v0.0.1"
 
 main = do
   KiteArgs {..} <- cmdArgsRun kiteArgs
 
-  --inp <- readFile input
-
-  runKite noFoundation eval debugOutput jsEmit lexOutput parOutput input
+  runKite noFoundation eval debugOutput target lexOutput parOutput input

@@ -17,10 +17,10 @@ import Kite.Lexer
 import Kite.Parser
 import Kite.TypeCheck
 import Kite.Preprocessor
---import Kite.Analyzer
+import Kite.Codegen
 
 import Control.Monad
-import qualified Kite.JSEmit as Kjs
+import qualified Kite.CodegenJS as GenJS
 
 lex        = alexScanTokens
 parse      = kiteparser
@@ -29,7 +29,7 @@ process    = preprocess
 foundation = $(embedFile "lib/Foundation.kite")
 
 -- ev: eval, db: debug, js: emit js, lx: lex output, pr: parser output
-runKite exfnd ev db js lx pr source = do
+runKite exfnd ev db target lx pr source = do
   p <- if ev then return source else process source
   let p' = if exfnd
            then p
@@ -43,9 +43,9 @@ runKite exfnd ev db js lx pr source = do
 
   let analysis = typeCheck db decls
   case analysis of
-    Right _ -> if js
-                 then Kjs.codegen decls >>= putStrLn
-                 else putStrLn "No emitter selected. Use kite --help to view available emitters."
-    Left err -> putStrLn ("Error: " ++ show err)
+    Right _ -> case target of
+      JavaScript -> GenJS.codegen decls >>= putStrLn
+      LLVM -> putStrLn "Such LLVM"
+    Left err -> print err
 
   where prettyPrint = putStrLn . ppShow
