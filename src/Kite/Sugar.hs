@@ -4,8 +4,8 @@ import Kite.Syntax
 
 mkInfixCall op a1 a2 = PApply (PApply (PIdentifier op) a1) a2
 -- TODO: "partial infix right" can probably be done cleaner
-mkPartialRightInfixCall op rhs = PLambda (PLambdaType (PTypeArg (PFreeType "t") (PIdentifier "lhs"))
-                                                  (PFreeType "t"))
+mkPartialRightInfixCall op rhs = PLambda (PLambdaType (PTypeArg (PTypeVar "t1") (PIdentifier "lhs"))
+                                                  (PTypeVar "t2"))
                                        (PReturn (PApply (PApply (PIdentifier op) (PIdentifier "lhs")) rhs))
 mkPartialLeftInfixCall op lhs = PApply (PIdentifier op) lhs
 
@@ -20,10 +20,10 @@ mkCalls f args =
 mkFunc params body =
   let firstParam = if null params then PTypeArg PVoidType (PIdentifier "_") else head params
       restParams = if null params then [] else tail params
-      ini = PLambda (PLambdaType firstParam (PFreeType "t"))
-      fns = foldl (\fn param ->
-                    fn . PReturn . PLambda (PLambdaType param (PFreeType "t"))
-                  ) ini restParams
+      ini = PLambda (PLambdaType firstParam (PTypeVar "sugarType"))
+      (fns, _) = foldl (\(fn, n) param ->
+                    (fn . PReturn . PLambda (PLambdaType param (PTypeVar ("sugarType" ++ [n]))), succ n)
+                  ) (ini, 'a') restParams
   in fns body
 
 mkFuncBlock exprs =

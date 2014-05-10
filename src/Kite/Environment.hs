@@ -123,9 +123,9 @@ popSymFrame = do
 ------------------------
 -- Built-in functions --
 ------------------------
-mkConsSignature n = let t = PFreeType ("t" ++ n) in PLambdaType t (PLambdaType (PListType t) (PListType t))
-mkArithSignature n = let t = PFreeType ("t" ++ n) in PLambdaType t (PLambdaType t t)
-mkEqualitySignature n = let t = PFreeType ("t" ++ n) in PLambdaType t (PLambdaType t PBoolType)
+mkConsSignature n = let t = PTypeVar ("t" ++ n) in PLambdaType t (PLambdaType (PListType t) (PListType t))
+mkArithSignature n = let t = PTypeVar ("t" ++ n) in PLambdaType t (PLambdaType t t)
+mkEqualitySignature n = let t = PTypeVar ("t" ++ n) in PLambdaType t (PLambdaType t PBoolType)
 
 initSymbols =
   let arithOps = ["+", "-", "*", "/", "%"]
@@ -133,7 +133,7 @@ initSymbols =
   in Map.fromList (arithSigs `union` [("<=", mkEqualitySignature "5"),
                                       ("==", mkEqualitySignature "6"),
                                       (":", mkConsSignature "7"),
-                                      ("print", PLambdaType (PFreeType "8") PVoidType),
+                                      ("print", PLambdaType (PTypeVar "8") PVoidType),
                                       ("arguments", PLambdaType PVoidType (PListType (PListType PCharType)))])
 
 -----------------
@@ -148,12 +148,12 @@ instance Types TypeEnvironment where
   apply s (TypeEnvironment env) = TypeEnvironment (Map.map (apply s) env)
 
 instance Types Type where
-  ftv (PFreeType ide) = Set.singleton ide
+  ftv (PTypeVar ide) = Set.singleton ide
   ftv (PListType t) = ftv t
   ftv (PPairType ta tb) = ftv ta `Set.union` ftv tb
   ftv (PLambdaType tParam tRet) = ftv tParam `Set.union` ftv tRet
   ftv _ = Set.empty
-  apply s (PFreeType ide) = fromMaybe (PFreeType ide) (Map.lookup ide s)
+  apply s (PTypeVar ide) = fromMaybe (PTypeVar ide) (Map.lookup ide s)
   apply s (PLambdaType tParam tRet) = PLambdaType (apply s tParam) (apply s tRet)
   apply s (PListType t) = PListType (apply s t)
   apply s (PPairType a b) = PPairType (apply s a) (apply s b)
@@ -178,17 +178,17 @@ generalize env t = Scheme (Set.toList (ftv t Set.\\ ftv env)) t
 
 instantiate :: Scheme -> TC Type
 instantiate (Scheme vars t) = do
-  freshVars <- mapM (\_ -> freshFtv "t") vars
+  freshVars <- mapM (\_ -> freshTypeVar "t") vars
   let s = Map.fromList (zip vars freshVars)
   return (apply s t)
 
 -- generate a fresh type variable
-freshFtv :: String -> TC Type
-freshFtv ide = do
+freshTypeVar :: String -> TC Type
+freshTypeVar ide = do
   env <- get
   let count = symCount env
   put env{symCount =  succ count}
-  return $ PFreeType (ide ++ show count)
+  return $ PTypeVar (ide ++ show count)
 
 removeSym :: String -> TC ()
 removeSym ide = do

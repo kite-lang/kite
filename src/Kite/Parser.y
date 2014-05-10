@@ -135,7 +135,7 @@ Type   :: { Type }
         | charTy             { PCharType }
         | '(' Type ',' Type ')' { PPairType $2 $4 }
         | '[' Type ']'       { PListType $2 }
-        | id                 { PFreeType $1 }
+        | id                 { PTypeVar $1 }
 --        | FuncType         { $1 }
 
 -- support both single expr and blocks
@@ -150,7 +150,7 @@ Func   :: { Expr }
 
 -- func literal
 FuncSignature :: { ([Type], Type) }
-         : '|' Parameters '|' '->'       { ($2, PFreeType "t") }
+         : '|' Parameters '|' '->'       { ($2, PTypeVar "t") }
          | '|' Parameters '|' '->' Type  { ($2, $5) }
 
 -- named arguments
@@ -161,7 +161,7 @@ Parameters :: { [Type] }
 
 -- func literal parameter
 Parameter :: { Type }
-         : id              { PTypeArg (PFreeType ("t" ++ $1)) (PIdentifier $1) }
+         : id              { PTypeArg (PTypeVar ("t" ++ $1)) (PIdentifier $1) }
          | id ':' Type     { PTypeArg $3 (PIdentifier $1) }
 
 -- func signature

@@ -63,7 +63,7 @@ infer (TypeEnvironment env) (PIdentifier ide) = do
   pushTrace ("Identifier " ++ ide)
   e <- get
   if onlyFree e
-    then liftM ((,) nullSubst) (freshFtv "t")
+    then liftM ((,) nullSubst) (freshTypeVar "t")
     else do
     symEnv <- get
     ty <- case Map.lookup ide env of
@@ -85,7 +85,7 @@ infer (TypeEnvironment env) (PIdentifier ide) = do
 infer env (PList elems) = do
   pushTrace $ "List: " ++ show elems
 
-  fresh <- freshFtv "t"
+  fresh <- freshTypeVar "t"
   (sElems, tElems) <- foldM (\(s, t) e -> do
                                 (se, te) <- infer (apply s env) e
                                 s' <- unify te t "Varying types in list, saw %s and %s"
@@ -106,10 +106,10 @@ infer env pair@(PPair a b) = do
 infer env (PMatch expr patterns) = do
   pushTrace $ "Match: " ++ show expr
 
-  fpat1 <- freshFtv "tp1"
-  fpat2 <- freshFtv "tp2" -- fails if defined after freshCon and freshPat, W.T.F.?
-  freshCon <- freshFtv "t1"
-  freshPat <- freshFtv "t2"
+  fpat1 <- freshTypeVar "tp1"
+  fpat2 <- freshTypeVar "tp2" -- fails if defined after freshCon and freshPat, W.T.F.?
+  freshCon <- freshTypeVar "t1"
+  freshPat <- freshTypeVar "t2"
   (sExpr, tExpr) <- infer env expr
   ((sElems, sPat), (tConseq, tPat)) <- foldM (\((s, p), (tc, tp)) (pattern, val) -> do
                                 let TypeEnvironment en = env
@@ -176,7 +176,7 @@ infer env (PIf cond conseq alt) = do
 infer env (PLambda (PLambdaType param ret) body) = do
   pushTrace $ "Lambda: " ++ show (PLambdaType param ret)
 
-  tParam <- freshFtv "t"
+  tParam <- freshTypeVar "t"
   let PTypeArg _ (PIdentifier ide) = param
       TypeEnvironment env' = remove env ide
       env'' = TypeEnvironment (Map.insert ide (Scheme [] tParam) env')
@@ -184,7 +184,7 @@ infer env (PLambda (PLambdaType param ret) body) = do
 
   popTrace
 
-  return (s1, apply s1 (PLambdaType tParam t1))
+  return (s1, PLambdaType (apply s1 tParam) t1)
 
 infer env (PApply expr arg) = do
   case expr of
@@ -194,23 +194,21 @@ infer env (PApply expr arg) = do
   (sArg, tArg) <- infer env arg
   (sFn, tFn) <- infer (apply sArg env) expr
 
-  fresh <- freshFtv "t"
+  fresh <- freshTypeVar "t"
   let err = case expr of
         PIdentifier ide -> "Argument does not match parameter in function '" ++ ide ++ "', saw %s, expected %s"
         _ -> "Argument does not match parameter, expected %s, saw %s"
 
   s3 <- unify (apply sFn tFn) (PLambdaType tArg fresh) err
 
-  let s = s3 <+> sFn <+> sArg
-
   popTrace
 
-  return (s, apply s3 fresh)
+  return (s3 <+> sFn <+> sArg, apply s3 fresh)
 
 infer (TypeEnvironment env) (PBind (PIdentifier ide) expr) = do
   pushTrace $ "Bind: " ++ ide
 
-  fresh <- freshFtv "rec"
+  fresh <- freshTypeVar "rec"
   insertSym ide fresh
 
   (s1, t1) <- infer (TypeEnvironment env) expr
@@ -244,8 +242,8 @@ unify PBoolType PBoolType       _ = return nullSubst
 unify PVoidType PVoidType       _ = return nullSubst
 
 -- free type with any type
-unify ta (PFreeType ide) _ = varBind ide ta
-unify (PFreeType ide) tb _ = varBind ide tb
+unify ta (PTypeVar ide) _ = varBind ide ta
+unify (PTypeVar ide) tb _ = varBind ide tb
 
 -- list
 unify (PListType ta) (PListType tb) err = unify ta tb err
@@ -266,6 +264,6 @@ unify (PLambdaType paramA ra) (PLambdaType paramB rb) err = do
 unify ta tb err = throwTE $ printf err (show ta) (show tb)
 
 varBind :: Name -> Type -> TC Substitution
-varBind ide t | t == PFreeType ide = return nullSubst
-              | PFreeType ide == t = return nullSubst
+varBind ide t | t == PTypeVar ide = return nullSubst
+              | ide `Set.member` ftv t = throwTE $ "Occurs in type: " ++ ide ++ " vs. " ++ show t
               | otherwise = return $ Map.singleton ide t

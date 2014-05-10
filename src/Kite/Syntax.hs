@@ -42,14 +42,14 @@ data Type = PListType Type
           | PFloatType
           | PCharType
           | PTypeArg Type Expr -- PIdentifier!
-          | PFreeType String
+          | PTypeVar String
           | PVoidType
           deriving (Eq)
 
 --- Pretty printing
 
 -- free types in nodes
-free f@(PFreeType _) = [f]
+free f@(PTypeVar _) = [f]
 
 free PBoolType    = []
 free PIntegerType = []
@@ -62,7 +62,7 @@ free (PPairType ta tb)     = free ta `union` free tb
 free (PLambdaType param ret) = free param `union` free ret
 free (PTypeArg t _)        = free t
 
-prettyType tmap t@(PFreeType ide) =
+prettyType tmap t@(PTypeVar ide) =
   case find ((==t) . fst) tmap of
     Just a -> snd a
     Nothing -> ide
