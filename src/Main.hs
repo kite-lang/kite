@@ -13,8 +13,9 @@ data KiteArgs = KiteArgs {
   eval :: Bool,
   lexOutput :: Bool,
   parOutput :: Bool,
-  jsEmit :: Bool,
-  debugOutput :: Bool
+  debugOutput :: Bool,
+  noFoundation :: Bool,
+  jsEmit :: Bool
   } deriving (Data, Typeable, Show)
 
 kiteArgs = cmdArgsMode $ KiteArgs {
@@ -23,6 +24,7 @@ kiteArgs = cmdArgsMode $ KiteArgs {
   lexOutput = False &= help "Emit lexer output",
   parOutput = False &= help "Emit parser output",
   debugOutput = False &= help "Output debug information",
+  noFoundation = False &= help "Exclude the Foundation standard library",
   jsEmit = False &= help "Emit JavaScript"}
            &= summary "Kite compiler v0.0.1"
 
@@ -31,4 +33,4 @@ main = do
 
   --inp <- readFile input
 
-  runKite eval debugOutput jsEmit lexOutput parOutput input
+  runKite noFoundation eval debugOutput jsEmit lexOutput parOutput input

@@ -29,11 +29,11 @@ process    = preprocess
 foundation = $(embedFile "lib/Foundation.kite")
 
 -- ev: eval, db: debug, js: emit js, lx: lex output, pr: parser output
-runKite ev db js lx pr source = do
+runKite exfnd ev db js lx pr source = do
   p <- if ev then return source else process source
-  let p' = Ch.unpack foundation ++ p
-
-  --p <- p' ++ if ev then return source else process source
+  let p' = if exfnd
+           then p
+           else Ch.unpack foundation ++ p
 
   let tokens = lex p'
   when lx (prettyPrint tokens)
