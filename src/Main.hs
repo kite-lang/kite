@@ -15,7 +15,8 @@ data KiteArgs = KiteArgs {
   parOutput :: Bool,
   debugOutput :: Bool,
   noFoundation :: Bool,
-  target :: CodegenTarget
+  target :: CodegenTarget,
+  noEmit :: Bool
   } deriving (Data, Typeable, Show)
 
 kiteArgs = cmdArgsMode $ KiteArgs {
@@ -25,6 +26,7 @@ kiteArgs = cmdArgsMode $ KiteArgs {
   parOutput = False &= help "Emit parser output",
   debugOutput = False &= help "Output debug information",
   noFoundation = False &= help "Exclude the Foundation standard library",
+  noEmit = False &= help "Prevent emitting compiled code",
   target = JavaScript &= help "Compilation target"}
            &= summary "Kite compiler v0.0.1"
 
