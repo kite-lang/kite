@@ -16,7 +16,7 @@
     (define-key map (kbd "C-c C-p C-r")
       (lambda (start end) (interactive "r") (kite-compile-region start end "-p")))
     (define-key map (kbd "C-c C-j")
-      (lambda () (interactive) (kite-compile-current-buffer " -j | node ")))
+      (lambda () (interactive) (kite-compile-current-buffer " --target=javascript | node ")))
     map)
 
   "Keymap for Kite major mode.")
