@@ -1,0 +1,40 @@
+printdensity = |d| -> {
+  c = if d > 8.0 then ' '
+      else if d > 4.0 then '.'
+      else if d > 2.0 then '+'
+      else '*'
+}
+
+-- determine whether the specific location diverges.
+-- Solve for z = z^2 + c in the complex plane.
+mandleconverger = |real, imag, iters, creal, cimag| -> {
+  if (iters > 255.0) || ((real*real + imag*imag) > 4.0)
+  then iters
+  else mandleconverger((real*real) - (imag*imag) + creal,
+                       (2.0*real*imag) + cimag,
+                       iters+1.0,
+                       creal,
+                       cimag)
+}
+-- return the number of iterations required for the iteration to escape
+mandleconverge = |real, imag| -> {
+  mandleconverger (real, imag, 0.0, real, imag)
+}
+
+-- compute and plot the mandlebrot set with the specified 2 dimensional range
+-- info.
+mandelhelp = |xmin, xmax, xstep, ymin, ymax, ystep| -> {
+  f = |x, y| -> { printdensity (mandleconverge (x, y)) }
+
+  flatMap (|y| -> {
+    map (|x| -> {
+      printdensity (mandleconverge(x, y))
+    }, rangeStep(xmin, xmax, xstep)) ++ ['\n']
+  }, rangeStep(ymin, ymax, ystep))
+}
+-- mandel - This is a convenient helper function for ploting the mandelbrot set
+-- from the specified position with the specified Magnification.
+mandel = |realstart, imagstart, realmag, imagmag| -> {
+  mandelhelp(realstart, realstart+realmag*78.0, realmag * 2.0,
+             imagstart, imagstart+imagmag*40.0, imagmag * 2.0)
+}

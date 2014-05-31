@@ -1,0 +1,13 @@
+animate = |f, interval, from, to, step| -> {
+  f' = -> {
+    m = f(from)
+    clear()
+    print (m)
+    sleep(interval)
+    animate(f, interval, from + step, to, step)
+  }
+
+  if from >= to
+  then to
+  else f'()
+}

@@ -1,0 +1,13 @@
+plot = |f, threshold, stepX, minX, maxX, minY, maxY| -> {
+  drawRow = |y| -> {
+    fn = |x| -> {
+       if (f(x) > y - threshold) && (f(x) < y + threshold)
+       then "o"
+       else " "
+    }
+    flatMap(fn, rangeStep(minX, maxX, stepX))
+  }
+
+  -- collect lines
+  flatMap ((++ ['\n']) . drawRow, rangeStep(minY, maxY, 0.5))
+}
