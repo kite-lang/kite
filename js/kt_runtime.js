@@ -13,8 +13,10 @@ var print = function (str) {
         return out;
     };
 
-    console.log(_print(str));
+    process.stdout.write(_print(str) + '\n');
 };
+
+var put = function (s) { process.stdout.write(s); };
 
 /* Math */
 var sin = Math.sin;

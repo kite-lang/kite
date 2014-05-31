@@ -133,6 +133,7 @@ initSymbols =
                                       ("==", mkEqualitySignature "6"),
                                       (":", mkConsSignature "7"),
                                       ("print", PLambdaType (PTypeVar "8") PVoidType),
+                                      ("put", PLambdaType (PTypeVar "9") PVoidType),
                                       ("sin", PLambdaType PFloatType PFloatType),
                                       ("cos", PLambdaType PFloatType PFloatType),
                                       ("tan", PLambdaType PFloatType PFloatType),

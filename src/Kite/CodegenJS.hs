@@ -3,6 +3,7 @@
 module Kite.CodegenJS where
 
 import Control.Monad
+import Data.Char
 import Data.Maybe
 import Data.List
 import Data.FileEmbed
@@ -58,7 +59,7 @@ emit :: Expr -> Source
 emit PVoid = ""
 emit (PInteger val) = show val
 emit (PFloat val) = show val
-emit (PChar val) = '\'' : val : "'"
+emit (PChar val) = '\'' : showLitChar val "'"
 emit (PBool val) = if val then "true" else "false"
 
 emit (PIdentifier ide) = safeId ide

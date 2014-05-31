@@ -15,7 +15,7 @@ $operatorSymbols        = [\+\-\/\*\%\=\|\&\<\>\!\~\`\#\.\:\^]
 @keywords		= return | import | if | then | else | yolo | match
 @operators		= [$operatorSymbols]+
 @string                 = \" (. # \")* \"
-@char                   = \' (. # \") \'
+@char                   = \' (\\?. # \') \'
 @identifier		= $downcase [$alphaNum \_ \' \! \?]*
 @bool			= "True" | "False"
 @type			= $upcase [$alphaNum]*
