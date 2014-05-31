@@ -2,6 +2,10 @@
 
 [![Build Status](https://travis-ci.org/altschuler/kite.png?branch=master)](https://travis-ci.org/altschuler/kite)
 
+<p align="center">
+  <img width="100" src="https://rawgit.com/altschuler/kite/master/logo/logo.svg" alt="Kite"/>
+</p>
+
 Kite is language with a strong emphasis on functional development. It is statically and strongly typed.
 
 Wanna know more about the design and other features? See the [wiki](https://github.com/altschuler/kite/wiki)!
