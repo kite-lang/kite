@@ -1,3 +1,5 @@
+-- Constants
+pi = 3.14159265359
 
 --- Functional
 
@@ -324,6 +326,9 @@ odd = not . even
 
 -- Int -> Int
 negate = (0-)
+
+-- Float -> Float
+negatef = (0.0-)
 
 -- Int -> Int
 abs = |n| -> {

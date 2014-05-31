@@ -16,6 +16,21 @@ var print = function (str) {
     console.log(_print(str));
 };
 
+/* Math */
+var sin = Math.sin;
+var cos = Math.cos;
+var tan = Math.tan;
+
+/* Utils */
+function sleep(time) {
+    var stop = new Date().getTime();
+    while(new Date().getTime() < stop + time) { ; }
+}
+
+function clear() {
+    process.stdout.write('\u001B[2J\u001B[0;0f');
+}
+
 var KT_PLUS = function  (l) { return function (r) { return l + r; };};
 var KT_MINUS = function  (l) { return function (r) { return l - r; };};
 var KT_STAR = function  (l) { return function (r) { return l * r;};};

@@ -133,6 +133,11 @@ initSymbols =
                                       ("==", mkEqualitySignature "6"),
                                       (":", mkConsSignature "7"),
                                       ("print", PLambdaType (PTypeVar "8") PVoidType),
+                                      ("sin", PLambdaType PFloatType PFloatType),
+                                      ("cos", PLambdaType PFloatType PFloatType),
+                                      ("tan", PLambdaType PFloatType PFloatType),
+                                      ("sleep", PLambdaType PIntegerType PVoidType),
+                                      ("clear", PLambdaType PVoidType PVoidType),
                                       ("arguments", PLambdaType PVoidType (PListType (PListType PCharType)))])
 
 -----------------
@@ -172,8 +177,8 @@ instance Types Scheme where
 remove :: TypeEnvironment -> String -> TypeEnvironment
 remove (TypeEnvironment env) ide = TypeEnvironment (Map.delete ide env)
 
-generalize :: TypeEnvironment -> Type -> Scheme
-generalize env t = Scheme (Set.toList (ftv t Set.\\ ftv env)) t
+-- generalize :: TypeEnvironment -> Type -> Scheme
+-- generalize env t = Scheme (Set.toList (ftv t Set.\\ ftv env)) t
 
 instantiate :: Scheme -> TC Type
 instantiate (Scheme vars t) = do
