@@ -33,4 +33,4 @@ kiteArgs = cmdArgsMode $ KiteArgs {
 main = do
   KiteArgs {..} <- cmdArgsRun kiteArgs
 
-  runKite noFoundation eval debugOutput target lexOutput parOutput input
+  runKite noFoundation noEmit eval debugOutput target lexOutput parOutput input

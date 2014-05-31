@@ -28,10 +28,10 @@ parse      = kiteparser
 process    = preprocess
 foundation = $(embedFile "lib/Foundation.kite")
 
--- ev: eval, db: debug, js: emit js, lx: lex output, pr: parser output
-runKite exfnd ev db target lx pr source = do
+-- ev: eval, db: debug, target: compile target, lx: lex output, pr: parser output
+runKite noFnd noEmit ev db target lx pr source = do
   p <- if ev then return source else process source
-  let p' = if exfnd
+  let p' = if noFnd
            then p
            else Ch.unpack foundation ++ p
 
@@ -44,7 +44,7 @@ runKite exfnd ev db target lx pr source = do
   let analysis = typeCheck db decls
   case analysis of
     Right _ -> case target of
-      JavaScript -> GenJS.codegen decls >>= putStrLn
+      JavaScript -> unless noEmit $ GenJS.codegen decls >>= putStrLn
       LLVM -> putStrLn "Such LLVM"
     Left err -> print err
 
