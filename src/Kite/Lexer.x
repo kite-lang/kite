@@ -27,21 +27,20 @@ kite :-
   @multilineComment	;
   @comment		;
 
-  @keywords		{ tok (\p s -> TKeyword p s) }
-  @operators		{ tok (\p s -> TOperator p s) }
-  $digit+\.$digit+	{ tok (\p s -> TFloat p (read s)) }
-  $digit+		{ tok (\p s -> TInteger p (read s)) }
-  @bool		        { tok (\p s -> TBool p (read s)) }
-  $symbols		{ tok (\p s -> TSymbol p (head s)) }
+  @keywords		{ \p s -> TKeyword p s }
+  @operators		{ \p s -> TOperator p s }
+  $digit+\.$digit+	{ \p s -> TFloat p (read s) }
+  $digit+"f"		{ \p s -> TFloat p (read $ init s) }
+  $digit+		{ \p s -> TInteger p (read s) }
+  @bool		        { \p s -> TBool p (read s) }
+  $symbols		{ \p s -> TSymbol p (head s) }
 
-  @string               { tok (\p s -> TString p $ (tail . init) s) }
-  @char                 { tok (\p s -> TChar p (read s)) }
-  @identifier		{ tok (\p s -> TIdentifier p s) }
-  @type			{ tok (\p s -> TType p s) }
+  @string               { \p s -> TString p $ (tail . init) s }
+  @char                 { \p s -> TChar p (read s) }
+  @identifier		{ \p s -> TIdentifier p s }
+  @type			{ \p s -> TType p s }
 
 {
-
-tok f p s = f p s
 
 -- alexEOF :: Alex Token
 -- alexEOF = return EOF
