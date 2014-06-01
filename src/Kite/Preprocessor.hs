@@ -1,9 +1,10 @@
-module Kite.Preprocessor (preprocess) where
+module Kite.Preprocessor (preprocess, preprocessFile) where
 
 import qualified Language.Preprocessor.Cpphs as Cpphs
 import System.Directory
 import System.FilePath.Posix
 import System.IO
+import System.IO.Temp
 
 data Encoding = Encoding (Maybe (Handle -> IO ()))
 
@@ -26,4 +27,12 @@ include file = do
   opts <- options file
   Cpphs.runCpphs opts file enc
 
-preprocess = include
+preprocess source =
+  withSystemTempFile "kite" $ \tmpFile hFile -> do
+    let temp = tmpFile ++ ".tmp" -- avoid locked file
+    writeFile temp source
+    res <- include temp
+    removeFile temp
+    return res
+
+preprocessFile = include

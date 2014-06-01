@@ -3,7 +3,8 @@ module Kite.Driver (
   runKite
 , lex
 , parse
-, process
+, preprocess
+, preprocessFile
 , foundation
 ) where
 
@@ -25,12 +26,11 @@ import qualified Kite.CodegenJS as GenJS
 lex        = alexScanTokens
 parse      = kiteparser
 --analyze = typeCheck
-process    = preprocess
 foundation = $(embedFile "lib/Foundation.kite")
 
 -- ev: eval, db: debug, target: compile target, lx: lex output, pr: parser output
-runKite noFnd noEmit noTypeCheck ev db target lx pr source = do
-  p <- if ev then return source else process source
+runKite noFnd noEmit noTypeCheck eval db target lx pr source = do
+  p <- if eval then preprocess source else preprocessFile source
   let p' = if noFnd
            then p
            else Ch.unpack foundation ++ p
