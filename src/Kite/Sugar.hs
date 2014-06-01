@@ -30,3 +30,40 @@ mkBlock exprs =
   case last exprs of
     PReturn _ -> PBlock exprs
     _ -> PBlock (init exprs ++ [PReturn (last exprs)])
+
+
+mkCompreExpr expr draws =
+  let ids = map (\ (PDraw id _) -> id) draws
+      params = map (\id -> PTypeArg (PTypeVar ("t"++id)) (PIdentifier id)) ids
+   in mkFunc params (PBlock [(PReturn expr)])
+
+mkCompreGuards exprs guards =
+  let ids = map (\(PDraw id _) -> id) guards
+      params = map (\id -> PTypeArg (PTypeVar ("t"++id)) (PIdentifier id)) ids
+   in map (\expr -> mkFunc params (PBlock [(PReturn expr)])) exprs
+
+mkComprehension func draws guardFuncs =
+  let ids = map (\ (PDraw id _) -> id) draws
+      params = map (\id -> PTypeArg (PTypeVar ("t"++id)) (PIdentifier id)) ids
+      draws_ranges = map(\ (PDraw _ range) -> range) draws
+  -- in mkFunc params (PBlock [(PReturn func)])
+      in generateFlatmaps ids draws_ranges ids guardFuncs func
+
+generateFlatmaps ids ranges ids_all guardFuncs finalFunc =
+  case ids of
+    [] -> let args = map(\id -> PIdentifier id) ids_all
+          in PIf (generateGuards args guardFuncs) (PList [mkCalls finalFunc args]) (PList [])
+              -- in generateGuards args guardFuncs
+    (id:_) -> let param = map (\id -> PTypeArg (PTypeVar ("t"++id)) (PIdentifier id)) [id]
+              in
+               (PApply
+                (PApply (PIdentifier "flatMap")
+                 (mkFunc param (PBlock
+                                [(PReturn (generateFlatmaps (tail ids) (tail ranges) ids_all guardFuncs finalFunc))]))) (head ranges))
+
+-- generateFinalFunc
+
+generateGuards args guardFuncs =
+  case length guardFuncs of
+    1 -> mkCalls (head guardFuncs) args
+    true -> PApply (PApply (PIdentifier "&&") (mkCalls (head guardFuncs) args)) (generateGuards args (tail guardFuncs))

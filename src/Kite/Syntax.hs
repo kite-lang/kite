@@ -12,6 +12,9 @@ data Pattern = PatCons String String
 
 type PatternCase = (Pattern, Expr)
 
+data Draw = PDraw String Expr
+            deriving(Show, Eq) -- Perhaps?
+
 data Decl = PDecl String Expr
             deriving (Show)
 
@@ -22,6 +25,7 @@ data Expr = PList [Expr]
           | PBind String Expr
           | PLambda Type Expr -- PLambdaType!
           | PApply Expr Expr
+          | PComprehension Expr [Draw] [Expr]
           | PReturn Expr
           | PMatch Expr [PatternCase]
 

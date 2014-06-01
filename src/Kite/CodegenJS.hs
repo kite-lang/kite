@@ -90,6 +90,9 @@ emit (PApply expr arg) =
 emit (PMatch expr pats) =
   printf "KT_match(%s,%s)" (emit expr) ("[" ++ intercalate "," (map emitPattern pats) ++ "]")
 
+emit (PComprehension expr draws guards) =
+  printf "/* !!!YTTAP-SMASH!!! */"
+
 emitPattern (PatPair a b, val) = printf "{ type: 'pair', conseq: function (%s, %s) { return %s } }" a b (emit val)
 emitPattern (PatCons hd tl, val) = printf "{ type: 'list', conseq: function (%s, %s) { return %s } }" hd tl (emit val)
 emitPattern (PatPrimitive expr, val) = printf "{ type: 'simple', expr:function(){ return %s}, conseq: function () { return %s } }" (emit expr) (emit val)

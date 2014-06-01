@@ -26,6 +26,7 @@ import Text.Printf
 
         '='                { TOperator _ "=" }
         '->'               { TOperator _ "->" }
+        '<-'               { TOperator _ "<-" }
         '|'                { TOperator _ "|" }
         '`'                { TOperator _ "`" }
 
@@ -90,6 +91,14 @@ Patterns   : {- nothing -}      { [] }
 
 --- Expressions
 
+Draw   :: { Draw }
+        : id '<-' Expr     { PDraw $1 $3 }
+
+Draws  :: { [Draw] }
+        : Draw             { [$1]}
+        | Draw ',' Draws   { $1 : $3}
+
+
 Expr   :: { Expr }
         : List             { $1 }
         | Pair             { $1 }
@@ -116,6 +125,9 @@ Apply   :: { Expr }
         | '(' Expr operator ')'    { mkPartialLeftInfixCall $3 $2 }
         -- partial right infix
         | '(' operator Expr ')'    { mkPartialRightInfixCall $2 $3 }
+-- list comprehension
+        -- | '{' Expr '|' Draws '|' Exprs '}' { PComprehension (mkCompreExpr $2 $4) $4 (mkCompreGuards $6 $4) }
+        | '{' Expr '|' Draws '|' Exprs '}' { mkComprehension (mkCompreExpr $2 $4) $4 (mkCompreGuards $6 $4) }
 
 Bind :: { Expr }
         : id '=' Expr                  { PBind $1 $3 }

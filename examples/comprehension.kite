@@ -1,0 +1,10 @@
+main = -> {
+
+yttap = { x*y | x <- [3,4,5] , y <- range(4,6) | (x+y) >= 10 , y > 4}
+
+print(yttap)
+-- draw1 = [1,2,3]
+-- draw2 = range(6,8)
+-- test = |x| -> { 1 }
+-- test_func = |abe,bex| -> {abe*bex}
+}
