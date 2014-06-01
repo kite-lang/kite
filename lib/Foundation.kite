@@ -6,11 +6,9 @@ pi = 3.14159265359
 -- a -> a
 id = |x| -> { x }
 
-length = |xs| -> {
-  match xs {
-    [] -> 0,
-    x,xs -> 1 + length (xs)
-  }
+-- (a -> b) -> a -> b
+{$} = |f, x| -> {
+  f (x)
 }
 
 -- composition
@@ -100,6 +98,14 @@ snd = |p| -> {
   }
 }
 
+-- [a] -> Int
+length = |xs| -> {
+  match xs {
+    [] -> 0,
+    x,xs -> 1 + length (xs)
+  }
+}
+
 -- [a] -> Bool
 empty = |xs| -> {
   match xs {
@@ -119,7 +125,7 @@ head = |xs| -> {
 -- [a] -> [a]
 tail = |xs| -> {
   match xs {
-    [] -> panic ("can't take tail of empty list")
+    [] -> panic ("can't take tail of empty list"),
     x,xs -> xs
   }
 }
