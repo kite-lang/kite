@@ -1,5 +1,5 @@
 printdensity = |d| -> {
-  c = if d > 8.0 then ' '
+  if d > 8.0 then ' '
       else if d > 4.0 then '.'
       else if d > 2.0 then '+'
       else '*'
