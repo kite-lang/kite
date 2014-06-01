@@ -65,5 +65,6 @@ generateFlatmaps ids ranges ids_all guardFuncs finalFunc =
 
 generateGuards args guardFuncs =
   case length guardFuncs of
+    0 -> PApply (PIdentifier "id") (PBool True)
     1 -> mkCalls (head guardFuncs) args
-    true -> PApply (PApply (PIdentifier "&&") (mkCalls (head guardFuncs) args)) (generateGuards args (tail guardFuncs))
+    _ -> PApply (PApply (PIdentifier "&&") (mkCalls (head guardFuncs) args)) (generateGuards args (tail guardFuncs))

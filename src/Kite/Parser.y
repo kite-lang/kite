@@ -128,6 +128,7 @@ Apply   :: { Expr }
 -- list comprehension
         -- | '{' Expr '|' Draws '|' Exprs '}' { PComprehension (mkCompreExpr $2 $4) $4 (mkCompreGuards $6 $4) }
         | '{' Expr '|' Draws '|' Exprs '}' { mkComprehension (mkCompreExpr $2 $4) $4 (mkCompreGuards $6 $4) }
+        | '{' Expr '|' Draws '}' { mkComprehension (mkCompreExpr $2 $4) $4 (mkCompreGuards [] $4) }
 
 Bind :: { Expr }
         : id '=' Expr                  { PBind $1 $3 }
