@@ -59,7 +59,7 @@ emit :: Expr -> Source
 emit PVoid = ""
 emit (PInteger val) = show val
 emit (PFloat val) = show val
-emit (PChar val) = '\'' : showLitChar val "'"
+emit (PChar val) = '"' : showLitChar val "\""
 emit (PBool val) = if val then "true" else "false"
 
 emit (PIdentifier ide) = safeId ide
@@ -76,7 +76,7 @@ emit (PLambda (PLambdaType param _) body) =
   in printf "(function(%s) {%s})" (emit ide) (emit body)
 
 emit (PBind ide expr) =
-  printf "%s = %s" (safeId ide) (emit expr)
+  printf "var %s = %s; %s" (safeId ide) (emit expr) (safeId ide)
 
 emit (PBlock exprs) =
   emitAll ";" exprs

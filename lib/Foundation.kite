@@ -6,11 +6,9 @@ pi = 3.14159265359
 -- a -> a
 id = |x| -> { x }
 
-length = |xs| -> {
-  match xs {
-    [] -> 0,
-    x,xs -> 1 + length (xs)
-  }
+-- (a -> b) -> a -> b
+{$} = |f, x| -> {
+  f (x)
 }
 
 -- composition
@@ -91,12 +89,20 @@ snd = |p| -> {
 -- [a] -> Int -> a
 {#} = |xs, idx| -> {
   match xs {
-    -- [] -> -- panic ("List index too large") TODO: error
+    [] -> panic ("list index too large"),
     x,xs -> if idx == 0 then x else xs # (idx - 1)
     -- [], _           -> panic,
     -- x:xs, i | i < 0 -> panic,
     -- x:xs, 0         -> x,
     -- x:xs, i         -> xs # (i - 1)
+  }
+}
+
+-- [a] -> Int
+length = |xs| -> {
+  match xs {
+    [] -> 0,
+    x,xs -> 1 + length (xs)
   }
 }
 
@@ -111,7 +117,7 @@ empty = |xs| -> {
 -- [a] -> a
 head = |xs| -> {
   match xs {
-    -- [] -> [], -- TODO: needs an error
+    [] -> panic ("can't take head of empty list"),
     x,xs -> x
   }
 }
@@ -119,7 +125,7 @@ head = |xs| -> {
 -- [a] -> [a]
 tail = |xs| -> {
   match xs {
-    [] -> [], -- TODO: needs an error
+    [] -> panic ("can't take tail of empty list"),
     x,xs -> xs
   }
 }
@@ -127,6 +133,7 @@ tail = |xs| -> {
 -- [a] -> [a]
 init = |xs| -> {
   match xs {
+    [] -> panic ("can't take init of empty list"),
     x,xs -> if empty (xs) then [] else x : init (xs)
   }
 }
@@ -134,6 +141,7 @@ init = |xs| -> {
 -- [a] -> a
 last = |xs| -> {
   match xs {
+    [] -> panic ("can't take last of empty list"),
     x,xs -> if empty (xs) then x else last (xs)
   }
 }
