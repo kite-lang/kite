@@ -29,7 +29,7 @@ process    = preprocess
 foundation = $(embedFile "lib/Foundation.kite")
 
 -- ev: eval, db: debug, target: compile target, lx: lex output, pr: parser output
-runKite noFnd noEmit ev db target lx pr source = do
+runKite noFnd noEmit noTypeCheck ev db target lx pr source = do
   p <- if ev then return source else process source
   let p' = if noFnd
            then p
@@ -41,11 +41,13 @@ runKite noFnd noEmit ev db target lx pr source = do
   let decls = parse tokens
   when pr (prettyPrint decls)
 
-  let analysis = typeCheck db decls
-  case analysis of
-    Right _ -> case target of
-      JavaScript -> unless noEmit $ GenJS.codegen decls >>= putStrLn
-      LLVM -> putStrLn "Such LLVM"
-    Left err -> print err
+  if noTypeCheck
+    then GenJS.codegen decls >>= putStrLn
+    else do let analysis = typeCheck db decls
+            case analysis of
+              Right _ -> case target of
+                JavaScript -> unless noEmit $ GenJS.codegen decls >>= putStrLn
+                LLVM -> putStrLn "Such LLVM"
+              Left err -> print err
 
   where prettyPrint = putStrLn . ppShow

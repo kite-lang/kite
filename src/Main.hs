@@ -16,7 +16,8 @@ data KiteArgs = KiteArgs {
   debugOutput :: Bool,
   noFoundation :: Bool,
   target :: CodegenTarget,
-  noEmit :: Bool
+  noEmit :: Bool,
+  noTypeCheck :: Bool
   } deriving (Data, Typeable, Show)
 
 kiteArgs = cmdArgsMode $ KiteArgs {
@@ -27,10 +28,11 @@ kiteArgs = cmdArgsMode $ KiteArgs {
   debugOutput = False &= help "Output debug information",
   noFoundation = False &= help "Exclude the Foundation standard library",
   noEmit = False &= help "Prevent emitting compiled code",
+  noTypeCheck = False &= help "Prevent type checking",
   target = JavaScript &= help "Compilation target"}
            &= summary "Kite compiler v0.0.1"
 
 main = do
   KiteArgs {..} <- cmdArgsRun kiteArgs
 
-  runKite noFoundation noEmit eval debugOutput target lexOutput parOutput input
+  runKite noFoundation noEmit noTypeCheck eval debugOutput target lexOutput parOutput input
