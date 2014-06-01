@@ -138,6 +138,7 @@ initSymbols =
                                       ("cos", PLambdaType PFloatType PFloatType),
                                       ("tan", PLambdaType PFloatType PFloatType),
                                       ("sleep", PLambdaType PIntegerType PVoidType),
+                                      ("panic", PLambdaType (PListType PCharType) PVoidType),
                                       ("clear", PLambdaType PVoidType PVoidType),
                                       ("arguments", PLambdaType PVoidType (PListType (PListType PCharType)))])
 

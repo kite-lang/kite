@@ -1,22 +1,27 @@
-var print = function (str) {
-    var _print = function (str) {
-        var out = str;
-        if (KT_isArray(str) && str.length > 0) {
-            if (Object.prototype.toString.call(str[0]) === '[object String]') {
-                out = str.join('');
-            } else {
-                for (var i = 0; i < str.length; i++) {
-                    out[i] = _print(str[i]);
-                }
+var _print = function (str) {
+    var out = str;
+    if (KT_isArray(str) && str.length > 0) {
+        if (Object.prototype.toString.call(str[0]) === '[object String]') {
+            out = str.join('');
+        } else {
+            for (var i = 0; i < str.length; i++) {
+                out[i] = _print(str[i]);
             }
         }
-        return out;
-    };
+    }
+    return out;
+};
 
+var print = function (str) {
     process.stdout.write(_print(str) + '\n');
 };
 
 var put = function (s) { process.stdout.write(s); };
+
+var panic = function (s) {
+    console.log("Panic: " + _print(s));
+    process.exit();
+};
 
 /* Math */
 var sin = Math.sin;
