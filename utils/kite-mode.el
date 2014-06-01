@@ -68,9 +68,11 @@
 ;; keywords
 (defvar kite-keywords
   '(("return\\|import\\|if\\|then\\|else\\|match" . font-lock-keyword-face)
-    ("[a-z][a-zA-Z0-9_']*" . font-lock-variable-name-face)
-    ("[A-Z][a-zA-Z0-9_']*" . font-lock-type-face)
-    ("False\\|True\\|[0-9]\\(\\.[0-9]*\\)?" . font-lock-constant-face)
+    ;("[A-Z][a-zA-Z0-9_']*" . font-lock-type-face)
+    ("False\\|True" . font-lock-constant-face)
+    ("[0-9]+f" . font-lock-constant-face) ; float constants
+    ("[a-zA-Z][a-zA-Z0-9_']*" . font-lock-variable-name-face)
+    ("[0-9]+\\(\\.[0-9]+\\)?" . font-lock-constant-face) ; number constants
     ("->" . font-lock-function-name-face)))
 
 ;; syntax table
