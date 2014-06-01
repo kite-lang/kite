@@ -76,7 +76,7 @@ emit (PLambda (PLambdaType param _) body) =
   in printf "(function(%s) {%s})" (emit ide) (emit body)
 
 emit (PBind ide expr) =
-  printf "%s = %s" (safeId ide) (emit expr)
+  printf "var %s = %s; %s" (safeId ide) (emit expr) (safeId ide)
 
 emit (PBlock exprs) =
   emitAll ";" exprs
