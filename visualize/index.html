@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Kite's parse tree</title>
+
+
+        <link rel="stylesheet" href="http://netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" type="text/css">
+        <link rel="stylesheet" href="style/index.css" type="text/css" media="all">
+
+    </head>
+
+    <body>
+        <!-- navbar -->
+        <div class="navbar navbar-default navbar-fixed-top" role="navigation">
+            <div class="container">
+                <div class="navbar-header">
+                    <a class="navbar-brand" href="#">Kite's parse tree</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- main -->
+        <div class="container">
+            <div class="main">
+            </div>
+            <div>
+                <!-- defs -->
+                <svg>
+                    <defs>
+                        <marker id="end-arrow" viewBox="0 -5 10 10" refX="6" markerWidth="3" markerHeight="3" orient="auto" stroke="rgb(0,0,0)" fill="rgb(0,0,0)"><path d="M0,-5L10,0L0,5">
+                            </path>
+                        </marker>
+                        <marker id="start-arrow" viewBox="0 -5 10 10" stroke="rgb(240,50,50)" fill="rgb(240,50,50)" refX="4" markerWidth="3" markerHeight="3" orient="auto">
+                            <path d="M10,-5L0,0L10,5">
+                            </path>
+                        </marker>
+                    </defs>
+                </svg>
+            </div>
+        </div>
+
+        <!-- scripts -->
+        <script src="http://code.jquery.com/jquery-latest.min.js"></script>
+        <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+        <script src="src/main.js"></script>
+    </body>
+</html>

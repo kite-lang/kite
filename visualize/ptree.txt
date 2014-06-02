@@ -1,0 +1,1 @@
+[PDecl "main" (PLambda PIdentifier "Void": Void -> a (PBlock [PBind "x" (PInteger 2),PBind "y" (PInteger 3),PReturn (PBind "result" (PApply (PApply (PIdentifier "*") (PIdentifier "x")) (PIdentifier "y")))]))]

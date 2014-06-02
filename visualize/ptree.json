@@ -1,0 +1,29 @@
+{
+ "nodes":[
+ {"number":"PDecl 'main' ","group":1} ,
+ {"number":"PLambda PIdentifier 'Void': Void -> a ","group":2} ,
+ {"number":"PBlock ","group":3} ,
+ {"number":"PBind 'x' ,PBind 'y' ,PReturn ","group":4} ,
+ {"number":"PInteger 2","group":5} ,
+ {"number":"PInteger 3","group":5} ,
+ {"number":"PBind 'result' ","group":5} ,
+ {"number":"PApply  ","group":6} ,
+ {"number":"PApply  ","group":7} ,
+ {"number":"PIdentifier '*'","group":8} ,
+ {"number":"PIdentifier 'x'","group":8} ,
+ {"number":"PIdentifier 'y'","group":7}  
+ ],
+ "links":[
+ {"source":1, "target":0, "value":1} ,
+ {"source":2, "target":1, "value":1} ,
+ {"source":3, "target":2, "value":1} ,
+ {"source":4, "target":3, "value":1} ,
+ {"source":5, "target":3, "value":1} ,
+ {"source":6, "target":3, "value":1} ,
+ {"source":7, "target":6, "value":1} ,
+ {"source":8, "target":7, "value":1} ,
+ {"source":9, "target":8, "value":1} ,
+ {"source":10, "target":8, "value":1} ,
+ {"source":11, "target":7, "value":1}  
+ ]
+}

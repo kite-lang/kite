@@ -1,0 +1,12 @@
+body { padding-top: 70px; }
+
+.node {}
+
+.label {
+  fill: #fff;
+}
+
+.link {
+  stroke: #999;
+  stroke-opacity: .6;
+};
