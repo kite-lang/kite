@@ -17,6 +17,7 @@ import Text.Printf
         string             { TString _ $$ }
         char               { TChar _ $$ }
         bool               { TBool _ $$ }
+        void               { TVoid _ }
 
         intTy              { TType _ "Int" }
         floatTy            { TType _ "Float" }
@@ -47,6 +48,7 @@ import Text.Printf
         '{'                { TSymbol _ '{' }
         '}'                { TSymbol _ '}' }
         ','                { TSymbol _ ',' }
+        ';'                { TSymbol _ ';' }
         '_'                { TSymbol _ '_' }
 
 %right in
@@ -106,14 +108,19 @@ Expr   :: { Expr }
         | Bind             { $1 }
         | Lambda           { $1 }
         | Apply            { $1 }
+        | ListComp         { $1 }
         | If               { $1 }
         | Term             { $1 }
         | '(' Expr ')'     { $2 }
+        | Return           { $1 }
 
-Exprs  :: { [Expr] }
-Exprs   : {- nothing -}    { [] }
+Exprs :: { [Expr] }
+        : {- nothing -}    { [] }
         | Expr             { [$1] }
         | Expr ',' Exprs   { $1 : $3 }
+
+Return :: { Expr }
+        : return Expr      { PReturn $2 }
 
 Apply   :: { Expr }
         : Expr '(' Exprs ')'    { mkCalls $1 $3 }
@@ -125,10 +132,9 @@ Apply   :: { Expr }
         | '(' Expr operator ')'    { mkPartialLeftInfixCall $3 $2 }
         -- partial right infix
         | '(' operator Expr ')'    { mkPartialRightInfixCall $2 $3 }
--- list comprehension
-        -- | '{' Expr '|' Draws '|' Exprs '}' { PComprehension (mkCompreExpr $2 $4) $4 (mkCompreGuards $6 $4) }
-        | '{' Expr '|' Draws '|' Exprs '}' { mkComprehension (mkCompreExpr $2 $4) $4 (mkCompreGuards $6 $4) }
-        | '{' Expr '|' Draws '}' { mkComprehension (mkCompreExpr $2 $4) $4 (mkCompreGuards [] $4) }
+ListComp :: { Expr }
+        : '[' Expr '|' Draws '|' Exprs ']' { mkComprehension (mkCompreExpr $2 $4) $4 (mkCompreGuards $6 $4) }
+        | '[' Expr '|' Draws ']' { mkComprehension (mkCompreExpr $2 $4) $4 (mkCompreGuards [] $4) }
 
 Bind :: { Expr }
         : id '=' Expr                  { PBind $1 $3 }
@@ -139,12 +145,13 @@ Block :: { Expr }
 
 -- TODO: WHAT THE FUCK!?
 BlockExpr :: { Expr }
-      : Expr { $1 }
+          : Expr { $1 }
 
 BlockExprs  :: { [Expr] }
 BlockExprs   : {- nothing -}         { [] }
              | BlockExpr             { [$1] }
              | BlockExpr BlockExprs  { $1 : $2 }
+             | BlockExpr ';' BlockExprs  { $1 : $3 }
 
 List   :: { Expr }
 List    : '[' Exprs ']'           { PList $2 }
@@ -169,11 +176,12 @@ If     :: { Expr }
 --- Lambdas
 
 Lambda   :: { Expr }
-        : LambdaSignature Block        { mkFunc (fst $1) $2 }
+        : LambdaSignature Block      { mkFunc (fst $1) $2 }
         | '->' Block                 { mkFunc [] $2 }
 
 LambdaSignature :: { ([Type], Type) }
-         : '|' Parameters '|' '->'       { ($2, PTypeVar "t") }
+         : '|' void '|' '->'             { ([], PTypeVar "t") }
+         | '|' Parameters '|' '->'       { ($2, PTypeVar "t") }
          | '|' Parameters '|' '->' Type  { ($2, $5) }
 
 Parameters :: { [Type] }
@@ -194,6 +202,7 @@ Term     :: { Expr }
           | string           { mkCharList $1 }
           | char             { PChar $1 }
           | id               { PIdentifier $1 }
+          | void             { PVoid }
           | '(' operator ')' { PIdentifier $2 }
 
 {

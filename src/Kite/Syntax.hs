@@ -105,3 +105,29 @@ instance Show Type where
 
   -- monotypes
   show t = prettyType [] t
+
+prettyDecls :: [Decl] -> String
+prettyDecls decls = intercalate "\n\n" (map prettyDecl decls)
+
+prettyDecl :: Decl -> String
+prettyDecl (PDecl name expr) = printf "%s = %s" name (prettyExpr expr)
+
+prettyExpr :: Expr -> String
+prettyExpr (PInteger val) = show val
+prettyExpr (PFloat val) = show val
+prettyExpr (PBool val) = show val
+prettyExpr (PChar val) = show val
+prettyExpr (PIdentifier ide) = ide
+prettyExpr PVoid = "Void"
+
+prettyExpr (PList exprs) = "[" ++ intercalate "," (map prettyExpr exprs) ++ "]"
+prettyExpr (PBlock exprs) = intercalate ";\n" (map prettyExpr exprs)
+prettyExpr (PPair exprA exprB) = printf "(%s, %s)" (prettyExpr exprA) (prettyExpr exprB)
+prettyExpr (PIf cond conseq alt) = printf "if %s\nthen %s\nelse %s" (prettyExpr cond) (prettyExpr conseq) (prettyExpr alt)
+prettyExpr (PBind name expr) = printf "%s = %s" name (prettyExpr expr)
+prettyExpr (PLambda (PLambdaType (PTypeArg _ (PIdentifier ide)) _) expr) = "|" ++ ide ++ "| -> {\n" ++  (prettyExpr expr) ++ "\n}"
+prettyExpr (PApply fn arg) = printf "(%s) (%s)" (prettyExpr fn) (prettyExpr arg)
+prettyExpr (PReturn expr) = "return " ++ prettyExpr expr
+prettyExpr (PMatch expr cases) = "match"
+
+prettyExpr (PComprehension _ _ _) = "i shouldnt be here lolol"

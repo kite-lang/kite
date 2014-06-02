@@ -18,6 +18,7 @@ $operatorSymbols        = [\+\-\/\*\%\=\|\&\<\>\!\~\`\#\.\:\^\$]
 @char                   = \' (\\?. # \') \'
 @identifier		= $downcase [$alphaNum \_ \' \! \?]*
 @bool			= "True" | "False"
+@void                   = "Void"
 @type			= $upcase [$alphaNum]*
 @comment		= "--" .*
 @multilineComment	= "{-" ($white | .)* "-}"
@@ -33,6 +34,7 @@ kite :-
   $digit+"f"		{ \p s -> TFloat p (read $ init s) }
   $digit+		{ \p s -> TInteger p (read s) }
   @bool		        { \p s -> TBool p (read s) }
+  @void		        { \p s -> TVoid p }
   $symbols		{ \p s -> TSymbol p (head s) }
 
   @string               { \p s -> TString p $ (tail . init) s }
@@ -52,6 +54,7 @@ data Token
   | TInteger    AlexPosn Int
   | TFloat      AlexPosn Float
   | TBool       AlexPosn Bool
+  | TVoid       AlexPosn
   | TString     AlexPosn String
   | TChar       AlexPosn Char
   | TKeyword    AlexPosn String
@@ -68,8 +71,8 @@ tok2posn (TFloat      p _) = p
 tok2posn (TString     p _) = p
 tok2posn (TChar       p _) = p
 tok2posn (TBool       p _) = p
+tok2posn (TVoid       p  ) = p
 tok2posn (TKeyword    p _) = p
 tok2posn (TOperator   p _) = p
 tok2posn (TEOF        p  ) = p
-
 }

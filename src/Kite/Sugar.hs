@@ -18,7 +18,7 @@ mkCalls f args =
      else foldl PApply (PApply f (head args)) (tail args)
 
 mkFunc params body =
-  let firstParam = if null params then PTypeArg PVoidType (PIdentifier "_") else head params
+  let firstParam = if null params then PTypeArg PVoidType (PIdentifier "Void") else head params
       restParams = if null params then [] else tail params
       ini = PLambda (PLambdaType firstParam (PTypeVar "sugarType"))
       (fns, _) = foldl (\(fn, n) param ->
@@ -47,11 +47,11 @@ mkComprehension func draws guardFuncs =
       params = map (\id -> PTypeArg (PTypeVar ("t"++id)) (PIdentifier id)) ids
       draws_ranges = map(\ (PDraw _ range) -> range) draws
   -- in mkFunc params (PBlock [(PReturn func)])
-      in generateFlatmaps ids draws_ranges ids guardFuncs func
+  in generateFlatmaps ids draws_ranges ids guardFuncs func
 
 generateFlatmaps ids ranges ids_all guardFuncs finalFunc =
   case ids of
-    [] -> let args = map(\id -> PIdentifier id) ids_all
+    [] -> let args = map (\id -> PIdentifier id) ids_all
           in PIf (generateGuards args guardFuncs) (PList [mkCalls finalFunc args]) (PList [])
               -- in generateGuards args guardFuncs
     (id:_) -> let param = map (\id -> PTypeArg (PTypeVar ("t"++id)) (PIdentifier id)) [id]

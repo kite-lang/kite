@@ -16,6 +16,7 @@ import qualified Data.ByteString.Char8 as Ch
 
 import Kite.Lexer
 import Kite.Parser
+import Kite.Syntax
 import Kite.TypeCheck
 import Kite.Preprocessor
 import Kite.Codegen
@@ -29,7 +30,7 @@ parse      = kiteparser
 foundation = $(embedFile "lib/Foundation.kite")
 
 -- ev: eval, db: debug, target: compile target, lx: lex output, pr: parser output
-runKite noFnd noEmit noTypeCheck eval db target lx pr source = do
+runKite noFnd noEmit noTypeCheck desugar eval db target lx pr source = do
   p <- if eval then preprocess source else preprocessFile source
   let p' = if noFnd
            then p
@@ -41,8 +42,10 @@ runKite noFnd noEmit noTypeCheck eval db target lx pr source = do
   let decls = parse tokens
   when pr (prettyPrint decls)
 
+  when desugar (putStrLn (prettyDecls decls))
+
   if noTypeCheck
-    then GenJS.codegen decls >>= putStrLn
+    then unless noEmit $ GenJS.codegen decls >>= putStrLn
     else do let analysis = typeCheck db decls
             case analysis of
               Right _ -> case target of
