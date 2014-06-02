@@ -22,7 +22,13 @@ Started with a mix of syntactical and semantic design. Semantics changed much. S
 Parsing
 =======
 Shift-reduce parsing via Happy. Grammar in BNF format.
-The responsibilities of the parser (desugaring).
+Shift-reduce conflicts (examples, why shift/reduce is mostly ok, and reduce/reduce is mostly fucked)
+
+## Sugar
+Desugaring
+ - List comprehensions
+ - Poly-parametric lambdas
+ - Implicit returns
 
 ## Operator precedence
  * () [] {} (grouping, list, scope - MISSING)
