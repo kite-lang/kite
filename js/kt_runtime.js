@@ -13,7 +13,7 @@ var _print = function (str) {
 };
 
 var print = function (str) {
-    process.stdout.write(_print(str) + '\n');
+    console.log(_print(str));
 };
 
 var put = function (s) { process.stdout.write(s); };
