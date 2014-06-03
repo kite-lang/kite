@@ -202,6 +202,23 @@ drop = |n, xs| -> {
     else drop (n - 1, tail (xs))
 }
 
+-- [a] -> [b] -> [(a, b)]
+-- zip = |as, bs| -> {
+--   if empty (as) || empty (bs)
+--   then []
+--   else (head (as), head (bs)) : zip (tail (as), tail (bs))
+-- }
+
+-- [a] -> [b] -> [(a, b)]
+zip = |as, bs| -> {
+  if empty (as)
+  then []
+  else match bs {
+    [] -> [],
+    x,xs -> (head (as), x) : zip (tail (as), xs)
+  }
+}
+
 -- [Bool] -> Bool
 and = fold ((&&), True)
 
