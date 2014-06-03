@@ -72,6 +72,8 @@ asPair = |a, b| -> {
   (a, b)
 }
 
+{<>} = asPair
+
 fst = |p| -> {
   match p {
     (a , b) -> a
@@ -210,14 +212,16 @@ drop = |n, xs| -> {
 -- }
 
 -- [a] -> [b] -> [(a, b)]
-zip = |as, bs| -> {
+zipWith = |f, as, bs| -> {
   if empty (as)
   then []
   else match bs {
     [] -> [],
-    x,xs -> (head (as), x) : zip (tail (as), xs)
+    x,xs -> f (head (as), x) : zipWith (f, tail (as), xs)
   }
 }
+
+zip = zipWith (asPair)
 
 -- [Bool] -> Bool
 and = fold ((&&), True)
