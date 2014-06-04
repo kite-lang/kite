@@ -29,3 +29,4 @@ report/*.out
 report/*.pdf
 report/*.toc
 report/auto
+/visualize/div_classes.pyc
