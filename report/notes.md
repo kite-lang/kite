@@ -49,6 +49,7 @@ Basically uses extended lambda calculus. Easier to understand and implement if u
 
 Functional style implementation uses substitutions instead of mutable global state.
 
+
 Codegen
 =======
 Can use different backends. Uses the analyzed and annoted AST given by the type checker. The AST is assumed to be correct.
@@ -63,3 +64,12 @@ Closely related semantics makes it an easy compile target. Laziness implemented 
 Partial application possible by using an aggregate type with supplied arguments and a function ptr. This way partially applied functions are represented as a list of arguments and a function ptr until the last argument is supplied.
 
 If using closures, partial application is given "for free" as the supplied argument(s) are simply captured in the closure of the function being applied and the partially applied function that is returned references those arguments.
+
+
+Examination
+===========
+
+## Challenges
+Why challenging and how *could* it be solved:
+
+ * Data Structures
