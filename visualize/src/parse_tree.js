@@ -101,6 +101,7 @@ var test_d3 = function() {
         .attr("y", 10)
         .attr("x", function(d) { return d.number.length * 7 / 2; })
         .style("text-anchor", "middle")
+        .style("cursor", "pointer")
         .text(function(d) { return d.number; });
 
     node.on('click', function(d) {
