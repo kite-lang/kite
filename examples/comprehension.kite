@@ -1,7 +1,7 @@
 main = -> {
 
 
-the_list = [ x*y | x <- [3,4,5] , y <- range(4,6) | (x+y) >= 10 , y > 4]
+the_list = [ x*y | x <- range(3,5) , y <- range(4,6) | (x+y) >= 10 , y > 4]
 
 print(the_list)
 

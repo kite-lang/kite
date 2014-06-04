@@ -1,34 +1,37 @@
 main = -> {
 
-xs = range(3,5)
-ys = range(4,6)
-vars =[xs, ys]
-
-guard0 = |x,y| -> { y > 4}
-guard1 = |x,y| -> {(x+y) >= 10}
-
-guards = [guard0, guard1]
-func = |x,y| -> {x+y}
-draws = [xs, ys]
-
-the_comprehension = 
-  flatMap (|x| -> {
+the_comprehension =
+  flatMap(|x| -> {
     flatMap (|y| -> {
-     -- if guards#0(x,y) && guards#1(x,y) then [func(x,y)] else []
-     if (guards#0)(x,y) && (guards#1)(x,y) then [(|x,y| -> {x*y})(x,y)] else []
-} , vars#1 )
-}, [3,4,5] )
+      if (|x,y| -> {y > 4})(x,y) && (|x,y| -> {(x+y) >= 10})(x,y) 
+         then [(|x,y| -> {x*y})(x,y)] 
+         else []
+    } , range(4,6) )
+}, range(3,5) )
+
 
 print(the_comprehension)
 
-test = |x| -> {x * 5}(6)
-print(test)
+-- test = "abe" + 1
+-- print(test)
 
--- http://stackoverflow.com/questions/20687896/how-are-list-comprehensions-implemented-in-haskell
+-- xs = range(3,5)
+-- ys = range(4,6)
+-- vars =[xs, ys]
 
+-- guard0 = |x,y| -> { y > 4}
+-- guard1 = |x,y| -> {(x+y) >= 10}
 
--- t_draws = ["d1", "d2", "d3"]
--- t_guards = ["g1", "g2", "g3"]
+-- guards = [guard0, guard1]
 -- func = |x,y| -> {x+y}
+-- draws = [xs, ys]
+
+-- the_comprehension = 
+--   flatMap (|x| -> {
+--     flatMap (|y| -> {
+--      -- if guards#0(x,y) && guards#1(x,y) then [func(x,y)] else []
+--      if (guards#0)(x,y) && (guards#1)(x,y) then [(|x,y| -> {x*y})(x,y)] else []
+-- } , vars#1 )
+-- }, [3,4,5] )
 
 }
