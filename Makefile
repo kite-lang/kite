@@ -1,6 +1,7 @@
 # kite - the kite programming language
 
 SHELL = /bin/sh
+CC = cabal
 
 DESTDIR = /usr/local
 BUILDDIR = dist/build
@@ -23,14 +24,14 @@ $(PAR).hs: $(PAR).y
 
 clean:
 	@echo Cleaning...
-	@cabal clean
+	@$(CC) clean
 	@rm -f $(LEX).hs $(PAR).hs
 	@echo
 
 build: $(LEX).hs $(PAR).hs
 	@echo Building...
-	@cabal configure
-	@cabal build
+	@$(CC) configure
+	@$(CC) build
 
 install:
 	@echo Installing...
@@ -44,8 +45,8 @@ uninstall:
 
 test:
 	@echo Testing...
-	@cabal configure --enable-tests
-	@cabal build
-	@cabal test
+	@$(CC) configure --enable-tests
+	@$(CC) build
+	@$(CC) test
 
 .PHONY: all clean generate build install uninstall test
