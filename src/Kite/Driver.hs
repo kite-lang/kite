@@ -10,6 +10,7 @@ module Kite.Driver (
 
 import Prelude hiding (lex)
 
+import Data.List
 import Text.Show.Pretty
 import Data.FileEmbed
 import qualified Data.ByteString.Char8 as Ch
@@ -20,6 +21,7 @@ import Kite.Syntax
 import Kite.TypeCheck
 import Kite.Preprocessor
 import Kite.Codegen
+import Kite.Optimizer
 
 import Control.Monad
 import qualified Kite.CodegenJS as GenJS
@@ -44,12 +46,14 @@ runKite noFnd noEmit noTypeCheck desugar eval db target lx pr source = do
 
   when desugar (putStrLn (prettyDecls decls))
 
+  let optimized = optimize decls
+
   if noTypeCheck
-    then unless noEmit $ GenJS.codegen decls >>= putStrLn
-    else do let analysis = typeCheck db decls
+    then unless noEmit $ GenJS.codegen optimized >>= putStrLn
+    else do let analysis = typeCheck db optimized
             case analysis of
               Right _ -> case target of
-                JavaScript -> unless noEmit $ GenJS.codegen decls >>= putStrLn
+                JavaScript -> unless noEmit $ GenJS.codegen optimized >>= putStrLn
                 LLVM -> putStrLn "Such LLVM"
               Left err -> print err
 
