@@ -21,3 +21,30 @@
 %   year
 %   url
 \newcommand{\refonline}[4]{\refgeneral{#1}{#2}{#3} \\\url{<#4>}}
+
+% pseudo code environment
+\lstset{
+  keywordstyle=\color{blue},
+  commentstyle=\color{ForestGreen},
+  stringstyle=\color{Maroon},%
+  basicstyle=\ttfamily\small,
+  frame=single,
+  framesep=10pt,
+  xleftmargin=30pt,
+  xrightmargin=30pt,
+  showspaces=false,
+  showstringspaces=false,
+  tabsize=4,
+  aboveskip=10pt,
+  belowskip=10pt,
+  lineskip=2pt,
+  numbers=left,
+  numberstyle=\tiny,
+  stepnumber=1,
+  numbersep=5pt,
+  breaklines,
+}
+
+\lstnewenvironment{pseudo}[1]{%
+\lstset{morekeywords={if, then, else, return, function, var, for, foreach, do, end}}}%
+{}
