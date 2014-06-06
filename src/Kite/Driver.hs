@@ -39,14 +39,12 @@ runKite noFnd noEmit noTypeCheck desugar eval db target lx pr source = do
            else Ch.unpack foundation ++ p
 
   let tokens = lex p'
-  when lx (prettyPrint tokens)
-
   let decls = parse tokens
-  when pr (prettyPrint decls)
-
-  when desugar (putStrLn (prettyDecls decls))
-
   let optimized = optimize decls
+
+  when lx (prettyPrint tokens)
+  when desugar (putStrLn (prettyDecls decls))
+  when pr (prettyPrint decls)
 
   if noTypeCheck
     then unless noEmit $ GenJS.codegen optimized >>= putStrLn

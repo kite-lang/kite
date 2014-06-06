@@ -24,8 +24,6 @@ mandleconverge = |real, imag| -> {
 -- compute and plot the mandlebrot set with the specified 2 dimensional range
 -- info.
 mandelhelp = |xmin, xmax, xstep, ymin, ymax, ystep| -> {
-  f = |x, y| -> { printdensity (mandleconverge (x, y)) }
-
   flatMap (|y| -> {
     map (|x| -> {
       printdensity (mandleconverge(x, y))

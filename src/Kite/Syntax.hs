@@ -16,7 +16,7 @@ data Draw = PDraw String Expr
             deriving(Show, Eq) -- Perhaps?
 
 data Decl = PDecl String Expr
-            deriving (Show)
+            deriving (Show, Eq)
 
 data Expr = PList [Expr]
           | PBlock [Expr]

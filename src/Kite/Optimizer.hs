@@ -28,7 +28,8 @@ data OptiState = OptiState { decls :: [Decl], scope :: [[Name]], checked :: [Nam
 type Opti a = ErrorT OptiError (State OptiState) a
 
 builtInNames :: [Name]
-builtInNames = ["print"]
+builtInNames = ["print", "put", "sin", "cos", "tan", "sleep", "panic", "clear",
+                "arguments", ":", "==", "<=", "+", "-", "*", "/", "%"]
 
 builtIns :: [Decl]
 builtIns = map (`PDecl` PVoid) builtInNames
@@ -47,11 +48,12 @@ optimize ds = do
   let used = evalState (runErrorT optimize') OptiState { decls = ds ++ builtIns,
                                                          scope = [],
                                                          checked = [] }
-  case used of
-    Right names -> do
-      let keep = "main" : (builtInNames ++ names)
-      filter (\d -> case d of
-                              PDecl name _ -> name `elem` keep) ds
+  -- we expect this to always be Right, maybe refactor?
+  let Right names = used
+      keep = "main" : (builtInNames ++ names)
+
+  filter (\d -> let PDecl name _ = d
+                in name `elem` keep) ds
 
 optimize' :: Opti [Name]
 optimize' = do
