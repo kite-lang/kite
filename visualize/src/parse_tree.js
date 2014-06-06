@@ -120,7 +120,7 @@ var test_d3 = function() {
             .attr("y1", function(d) {
                 var height = 24;
 
-                return d.source.y;// + height/2;
+                return d.source.y - 50 * d.source.group;// + height/2;
  })
             .attr("x2", function(d) {
                 return d.target.x + char_pixel_ratio*d.target.number.length/2;
@@ -128,9 +128,9 @@ var test_d3 = function() {
 })
       .attr("y2", function(d) {
           var height = 24;
-          return d.target.y;// + height/2;
+          return d.target.y - 50 * d.target.group;// + height/2;
  });
 
-    node.attr("transform", function(d) { return "translate(" + d.x + "," + d.y + ")"; });
+    node.attr("transform", function(d) { return "translate(" + d.x + "," + (d.y - 50*d.group) + ")"; });
   });
 };

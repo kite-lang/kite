@@ -29,4 +29,8 @@ report/*.out
 report/*.pdf
 report/*.toc
 report/auto
+
+# visualization
 /visualize/div_classes.pyc
+/visualize/ptree.txt
+/visualize/ptree.json

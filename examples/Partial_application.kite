@@ -1,0 +1,11 @@
+main = -> {
+
+     division = |x,y| ->{ x / y }
+     inverse = division(1)
+
+
+     print(division(2,3))
+     print(inverse(4))
+
+     return 42
+}

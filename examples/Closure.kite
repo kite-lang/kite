@@ -1,0 +1,15 @@
+main = -> {
+
+     one = 1
+     
+     increment = |x| -> { x + one }
+
+     incre_twice = |x| -> {
+                 one = 2
+                 x + one
+     }
+
+     print(one)
+     print(increment(0))
+     print(incre_twice(0))
+}
