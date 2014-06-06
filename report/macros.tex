@@ -6,10 +6,18 @@
 \newcommand{\code}[1]{\texttt{#1}}
 
 %% source / reference
+\newcommand{\refgeneral}[3]{#1 (#3), \emph{#2}}
+
 % arguments:
 %   author
 %   title
 %   year
-%   [url]
-\newcommand{\sbook}[4]{#1: `#2' #3}
-\newcommand{\sonline}[4]{#1: `#2' #3 \\\url{#4}}
+%   publisher
+\newcommand{\refbook}[4]{\refgeneral{#1}{#2}{#3}, #4}
+
+% arguments:
+%   author
+%   title
+%   year
+%   url
+\newcommand{\refonline}[4]{\refgeneral{#1}{#2}{#3} \\\url{<#4>}}
