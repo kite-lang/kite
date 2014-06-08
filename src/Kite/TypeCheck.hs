@@ -84,7 +84,7 @@ infer (TypeEnvironment env) (PIdentifier ide) = do
       Just f -> instantiate f
       Nothing -> case findit (sym symEnv) of
         Just t' -> return t'
-        Nothing -> throwRE $ printf "Reference to undefined variable '%s'." ide
+        Nothing -> throwRE $ printf "Reference to undefined variable '%s'" ide
     popTrace
     return (nullSubst, ty)
   where findit stack =
