@@ -1,3 +1,70 @@
+% TODO:
+% introduce notations for type
+% hindley milner does not support subtyping
+\subsection{Functional language properties}
+We will describe function types using the following notation; let $f$ be a function with one parameter of type $Int$ (integer) and return value $Float$. We denote this using $:$, meaning ``of type'' or ``has type''
+
+\[ f: Int \to Float \]
+
+Note that the concrete types are capitalized, and we use small letters to indicate free types. For instance $f: a \to b$ denotes a function which takes any type $a$ to any type $b$, and $f: a \to a$ denotes a function that takes any type $a$ and produces \emph{the same} type $a$.
+
+The function operator $\to$ can be chained for a function to accept multiple parameters which we indicate as $f: a \to b \to c$. It's important to note that $\to$ is a \emph{binary} and \emph{right-associative} operator, meaning that
+
+\[ f: a \to b \to c \quad = \quad f: a \to (b \to c) \]
+
+This effectively means that a function always takes exactly one argument and produces one other. In the example above the returned value is a new function with type $b \to c$, which can then be applied to a value of type $b$ producing a final value of type $c$.
+
+If we group the function operator differently we can describe functions that take other functions as argument. Consider for example $f: (a \to b) \to c$, indicating that $f$ takes a function of type $a \to b$ and returns a value of type $c$. The possibility to apply functions to functions and produce functions as return values is known as ``higher-order'' functions.
+
+Closely related is the concept of functions as so-called ``first-class citizen'', which basically means that a function can be passed around and transformed just like any other value type.
+
+We consider all functions to be \emph{anonymous}, meaning that they do not have a name associated with them in their definition. They can then be found to names using the \emph{bind} operation (syntactically denoted $=$) The following are examples of how we define concrete implementations of functions (later we will use Kite specific syntax, but for now we stick with simple mathematical notation)
+
+\begin{align*}
+id &= \fn{x}{x} & \text{The identify function, returns the argument unchanged}\\
+add &= \fn{ x, y }{ x + y }  & \text{Add two values}\\
+max &= \fn{ x, y }{ \ite{x > y}{x}{y} }  & \text{Calculate the maximum of two values}\\
+\end{align*}
+
+Here we use the $\lambda$ notation for functions using the ``maps to'' operator $\mapsto$.
+
+We indicate function application using parenthesis, for instance $sum = add(2, 5)$.
+
+A very powerful concept that rises naturally from that of higher-order functions, is that of partial application and currying. With partial application it is possible to apply a single argument to a function with multiple arguments, which produces a new function that accepts the remaining arguments. For instance, given the function $add$ from above, we can create a new function 
+
+\begin{align*}
+increment &: Int \to Int\\
+increment &= add(1)
+\end{align*}
+
+which will take an $Int$ and add $1$ to it. Currying is closely related, but is concerned with transforming a function of type $f : a \times b \to c$ to the function $f' : a \to b \to c$, thus enabling partial application. Here we used another notation, namely $\times$ which denotes the Cartesian product of two values, which we will further describe as a \emph{pair} of values.
+
+As can be observed from the above, functional languages are closely related to lambda calculus, and can be seen as an extension of it. Common for them is that almost everything is regarded as an expression, meaning that everything conveys a \emph{value}. For instance, in imperative languages the \code{if} construct is a statement, controlling flow of execution, whereas in a functional language, it's a choice between two values.
+
+When working in imperative language, mutation of variables is a core feature that is used in almost all parts of all programs. In a functional language however, it's common that variables are not in fact variable but rather declarations of values. For instance, to calculate the sum of a list of numbers (pseudo-code)
+
+\begin{pseudo}
+
+// imperative style
+function sum(nums) do
+  var s = 0
+  foreach num in nums do
+    s = s + num
+  end
+  return s
+end
+
+// functional style
+function sum(nums) do
+  return if length of nums is 0
+    then 0
+    else head(nums) + sum(tail(nums))
+end
+\end{pseudo}
+
+Here we can see how the imperative code continuously mutates the \code{s} variable, and the functional code instead leverages recursion (and also is an example of the previously mentioned \code{if} as an expression).
+
+The idea of immutability is related to the strive for controlling side effects. In a purely functional language, a function will \emph{always} produce the same value, given the same input. This makes the code much easier to reason about, and can help the compiler make better optimizations. It is however not optimal for writing useful programs so solutions have been developed to keep a language pure while still maintaining side effecting operations such as IO. For instance Haskell uses the concept of Monads to force side effecting functions to declare which effects they might have and provide fallback strategies in case of failure.
 
 %%% Local Variables: 
 %%% mode: latex
