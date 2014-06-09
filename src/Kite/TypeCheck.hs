@@ -17,15 +17,16 @@ import Text.Printf
 ---------------
 -- Interface --
 ---------------
-typeCheck :: Bool -> [Decl] -> Either TypeError [Decl]
+typeCheck :: Bool -> [Decl] -> Either (TypeError, [String]) [Decl]
 typeCheck debug decls = do
   let (r, env) = runTC $ typeCheckDecls decls
+      stack = evalTrace env
+
   when debug (traceShow env $ return ())
+
   case r of
-    Right _ -> Right (filter isDecl decls)
-    Left err -> Left err
-  where isDecl (PDecl _ _ ) = True
-        isDecl _ = False
+    Right _ -> Right decls
+    Left err -> Left (err, stack)
 
 typeCheckDecls :: [Decl] -> TC ()
 typeCheckDecls decls = do

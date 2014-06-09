@@ -12,10 +12,10 @@ data TypeCheckError = TypeE | RefE | ArE | UnE deriving (Show, Eq)
 
 run prog = case (analyze False . parse . lex) prog of
   Right _ -> Nothing
-  Left (TypeError _) -> Just TypeE
-  Left (ReferenceError _) -> Just RefE
-  Left (ArityError _) -> Just ArE
-  Left UnknownError -> Just UnE
+  Left ((TypeError _), _) -> Just TypeE
+  Left ((ReferenceError _), _) -> Just RefE
+  Left ((ArityError _), _) -> Just ArE
+  Left (UnknownError, _) -> Just UnE
 
 -- test expression
 testE name ex prog = testCase name $ run prog @?= ex

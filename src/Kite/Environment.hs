@@ -31,11 +31,7 @@ printTrace :: [String] -> TC ()
 printTrace stack = mapM_ (\m -> trace m $ return ()) (take 10 stack)
 
 throwTE :: String -> TC a
-throwTE m = do
-  env <- get
-  let stack = evalTrace env
-  printTrace stack
-  (throwError . TypeError) m
+throwTE = throwError . TypeError
 
 throwRE :: String -> TC a
 throwRE = throwError . ReferenceError

@@ -55,6 +55,6 @@ runKite KiteOpts {..} = do
               Right _ -> case target of
                 JavaScript -> unless noEmit $ GenJS.codegen optimized >>= putStrLn
                 LLVM -> putStrLn "Such LLVM"
-              Left err -> print err
+              Left (err, stack) -> putStrLn (show err ++ "\nStacktrace:\n" ++ ppShow stack)
 
   where prettyPrint = putStrLn . ppShow
