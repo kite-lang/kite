@@ -24,6 +24,7 @@ var panic = function (s) {
 };
 
 /* Math */
+var sqrt = Math.sqrt;
 var sin = Math.sin;
 var cos = Math.cos;
 var tan = Math.tan;
