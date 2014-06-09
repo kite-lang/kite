@@ -1,4 +1,4 @@
-module InferenceTest (inferenceTests) where
+module Kite.Test.Inference (inferenceTests) where
 
 import qualified Data.Map as Map
 

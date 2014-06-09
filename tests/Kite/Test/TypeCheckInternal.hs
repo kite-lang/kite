@@ -1,4 +1,4 @@
-module TypeCheckTest (typeCheckTests) where
+module Kite.Test.TypeCheck (typeCheckTests) where
 
 import Test.Tasty
 import Test.Tasty.HUnit

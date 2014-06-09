@@ -5,10 +5,10 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 import Kite.Test.Exception
--- import LexerTest
--- import ParserTest
--- import TypeCheckTest
--- import InferenceTest
+-- import Kite.Test.Lexer
+-- import Kite.Test.Parser
+-- import Kite.Test.TypeCheck
+-- import Kite.Test.Inference
 
 
 main :: IO ()
