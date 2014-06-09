@@ -18,8 +18,8 @@ cabal.config
 *.#*
 
 # generated files
-Lexer.hs
-Parser.hs
+src/Kite/Lexer.hs
+src/Kite/Parser.hs
 Parser.info
 
 # latex
