@@ -72,6 +72,7 @@ Decls  :: { [Decl] }
         : {- nothing -}    { [] }
         | Decl             { [$1] }
         | Decl Decls       { $1 : $2 }
+        | Decl ';' Decls   { $1 : $3 }
 
 
 --- Pattern matching
