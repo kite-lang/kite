@@ -127,7 +127,7 @@ mkArithSignature n = let t = PTypeVar ("t" ++ n) in PLambdaType t (PLambdaType t
 mkEqualitySignature n = let t = PTypeVar ("t" ++ n) in PLambdaType t (PLambdaType t PBoolType)
 
 initSymbols =
-  let arithOps = ["+", "-", "*", "/", "%"]
+  let arithOps = ["+", "-", "*", "/", "%", "^"]
       arithSigs = map (\(op, n) -> (op, mkArithSignature (show n))) (zip arithOps [0 .. length arithOps])
   in Map.fromList (arithSigs `union` [("<=", mkEqualitySignature "5"),
                                       ("==", mkEqualitySignature "6"),

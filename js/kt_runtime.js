@@ -28,6 +28,7 @@ var sqrt = Math.sqrt;
 var sin = Math.sin;
 var cos = Math.cos;
 var tan = Math.tan;
+
 var random = function(b){ return function (a) {
     return Math.floor(Math.random() * a + b);
 };};
@@ -48,6 +49,7 @@ var KT_STAR = function  (l) { return function (r) { return l * r;};};
 var KT_SLASH = function  (l) { return function (r) { return l / r;};};
 
 var KT_PERCENT = function  (l) { return function (r) { return l % r;};};
+var KT_XOR = function (l) { return function (r) { return l ^ r ;};};
 
 var KT_LTKT_EQ = function  (l) { return function (r) { return l <= r;};};
 var KT_EQKT_EQ = function  (l) { return function (r) {
