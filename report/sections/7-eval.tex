@@ -1,5 +1,39 @@
-
-%%% Local Variables: 
+%%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "../report"
-%%% End: 
+%%% End:
+TODO:Present test methodology as well as results in this section. In addition, if performance
+analysis of the system is interesting, present it here as well.
+A few screenshots of the program can be included here as well. TODO
+
+
+In the following section we will describe the various tests we have performed in order to validate the correctness of the compiler. We will perform unit-tests for each module (as described in figure~\ref{fig:flow})
+
+\subsection{Preprocessing}
+
+\subsection{Lexing}
+
+\subsection{Parsing}
+As the job of the parser is to generate the parse-tree, or yield an error upon incorrect source code, we have implemented tests to look at these cases of correct and incorrect code. In the case of incorrect code, the parser will yield an error stating where the error occurred.
+
+An example of an \emph{incorrect} piece of Kite-code is the following:
+
+\texttt{increment =  -> \{1 + \}}
+
+This is incorrect, as we do not allow infix operators to be partially applied - as this leads to a whole lot of ambiguity. Thus this is expected
+
+We do, however, allow the following
+
+
+\subsection{Desugaring}
+\subsection{Analysis}
+\subsection{Optimization}
+\subsection{Code generation}
+
+
+\subsection{Known limitations (and bugs?)}
+The parse-errors are only exact down to lines, not columns.
+
+The optimizer expects a main-declaration and fails without. This is because the optimizer removes unused function-declarations, i.e.\ functions not called directly or indirectly by main.
+
+Not-exactly-a-negative-limitation: By syntax, only declarations can be done top-level, not application. Applications of functions has to be within the `main'-declaration (at some level!).

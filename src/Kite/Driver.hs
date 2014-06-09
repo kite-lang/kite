@@ -39,7 +39,9 @@ runKite KiteOpts {..} = do
 
   let tokens = lex p'
   let decls = parse tokens
-  let optimized = optimize decls
+  let optimized = if doOptimize
+                  then optimize decls
+                  else decls
 
   when lexOutput (prettyPrint tokens)
   when desugar (putStrLn (prettyDecls decls))
