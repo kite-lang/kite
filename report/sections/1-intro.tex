@@ -4,20 +4,16 @@
 %%% End:
 TODO: 1-2 pages
 \subsection{Programming languages and compilers in general}
-TODO: Give a short description of a compiler.
-
 
 Programming languages are the means for programmers to express what the machine should compute, or in other words: What a program should do.
-The two main divisions between programming languages are likely whether they are High- or Low-level and which `programming paradigm' they follow (in the next section these paradigms will be shortly described).
+The two main divisions between programming languages are likely whether they are High- or Low-level and which `programming paradigm' they follow (in subsection \ref{sec:paradigms} these paradigms will be shortly described).
 
-The low-level languages are close to what the computer `natively` understand, which is machine code/instructions, but are harder for humans to read and write. Examples hereof are FOTRAN and COBOL. Usually high-level languages are used for faster development, better readability and maintenance, among other things. Thus it is of general interest... SOMETHING SOMETHING
+The low-level languages are close to what the computer `natively' understand, which is machine code/instructions, but are harder for humans to read and write. Examples hereof are FOTRAN and COBOL. Usually high-level languages are used for faster development, better readability and maintenance, among other things. Thus for many purposes programmers prefer higher level languages. These languages have to be translated into something the machine can interpret, and this is done with a so-called compiler.
 
-
-TODO: Describe paradigms in the next subsection
-
-A programming language is implemented via a compiler
+A compiler is a program that translates source code in a specific language into another, usually lower level language. Thus a programming language is in fact implemented through a compiler.
 
 \subsection{Programming paradigms}
+\label{sec:paradigms}
 Through the history of computer science, many different approaches to the design and implementation of programming languages have been taken. Most languages can be categorized as being either in the imperative or declarative style. Code written in imperative style is more explicit in \emph{how} a problem is solved, where declarative languages tend to describe \emph{what} is to be computed. There exists multiple language paradigms that fall under one or both of these categories.
 
 A very popular paradigm is \textbf{object-oriented} programming (including \code{C++} and \code{Java}), in which data and algorithms are structured into objects that contain methods that can change the state of data in objects.
@@ -26,17 +22,16 @@ Another imperative approach is \textbf{procedural} languages like \code{C}, whic
 
 A very different style is the highly declarative \textbf{logic} programming, in which execution order and control-flow does not exist, but programs consist of logic clauses that define relationships and implications.
 
+The final paradigm we will describe is \textbf{functional} programming. This is a declarative approach, which has no mutable state, and the output of functions rely only on their inputs.
+
 \subsection{The problem}
-We are going to implement a compiler for a functional language named Kite. 
+The goal of this project is to gain knowledge in a field which we have only little prior knowledge about, as we by the beginning of this project have not had any formal education within the subject. In short we strive to get a good understanding of the concepts of functional programming and programming languages in general. We will achieve this by implementing a compiler for a functional language named Kite.
 
-In short, we want to make our own functional programming language, Kite, by implementing a compiler.
-
-
-Kite will feature the basic elements of most functional languages (described above), and a few additional features:
+Kite will feature the basic elements of most functional languages (TODO: COMMENT THIS - should this even be here?), and a few additional features:
 
 \begin{itemize}
 
-\item Static typing and thus typechecking
+\item Static typing and typechecking
 \item Closures
 \item If-expressions (not to be confused with if-statements)
 
