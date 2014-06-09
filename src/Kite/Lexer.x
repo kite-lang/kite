@@ -47,20 +47,19 @@ kite :-
 -- alexEOF :: Alex Token
 -- alexEOF = return EOF
 
-data Token
-  = TSymbol     AlexPosn Char
-  | TIdentifier AlexPosn String
-  | TType       AlexPosn String
-  | TInteger    AlexPosn Int
-  | TFloat      AlexPosn Float
-  | TBool       AlexPosn Bool
-  | TVoid       AlexPosn
-  | TString     AlexPosn String
-  | TChar       AlexPosn Char
-  | TKeyword    AlexPosn String
-  | TOperator   AlexPosn String
-  | TEOF        AlexPosn
-  deriving (Eq,Show)
+data Token = TSymbol     AlexPosn Char
+           | TIdentifier AlexPosn String
+           | TType       AlexPosn String
+           | TInteger    AlexPosn Int
+           | TFloat      AlexPosn Float
+           | TBool       AlexPosn Bool
+           | TVoid       AlexPosn
+           | TString     AlexPosn String
+           | TChar       AlexPosn Char
+           | TKeyword    AlexPosn String
+           | TOperator   AlexPosn String
+           | TEOF        AlexPosn
+           deriving (Eq,Show)
 
 -- get the AlexPosn from a token
 tok2posn (TSymbol     p _) = p

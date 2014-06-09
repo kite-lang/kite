@@ -9,25 +9,35 @@ import Kite.Lexer
 lexerTests = testGroup "Lexer"
   [
     testCase "Integer" $
-      alexScanTokens "1" @?= [TInteger 1]
+      alexScanTokens "1" @?= [ TInteger (AlexPn 0 1 1) 1 ]
 
-  , testCase "Float" $
-      alexScanTokens "1.0" @?= [TFloat 1]
+   , testCase "Float" $
+       alexScanTokens "1.0" @?= [ TFloat (AlexPn 0 1 1) 1.0 ]
 
   , testCase "String" $
-      alexScanTokens "\"swag\"" @?= [TString "swag"]
+      alexScanTokens "\"swag\"" @?= [ TString (AlexPn 0 1 1) "swag" ]
 
-  , testCase "TSymbol" $
-      alexScanTokens "(1)" @?= [TSymbol '(', TInteger 1, TSymbol ')']
+  , testCase "Symbol" $
+      alexScanTokens "(1)" @?= [ TSymbol (AlexPn 0 1 1) '('
+                               , TInteger (AlexPn 1 1 2) 1
+                               , TSymbol (AlexPn 2 1 3) ')' ]
 
-  , testCase "TKeyword return" $
-      alexScanTokens "return foo" @?= [TKeyword "return", TIdentifier "foo"]
+  , testCase "Keyword return" $
+      alexScanTokens "return foo" @?= [ TKeyword (AlexPn 0 1 1) "return"
+                                      , TIdentifier (AlexPn 7 1 8) "foo" ]
 
   , testCase "Function" $
-      alexScanTokens "(Int) -> Float" @?= [TSymbol '(', TType "Int", TSymbol ')', TOperator "->", TType "Float"]
+      alexScanTokens "(Int) -> Float" @?= [ TSymbol (AlexPn 0 1 1) '('
+                                          , TType (AlexPn 1 1 2) "Int"
+                                          , TSymbol (AlexPn 4 1 5) ')'
+                                          , TOperator (AlexPn 6 1 7) "->"
+                                          , TType (AlexPn 9 1 10) "Float" ]
 
   , testCase "Comment infix" $
-      alexScanTokens "2 {- -}; foo" @?= [TInteger 2, TSymbol ';', TIdentifier "foo"]
+      alexScanTokens "2 {- -}; foo" @?= [ TInteger (AlexPn 0 1 1) 2
+                                        , TSymbol (AlexPn 7 1 8) ';'
+                                        , TIdentifier (AlexPn 9 1 10) "foo"
+                                        ]
 
   , testCase "Comment block" $
       alexScanTokens "{- \
@@ -36,5 +46,6 @@ lexerTests = testGroup "Lexer"
 
   , testCase "Comment suffix" $
       alexScanTokens "1337 -- a comment \n\
-                      \ 42" @?= [TInteger 1337, TInteger 42]
+                      \ 42" @?= [ TInteger (AlexPn 0 1 1) 1337
+                                , TInteger (AlexPn 20 2 2) 42 ]
   ]
