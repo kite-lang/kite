@@ -27,6 +27,9 @@ var panic = function (s) {
 var sin = Math.sin;
 var cos = Math.cos;
 var tan = Math.tan;
+var random = function(b){ return function (a) {
+    return Math.floor(Math.random() * a + b);
+};};
 
 /* Utils */
 function sleep(time) {
