@@ -25,7 +25,6 @@ data Expr = PList [Expr]
           | PBind String Expr
           | PLambda Type Expr -- PLambdaType!
           | PApply Expr Expr
-          | PComprehension Expr [Draw] [Expr]
           | PReturn Expr
           | PMatch Expr [PatternCase]
 
