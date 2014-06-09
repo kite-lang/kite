@@ -6,8 +6,8 @@ import Test.Tasty.HUnit
 
 import Kite.Test.Exception
 import Kite.Test.Lexer
--- import Kite.Test.Parser
 import Kite.Test.TypeCheck
+import Kite.Test.Parser
 -- import Kite.Test.Inference
 
 
@@ -21,7 +21,7 @@ tests = testGroup "Kite Tests"
           lexerTests
         , typeCheckTests
         -- , inferenceTests
-        -- , parserTests
+        , parserTests
         ]
 
 truthTests = testGroup "Truth"
