@@ -1,5 +1,102 @@
-
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: "../report"
 %%% End: 
+
+\subsection{Minimum requirements}
+As of our initial requirements for Kite, we've set a list of minimum
+requirements for our compiler.
+
+\textbf{Lexical analysis:} A scanner is used. For lexical analysis, we
+want to make use of Alex for generating our lexer.
+
+\textbf{Parser:} For parsing, we want to make use of Happy for
+generating our parser.
+
+\textbf{Type system}
+
+\textbf{Static type check:} 
+
+\textbf{Code generation:} For the machine to be able to understand the
+high-level language, a step of code generation is needed. Kites code
+generator must be able to take some representation of the given source
+code, and convert it such that the machine will be able to execute the
+source code. The code generator will take a representation of the
+parse tree, the output of the parser, and generate code
+accordingly. For code generation we initially wanted to make use of a
+LLVM back-end for the generation of low-level code. 
+
+\textbf{Recursion:} As recursion is one of the main properties of
+functional languages, recursion will be implemented in Kite. Recursion
+is a function which calls itself to compute some corresponding $n$-th
+element, while upholding some boundaries. One of the most used example
+is the Fibonacci sequence, which can be defined in pseude-code as
+follows:
+\begin{pseudo}
+// Fibo
+function fibonacci(n) do
+  return if n is 0
+    then 0
+  return else if n is 1
+    then 1
+  else fibonacci(n - 1) + fibonacci(n - 2)
+
+\end{pseudo}
+
+\subsection{Optional features}
+
+\textbf{Standard library}
+
+\textbf{High order functions}
+
+\textbf{Closures}
+
+\textbf{Lazy evaluation}
+
+\textbf{Currying}
+
+\textbf{String interpolation}
+
+\textbf{Type inference:} TODO: Hindley-Milner.
+
+\textbf{I/O}
+
+\textbf{List comprehension}
+
+\textbf{Sugaring}
+
+\textbf{Preprocessing}
+
+
+% Parallel
+% Mutability
+% REPL
+% StdLib
+% HoF
+% Rekursion
+% String interpolation
+% Closures
+% Lazy eval
+% Parallel
+% Currying
+% Type system (static, strong)
+% *Type inference
+% I/O
+% “alt = expressions”
+% List comprehension
+% (else?)
+
+% Language features:
+% Conditionals
+% Functions
+% “let … in”
+% Loops (boobs)
+
+% Typez:
+% String
+% List
+% Int
+% Float/double
+% Tuples/structs
+
+
