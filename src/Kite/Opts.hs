@@ -33,7 +33,7 @@ kiteOpts = KiteOpts {
   debug        = False &= name "d" &= help "Output debug information",
   noFoundation = False &= help "Exclude the Foundation standard library",
   noEmit       = False &= help "Prevent emitting compiled code",
-  doOptimize   = False &= help "Enable optimization",
+  doOptimize   = False &= name "o" &= help "Enable optimization",
   noTypeCheck  = False &= help "Prevent type checking",
   desugar      = False &= help "Emit desugared source",
   target       = JavaScript &= typ "TARGET" &= help "Compilation target"
