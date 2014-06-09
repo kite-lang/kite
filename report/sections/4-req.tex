@@ -13,9 +13,23 @@ want to make use of Alex for generating our lexer.
 \textbf{Parser:} For parsing, we want to make use of Happy for
 generating our parser.
 
-\textbf{Type system}
+\textbf{Type system:} Standard types that should be included is as
+follows:
+\begin{itemize}
+\item [--] Float
+\item [--] Integers
+\item [--] Characters
+\item [--] Lists
+\item [--] Tuples
+\end{itemize}
 
-\textbf{Static type check:} 
+\textbf{Static type check:} In our initial analysation we wanted to
+implement a static type checker. A static type checker will ensure
+type safety in a given program. A program passing the static type
+check will be free of type errors. If a program is verified from the
+analyzer, the compiler will be able to trust the intermediate
+representation given from the type checker. This will also result in
+any type error will be caught compile-time.
 
 \textbf{Code generation:} For the machine to be able to understand the
 high-level language, a step of code generation is needed. Kites code
@@ -40,33 +54,65 @@ function fibonacci(n) do
   return else if n is 1
     then 1
   else fibonacci(n - 1) + fibonacci(n - 2)
-
 \end{pseudo}
 
 \subsection{Optional features}
 
-\textbf{Standard library}
+\textbf{Standard library:} Inspired by Haskells prelude, we want to
+implement a standard module imported by default into all Kite
+modules. The standard module should include useful functions for
+arithmetic operations, string manipulations and list manipulation.
 
-\textbf{High order functions}
+\textbf{REPL:}
 
-\textbf{Closures}
+\textbf{High order functions:} High order functions is when a
+function takes functions as parameters and can return a function.
 
-\textbf{Lazy evaluation}
 
-\textbf{Currying}
+\textbf{Currying:} As we want all functions only to take one
+parameter, we want to include currying. Currying will allow us 
 
-\textbf{String interpolation}
+\textbf{Closures:} 
 
-\textbf{Type inference:} TODO: Hindley-Milner.
+\textbf{Lazy evaluation:} 
 
-\textbf{I/O}
+\textbf{String interpolation:}
 
-\textbf{List comprehension}
+\textbf{Type inference:} This is an extension of the type
+checker. Type inference will let the analyzer automatically deduct
+types of expressions. As for implementation we want to make use of
+Hindley-Milners Algorithm W type system with parametric polymorphism.
 
-\textbf{Sugaring}
+TODO: Hindley-Milner.
 
-\textbf{Preprocessing}
+\textbf{I/O:} Input/Output is needed for user interaction between the
+user and computer. To make the language more usable, a minimum of I/O
+must be present.
 
+\textbf{Sugaring:} To make some expressions more readable, we want to
+implement a sugaring module.
+
+\textbf{List comprehensions:} As list comprehensions is syntactic
+sugar for creating new lists from already existing lists, this is an
+extension of sugaring. List comprehensions will output new lists, as a
+result of some operation performed on each element of another list (or
+lists). It should also be possible to create a subsequence of the
+elements of another list, by implying that each element in the created
+list should satisfy a number of conditions.
+An example of our proposed syntax of list comprehensions is as
+follows:
+% Lame maaske??
+\begin{pseudo}
+  
+list = [ x*y | x <- range(3,5), y <- range(4,6) | (x+y) >= 10 , y > 4]
+\end{pseudo}
+Where the resulting list should output $[ 24, 25, 30 ]$
+
+\textbf{Preprocessing:} To make it possible to include another file
+into a given program we want to make use of a preprocessor. The
+preprocessor should be C-like where '\#include' is used. The
+preprocessor should just be able to import external files into the
+current program.
 
 % Parallel
 % Mutability
@@ -98,5 +144,3 @@ function fibonacci(n) do
 % Int
 % Float/double
 % Tuples/structs
-
-
