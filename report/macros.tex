@@ -7,6 +7,8 @@
 
 \newcommand{\fn}[2]{\lambda{} \ #1 \mapsto{} #2 }
 \newcommand{\ite}[3]{\texttt{ if } #1 \texttt{ then } #2 \texttt{ else } #3 }
+\newcommand{\qcol}{\quad:\quad}
+\newcommand{\qvd}{\quad\vdash\quad}
 
 %% source / reference
 \newcommand{\refgeneral}[3]{#1 (#3), \emph{#2}}
@@ -48,6 +50,6 @@
   breaklines,
 }
 
-\lstnewenvironment{pseudo}[1]{%
-\lstset{morekeywords={if, then, else, return, function, var, for, foreach, do, end}}}%
+\lstnewenvironment{pseudo}[1]{
+\lstset{morekeywords={if, then, else, return, function, var, for, foreach, do, end}}}
 {}

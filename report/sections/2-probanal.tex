@@ -6,7 +6,7 @@ We will describe function types using the following notation; let $f$ be a funct
 
 \[ f: Int \to Float \]
 
-Note that the concrete types are capitalized, and we use small letters to indicate free types. For instance $f: a \to b$ denotes a function which takes any type $a$ to any type $b$, and $f: a \to a$ denotes a function that takes any type $a$ and produces \emph{the same} type $a$.
+Note that the concrete types are capitalized, and we use small letters to indicate type variables, also known as polymorphic types. For instance $f: a \to b$ denotes a function which takes any type $a$ to any type $b$, and $f: a \to a$ denotes a function that takes any type $a$ and produces \emph{the same} type $a$.
 
 The function operator $\to$ can be chained for a function to accept multiple parameters which we indicate as $f: a \to b \to c$. It's important to note that $\to$ is a \emph{binary} and \emph{right-associative} operator, meaning that
 
@@ -26,9 +26,7 @@ add &= \fn{ x, y }{ x + y }  & \text{Add two values}\\
 max &= \fn{ x, y }{ \ite{x > y}{x}{y} }  & \text{Calculate the maximum of two values}\\
 \end{align*}
 
-Here we use the $\lambda$ notation for functions using the ``maps to'' operator $\mapsto$.
-
-We indicate function application using parenthesis, for instance $sum = add(2, 5)$.
+Here we use the $\lambda$ notation for functions using the ``maps to'' operator $\mapsto$ to indicate concrete implementation. We indicate function application using standard parenthesis, for instance $sum = add(2, 5)$.
 
 A very powerful concept that rises naturally from that of higher-order functions, is that of partial application and currying. With partial application it is possible to apply a single argument to a function with multiple arguments, which produces a new function that accepts the remaining arguments. For instance, given the function $add$ from above, we can create a new function 
 
@@ -44,7 +42,6 @@ As can be observed from the above, functional languages are closely related to l
 When working in imperative language, mutation of variables is a core feature that is used in almost all parts of all programs. In a functional language however, it's common that variables are not in fact variable but rather declarations of values. For instance, to calculate the sum of a list of numbers (pseudo-code)
 
 \begin{pseudo}
-
 // imperative style
 function sum(nums) do
   var s = 0
@@ -65,6 +62,10 @@ end
 Here we can see how the imperative code continuously mutates the \code{s} variable, and the functional code instead leverages recursion (and also is an example of the previously mentioned \code{if} as an expression).
 
 The idea of immutability is related to the strive for controlling side effects. In a purely functional language, a function will \emph{always} produce the same value, given the same input. This makes the code much easier to reason about, and can help the compiler make better optimizations. It is however not optimal for writing useful programs so solutions have been developed to keep a language pure while still maintaining side effecting operations such as IO. For instance Haskell uses the concept of Monads to force side effecting functions to declare which effects they might have and provide fallback strategies in case of failure.
+
+Functional languages often make extensive use of lists, which is indeed also the case for Kite. A list is an ordered array of items that can be transformed in many different ways. We use a common short-hand method for describing a list of things, using square brackets $[\ ]$. For instance, a $List(Int)$ (pronounced ``List of Ints'') is denoted $[Int]$ and a list of a type variables $a$ is $[a]$. Lists can be nested, allowing $List(List(Int))$ denoted $[[Int]]$.
+
+The pair type is also abbreviated using $(,)$, for instance the type $Pair(Int, Bool)$ is written $(Int, Bool)$
 
 %%% Local Variables: 
 %%% mode: latex

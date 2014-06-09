@@ -1,5 +1,61 @@
-%%% Local Variables:
+%TODO: Write reserved names (Void, if, then, else, etc...)
+\subsection{Language constructs}
+
+Kite consist of several different language constructs
+
+List
+Pair
+Match
+Bind
+Lambda
+Apply
+If
+Term
+Group
+
+\subsection{Type inference}
+As mentioned earlier, Kite uses static type checking to verify that types align at compile-time. We have used the Hindley-Milner type inference algorithm first described by Damas and Milner \cite{milner82}. They described an algorithm, named ``Algorithm W'', that given an expression will infer the most general type of that expression. We introduce the $\vdash$ to mean a derivation of type from expressions. For instance $x = 1 \vdash x : Int$ is read as ``given the expression $x = 1$ we can derive that $x$ has type $Int$''. To give a sense of what the algorithm does we first present a few examples. Recall that $:$ is pronounced ``has type''
+
+Let the following be predefined
+\begin{align*}
+  head   & : [a] \to a   \\
+  fst    & : (a, b) \to a
+\end{align*}
+
+The algorithm can now infer the types of the following expressions
+\begin{align*}
+  \fn{xs}{head(xs) + 1} & \qcol [Int] \to Int    & \qvd xs : [Int]             \\
+  \fn{p}{fst(p) + 1}    & \qcol (Int, a) \to Int & \qvd p : (Int, a)           \\
+  f(n + 1)              & \qcol a                & \qvd f: (Int \to a), n: Int \\
+\end{align*}
+
+Using the last example above the intuition behind the algorithm is as follows
+
+\begin{enumerate}
+\item $e = \fn{f, n}{\ldots} \vdash e: (a \to b \to c)$ \\
+  $e$ is being assigned a lambda expression with two parameters but we do not know anything about their types
+\item $e = \fn{f, n}{f(\ldots)} \vdash f: d \to c$ \\
+  $f$ is being applied to a single (yet unknown) value, thus we can infer that it is a function
+\item $e = \fn{f, n}{f(n + 1)} \vdash n : Int$ \\
+  We know that $f$ is applied to $n+1$ and we just derived $n:Int$ (by type unification, explained below) therefore we must have $f:Int \to c$
+\item $e = \fn{f, n}{f(n + 1)} \vdash e : (Int \to c) \to Int \to c$ \\
+  There are no more expressions to infer so we end up with the final, most general type for $e$
+\end{enumerate}
+
+
+\subsubsection{Type unification}
+% TODO: ref to the section defining infix operators
+Above we implicitly used the common definition of the $+$ operator with type $a \to a \to a$. When the type of $n$ was inferred, we \emph{unified} $Int$ with $a$ since $1 : Int$ and we knew from the type of $+$ that $n$ had the same type. This is called type unification and is at the core of the algorithm.
+
+Formally the unification algorithm takes two types and either fails or returns a \emph{substitution} that maps the most general type to the most specific of the two.
+
+
+cases
+no subtyping
+
+
+%%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: "../report"
 %%% End:
-TODO: Write reserved names (Void, if, then, else, etc...)
+
