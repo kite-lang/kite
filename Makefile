@@ -47,6 +47,7 @@ test:
 	@echo Testing...
 	@$(CC) configure --enable-tests
 	@$(CC) build
-	@$(CC) test
+	@dist/build/test/test
+#@$(CC) test
 
 .PHONY: all clean generate build install uninstall test
