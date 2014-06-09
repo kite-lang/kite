@@ -128,5 +128,3 @@ prettyExpr (PLambda (PLambdaType (PTypeArg _ (PIdentifier ide)) _) expr) = "|" +
 prettyExpr (PApply fn arg) = printf "(%s) (%s)" (prettyExpr fn) (prettyExpr arg)
 prettyExpr (PReturn expr) = "return " ++ prettyExpr expr
 prettyExpr (PMatch expr cases) = "match"
-
-prettyExpr (PComprehension _ _ _) = "i shouldnt be here lolol"
