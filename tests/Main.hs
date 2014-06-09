@@ -7,7 +7,7 @@ import Test.Tasty.HUnit
 import Kite.Test.Exception
 import Kite.Test.Lexer
 -- import Kite.Test.Parser
--- import Kite.Test.TypeCheck
+import Kite.Test.TypeCheck
 -- import Kite.Test.Inference
 
 
@@ -17,9 +17,9 @@ main = defaultMain tests
 tests :: TestTree
 tests = testGroup "Kite Tests"
         [
-         -- truthTests
+          -- truthTests
           lexerTests
-        -- , typeCheckTests
+        , typeCheckTests
         -- , inferenceTests
         -- , parserTests
         ]

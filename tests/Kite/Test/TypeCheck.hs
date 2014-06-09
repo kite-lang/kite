@@ -1,15 +1,16 @@
 module Kite.Test.TypeCheck (typeCheckTests) where
 
+import Prelude hiding (lex)
+
 import Test.Tasty
 import Test.Tasty.HUnit
 
-import Kite.Lexer
-import Kite.Parser
-import Kite.TypeCheck
+import Kite.Driver
+import Kite.Environment
 
-data TypeCheckError = TypeE | RefE | ArE | UnE deriving(Show, Eq)
+data TypeCheckError = TypeE | RefE | ArE | UnE deriving (Show, Eq)
 
-analyze prog = case (typeCheck False . kiteparser . alexScanTokens) prog of
+run prog = case (analyze False . parse . lex) prog of
   Right _ -> Nothing
   Left (TypeError _) -> Just TypeE
   Left (ReferenceError _) -> Just RefE
@@ -17,7 +18,7 @@ analyze prog = case (typeCheck False . kiteparser . alexScanTokens) prog of
   Left UnknownError -> Just UnE
 
 -- test expression
-testE name ex prog = testCase name $ analyze prog @?= ex
+testE name ex prog = testCase name $ run prog @?= ex
 
 typeCheckTests =
   testGroup "Inference test"
@@ -38,8 +39,8 @@ typeCheckTests =
 
      , testE "Multiple nested applications of returned functions (HoF)"
       Nothing "id = |x| -> { return x }\
-	      \foo = id(|x| -> { \
-	      \    return |y| -> {\
+              \foo = id(|x| -> { \
+              \    return |y| -> {\
               \       return x + y\
               \    }\
               \})(1)(1)"
@@ -49,14 +50,20 @@ typeCheckTests =
     [ testE "Assignment"
       Nothing "one = 2"
 
+    , testE "Reassignment"
+      (Just TypeE) "one = 2; one = 1;"
+
+    , testE "Reassignment (top level)"
+      (Just TypeE) "main = -> { one = 2; one = 1; }"
+
     , testE "Illegal reassignment"
       (Just TypeE) "one = 2; one = \"the\";"
 
-    , testE "Reference"
-      Nothing "one = 1; two = 1 + one;"
+    , testE "Illegal reassignment (top level)"
+      (Just TypeE) "main = -> { one = 2; one = \"the\"; }"
 
-    , testE "Varying return types"
-      (Just TypeE) "f = |a: Int| -> Int { return 2; 2.0 }"
+    , testE "Reference"
+      Nothing "main = -> { one = 1; two = 1 + one; }"
 
     , testE "Reference not defined"
       (Just RefE) "two = 1 + one"
@@ -65,28 +72,22 @@ typeCheckTests =
       (Just RefE) "two = 1 + two"
 
     , testE "Function call"
-      Nothing "one = |a: Int| -> Int { return a }; one(1)"
+      Nothing "one = |a| -> { return a }; main = -> { one(1) }"
 
     , testE "Function call with arg of wrong type"
-      (Just TypeE) "one = |a: Int| -> Int { return a }; one(\"1\")"
+      (Just TypeE) "one = |a| -> { return 1+a }; main = -> { one(\"1\") }"
 
     , testE "Function call with multiple parameters"
-      Nothing "foo = |a: Int, b: Int| -> Int { return 1 }; foo(1, 2)"
-
-    , testE "Function call with multiple parameters and wrong arity"
-      (Just ArE) "foo = |a: Int, b: Int| -> Int { return 1 }; foo(1)"
+      Nothing "foo = |a, b| -> { return 1 }; main = -> { foo(1, 2) }"
 
     , testE "Function call with wrong number of args"
-      (Just ArE) "one = || -> Int { return 1 }; one(1)"
+      (Just TypeE) "foo = |a| -> { return a }; main = -> { foo(1, 2) }"
 
     , testE "Function call to undefined function"
-      (Just RefE) "foo(2)"
+      (Just RefE) "main = -> { foo(2) }"
 
     , testE "Recursive function"
-      Nothing "fib = |n: Int| -> Int { return if n == 0 then 0 else if n == 1 then 1 else fib (n - 1) + fib (n - 2)}; fib(5)"
-
-    , testE "Recursive function wrong return type"
-      (Just TypeE) "fib = |n: Int| -> Bool { return if n == 0 then 0 else if n == 1 then 1 else fib (n - 1) + fib (n - 2)}; fib(5)"
+      Nothing "fib = |n| -> { return if n == 0 then 0 else if n == 1 then 1 else fib (n - 1) + fib (n - 2)}; main = -> { fib(5) }"
 
     , testE "List assignment same type"
       Nothing "list = [1, 2, 3]"
@@ -111,15 +112,6 @@ typeCheckTests =
 
     , testE "Concatenate string with numbers"
       (Just TypeE) "s = \"2\" + 2.0"
-
-    , testE "Check Bool operators"
-      Nothing "foo = || -> Bool { return 2 > 1 }"
-
-    , testE "Index of list"
-      Nothing "foo = || -> Bool { list = [True, False] return list # 1}"
-
-    , testE "Index of list illegal argument"
-      (Just TypeE) "foo = [1, 2, 3] # \"one\""
 
     , testE "Illegal arithmic operator"
       (Just TypeE) "list = [1, 2, 3] / [4, 5, 6]; s = \"test\" / \"string\"; a = 1 + \"two\""

@@ -3,6 +3,7 @@ module Kite.Driver (
   runKite
 , lex
 , parse
+, analyze
 , preprocess
 , preprocessFile
 , foundation
@@ -28,7 +29,7 @@ import qualified Kite.CodegenJS as GenJS
 
 lex        = alexScanTokens
 parse      = kiteparser
---analyze = typeCheck
+analyze    = typeCheck
 foundation = $(embedFile "lib/Foundation.kite")
 
 runKite KiteOpts {..} = do
