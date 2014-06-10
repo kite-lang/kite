@@ -4,9 +4,8 @@ import Kite.Syntax
 
 mkInfixCall op a1 a2 = PApply (PApply (PIdentifier op) a1) a2
 -- TODO: "partial infix right" can probably be done cleaner
-mkPartialRightInfixCall op rhs = PLambda (PLambdaType (PTypeArg (PTypeVar "t1") (PIdentifier "lhs"))
-                                                  (PTypeVar "t2"))
-                                       (PReturn (PApply (PApply (PIdentifier op) (PIdentifier "lhs")) rhs))
+mkPartialRightInfixCall op rhs = PLambda "rhs"
+                                 (PReturn (PApply (PApply (PIdentifier op) (PIdentifier "rhs")) rhs))
 mkPartialLeftInfixCall op lhs = PApply (PIdentifier op) lhs
 
 mkCharList str = PList (map PChar str)
@@ -18,11 +17,11 @@ mkCalls f args =
      else foldl PApply (PApply f (head args)) (tail args)
 
 mkFunc params body =
-  let firstParam = if null params then PTypeArg PVoidType (PIdentifier "Void") else head params
+  let firstParam = if null params then "Void" else head params
       restParams = if null params then [] else tail params
-      ini = PLambda (PLambdaType firstParam (PTypeVar "sugarType"))
+      ini = PLambda firstParam
       (fns, _) = foldl (\(fn, n) param ->
-                    (fn . PReturn . PLambda (PLambdaType param (PTypeVar ("sugarType" ++ [n]))), succ n)
+                    (fn . PReturn . PLambda param, succ n)
                   ) (ini, 'a') restParams
   in fns body
 
@@ -34,13 +33,11 @@ mkBlock exprs =
 
 mkCompreExpr expr draws =
   let ids = map (\ (PDraw id _) -> id) draws
-      params = map (\id -> PTypeArg (PTypeVar ("t"++id)) (PIdentifier id)) ids
-   in mkFunc params (PBlock [(PReturn expr)])
+   in mkFunc ids (PBlock [(PReturn expr)])
 
 mkCompreGuards exprs guards =
   let ids = map (\(PDraw id _) -> id) guards
-      params = map (\id -> PTypeArg (PTypeVar ("t"++id)) (PIdentifier id)) ids
-   in map (\expr -> mkFunc params (PBlock [(PReturn expr)])) exprs
+   in map (\expr -> mkFunc ids (PBlock [(PReturn expr)])) exprs
 
 mkComprehension func draws guardFuncs =
   let ids = map (\ (PDraw id _) -> id) draws
@@ -54,11 +51,9 @@ generateFlatmaps ids ranges ids_all guardFuncs finalFunc =
     [] -> let args = map (\id -> PIdentifier id) ids_all
           in PIf (generateGuards args guardFuncs) (PList [mkCalls finalFunc args]) (PList [])
               -- in generateGuards args guardFuncs
-    (id:_) -> let param = map (\id -> PTypeArg (PTypeVar ("t"++id)) (PIdentifier id)) [id]
-              in
-               (PApply
+    (id:_) -> (PApply
                 (PApply (PIdentifier "flatMap")
-                 (mkFunc param (PBlock
+                 (mkFunc [id] (PBlock
                                 [(PReturn (generateFlatmaps (tail ids) (tail ranges) ids_all guardFuncs finalFunc))]))) (head ranges))
 
 -- generateFinalFunc

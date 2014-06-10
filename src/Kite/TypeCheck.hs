@@ -49,10 +49,6 @@ infer _ (PChar _) = return (nullSubst, PCharType)
 infer _ (PBool _) = return (nullSubst, PBoolType)
 infer _ (PVoid) = return (nullSubst, PVoidType)
 
--- infer env (PBlock StandardBlock exprs) = do
---   forM_ exprs (infer env)
---   return (nullSubst, PBoolType)
-
 infer env (PBlock exprs) = do
   pushSymFrame
   pushReturnFrame
@@ -187,13 +183,13 @@ infer env (PIf cond conseq alt) = do
   return (s0 <+> s1 <+> s2 <+> s3 <+> s4, apply s4 tyConseq)
 
 -- TODO: check return type(?)
-infer env (PLambda (PLambdaType param ret) body) = do
-  pushTrace $ "Lambda: " ++ show (PLambdaType param ret)
+infer env (PLambda param body) = do
+  pushTrace $ "Lambda: " ++ param ++ " -> ?"
 
   tParam <- freshTypeVar "t"
-  let PTypeArg _ (PIdentifier ide) = param
-      TypeEnvironment env' = remove env ide
-      env'' = TypeEnvironment (Map.insert ide (Scheme [] tParam) env')
+
+  let TypeEnvironment env' = remove env param
+      env'' = TypeEnvironment (Map.insert param (Scheme [] tParam) env')
   (s1, t1) <- infer env'' body
 
   popTrace

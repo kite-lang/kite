@@ -177,21 +177,17 @@ If     :: { Expr }
 --- Lambdas
 
 Lambda   :: { Expr }
-        : LambdaSignature Block      { mkFunc (fst $1) $2 }
+        : LambdaSignature Block      { mkFunc $1 $2 }
         | '->' Block                 { mkFunc [] $2 }
 
-LambdaSignature :: { ([Type], Type) }
-         : '|' void '|' '->'             { ([], PTypeVar "t") }
-         | '|' Parameters '|' '->'       { ($2, PTypeVar "t") }
-         | '|' Parameters '|' '->' Type  { ($2, $5) }
+LambdaSignature :: { [String] }
+         : '|' void '|' '->'             { [] }
+         | '|' Parameters '|' '->'       { $2 }
 
-Parameters :: { [Type] }
-           : {- nothing -}             { [] }
-           | Parameter                 { [$1] }
-           | Parameter ',' Parameters  { $1 : $3 }
-
-Parameter :: { Type }
-         : id              { PTypeArg (PTypeVar ("t" ++ $1)) (PIdentifier $1) }
+Parameters :: { [String] }
+           : {- nothing -}      { [] }
+           | id                 { [$1] }
+           | id ',' Parameters  { $1 : $3 }
 
 
 --- Primitives

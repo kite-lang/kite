@@ -38,12 +38,12 @@ opNames = [('+', "KT_PLUS"),
 
 codegen :: [Decl] -> IO Source
 codegen decls = do
-  let r' = filter (not . (=='\n')) (Ch.unpack runtime)
+  let unlined = filter (not . (=='\n')) (Ch.unpack runtime)
   let emitted = foldl (\full (PDecl ide expr) ->
                         let decl = printf "var %s = %s" (safeId ide) (emit expr)
                         in full ++ "\n" ++ decl
                         ) "" decls
-  return (r' ++ emitted ++ ";main();")
+  return (unlined ++ emitted ++ ";main();")
 
 -- convert a string to a valid js identifier
 safeId str =
@@ -71,9 +71,7 @@ emit (PPair a b) = emit (PList [a, b])
 emit (PIf cond conseq alt) =
   printf "KT_if(function() { return %s; })(function() { return %s; })(function() { return %s; })" (emit cond) (emit conseq) (emit alt)
 
-emit (PLambda (PLambdaType param _) body) =
-  let PTypeArg _ ide = param
-  in printf "(function(%s) {%s})" (emit ide) (emit body)
+emit (PLambda param body) = printf "(function(%s) {%s})" param (emit body)
 
 emit (PBind ide expr) =
   printf "var %s = %s; %s" (safeId ide) (emit expr) (safeId ide)

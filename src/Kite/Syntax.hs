@@ -23,7 +23,7 @@ data Expr = PList [Expr]
           | PPair Expr Expr
           | PIf Expr Expr Expr
           | PBind String Expr
-          | PLambda Type Expr -- PLambdaType!
+          | PLambda String Expr
           | PApply Expr Expr
           | PReturn Expr
           | PMatch Expr [PatternCase]
@@ -124,7 +124,7 @@ prettyExpr (PBlock exprs) = intercalate ";\n" (map prettyExpr exprs)
 prettyExpr (PPair exprA exprB) = printf "(%s, %s)" (prettyExpr exprA) (prettyExpr exprB)
 prettyExpr (PIf cond conseq alt) = printf "if %s\nthen %s\nelse %s" (prettyExpr cond) (prettyExpr conseq) (prettyExpr alt)
 prettyExpr (PBind name expr) = printf "%s = %s" name (prettyExpr expr)
-prettyExpr (PLambda (PLambdaType (PTypeArg _ (PIdentifier ide)) _) expr) = "|" ++ ide ++ "| -> {\n" ++  (prettyExpr expr) ++ "\n}"
+prettyExpr (PLambda ide expr) = "|" ++ ide ++ "| -> {\n" ++  (prettyExpr expr) ++ "\n}"
 prettyExpr (PApply fn arg) = printf "(%s) (%s)" (prettyExpr fn) (prettyExpr arg)
 prettyExpr (PReturn expr) = "return " ++ prettyExpr expr
 prettyExpr (PMatch expr cases) = "match"
