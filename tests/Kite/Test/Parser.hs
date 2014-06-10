@@ -1,7 +1,5 @@
 module Kite.Test.Parser (parserTests) where
 
-import Debug.Trace
-
 import Test.Tasty
 import Test.Tasty.HUnit
 
@@ -14,6 +12,9 @@ import Kite.Syntax
 parserTests = testGroup "Parser"
   [testCase "Integer" $
     kiteparser (alexScanTokens "main = ->{3}") @?=  [PDecl "main" (PLambda (PLambdaType (PTypeArg PVoidType (PIdentifier "Void")) (PTypeVar "sugarType")) (PBlock [PReturn (PInteger 3)]))]
+
+  , testCase "Float" $
+    kiteparser (alexScanTokens "main = ->{21.1}") @?=  [PDecl "main" (PLambda (PLambdaType (PTypeArg PVoidType (PIdentifier "Void")) (PTypeVar "sugarType")) (PBlock [PReturn (PFloat 21.1)]))]
   -- , testCase "Float" $
   --     kiteparser [Float 21.1] @?= PTerm (PFloat 21.1)
 
