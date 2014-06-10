@@ -22,19 +22,24 @@ typeCheck debug decls = do
   let (r, env) = runTC $ typeCheckDecls decls
   when debug (traceShow env $ return ())
   case r of
-    Right _ -> Right decls
+    Right _ -> Right (filter isDecl decls)
     Left err -> Left err
+  where isDecl (PDecl _ _ ) = True
+        isDecl _ = False
 
 typeCheckDecls :: [Decl] -> TC ()
 typeCheckDecls decls = do
-  forM_ decls (\(PDecl ide expr) -> do
-                  fresh <- freshTypeVar "tdecl"
-                  insertSym ide fresh
+  forM_ decls (\decl -> case decl of
+                  PDecl ide expr -> do
+                    fresh <- freshTypeVar "tdecl"
+                    insertSym ide fresh
 
-                  (s, t) <- infer (TypeEnvironment Map.empty) expr
+                    (s, t) <- infer (TypeEnvironment Map.empty) expr
 
-                  removeSym ide
-                  insertSym ide (apply s t)
+                    removeSym ide
+                    insertSym ide (apply s t)
+
+                  PTypeDecl ide ty -> return ()
               )
   return ()
 

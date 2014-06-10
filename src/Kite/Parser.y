@@ -30,6 +30,7 @@ import Text.Printf
         '<-'               { TOperator _ "<-" }
         '|'                { TOperator _ "|" }
         '`'                { TOperator _ "`" }
+        '::'               { TOperator _ "::" }
 
         operator           { TOperator _ $$ }
 
@@ -65,8 +66,10 @@ Program :: { [Decl] }
          : Decls { $1 }
 
 Decl   :: { Decl }
-        : id '=' Expr               { PDecl $1 $3 }
-        | '{' operator '}' '=' Expr { PDecl $2 $5 }
+        : id '=' Expr                     { PDecl $1 $3 }
+        | '{' operator '}' '=' Expr       { PDecl $2 $5 }
+        | id '::' Type                { PTypeDecl $1 $3 }
+        | '{' operator '}' '::' Type  { PTypeDecl $2 $5 }
 
 Decls  :: { [Decl] }
         : {- nothing -}    { [] }
@@ -168,6 +171,7 @@ Type   :: { Type }
         | '(' Type ',' Type ')' { PPairType $2 $4 }
         | '[' Type ']'       { PListType $2 }
         | id                 { PTypeVar $1 }
+        | Type '->' Type     { PLambdaType $1 $3 }
 
 -- TODO: support both single expr and blocks
 If     :: { Expr }

@@ -19,6 +19,7 @@ $operatorSymbols        = [\+\-\/\*\%\=\|\&\<\>\!\~\`\#\.\:\^\$]
 @identifier		= $downcase [$alphaNum \_ \' \! \?]*
 @bool			= "True" | "False"
 @void                   = "Void"
+@typedecl               = "::"
 @type			= $upcase [$alphaNum]*
 @comment		= "--" .*
 @multilineComment	= "{-" ($white | .)* "-}"
@@ -30,6 +31,7 @@ kite :-
 
   @keywords		{ \p s -> TKeyword p s }
   @operators		{ \p s -> TOperator p s }
+  @typedecl             { \p s -> TOperator p s }
   $digit+\.$digit+	{ \p s -> TFloat p (read s) }
   $digit+"f"		{ \p s -> TFloat p (read $ init s) }
   $digit+		{ \p s -> TInteger p (read s) }
