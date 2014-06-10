@@ -29,7 +29,7 @@ type Opti a = ErrorT OptiError (State OptiState) a
 
 builtInNames :: [Name]
 builtInNames = ["print", "put", "sin", "cos", "tan", "sleep", "panic", "clear",
-                "arguments", ":", "==", "<=", "+", "-", "*", "/", "%"]
+                "arguments", ":", "==", "<=", "+", "-", "*", "/", "%", "^", "random"]
 
 builtIns :: [Decl]
 builtIns = map (`PDecl` PVoid) builtInNames
