@@ -73,9 +73,17 @@ Here we can see how the imperative code continuously mutates the \code{s} variab
 The idea of immutability is related to the strive for controlling side effects. In a purely functional language, a function will \emph{always} produce the same value, given the same input. This makes the code much easier to reason about, because one does not have to worry about what state a certain function is in at a given time. It can also help the compiler make optimizations, which we will discuss in more detail later. Pure languages are however not practical for writing useful programs because, for instance, IO is inherently not pure. You can't know in advance what input the user will give you, and a truly pure function cannot generate random numbers, get the time, etc. Solutions have been developed to keep a language pure while still maintaining side effecting operations such as IO. For instance Haskell uses the concept of Monads to force side effecting functions to declare which effects they might have and provide fallback strategies in case of failure.
 
 
-\subsection{Challenges of implementing a compiler}
+\subsection{Implementing a compiler}
 
+Most modern compilers are built using more or less the same architecture. The source code of the compiled language is first analyzed lexically (a process sometimes referred to as \textbf{lexing}) into a stream of lexical tokens. This can be compared to splitting a natural language text into a list of words. This stream of tokens is parsed into nodes in an Abstract Syntax Tree (AST) using a \textbf{parser}. This can again be compared to natural language by imaging a list of word and punctuation being parsed into phrases that have ``meaning''.
 
+The AST can have various forms and structure, but common is that it is a representation of the source code in the form of data structures native to the language of implementation. The AST can be transformed for different purposes, for instance to give correct precedence to operators.
+
+Going further it can be analyzed in many different ways, for instance to perform \textbf{type checking} and ensure that no undefined identifiers are referenced. It is also possible to perform various optimizations on the AST. Dead (unused) code can be detected and removed, common patterns of code can be transformen into a more effecient structure, functions can be inlined to remove the overhead of making a function call and much more. We will go into details about this later.
+
+Finally the AST can be used to emit code for the target language of the compiler, process known as \textbf{code generation}. It worth noting that many different code generators can be implemented for the same AST, thus allowing to target multiple architectures and machines using the same compiler.
+
+We are going to implement all of these modules, some more thouroughly than others, and in such a way that it can be easily extended and maintained.
 
 
 %%% Local Variables: 
