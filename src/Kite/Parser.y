@@ -172,7 +172,7 @@ Type   :: { Type }
         | '[' Type ']'       { PListType $2 }
         | id                 { PTypeVar $1 }
         | Type '->' Type     { PLambdaType $1 $3 }
-        | '(' Type ')' '->' Type     { PLambdaType $2 $5 }
+        | '(' Type ')'       { $2 }
 
 -- TODO: support both single expr and blocks
 If     :: { Expr }
