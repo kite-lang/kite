@@ -230,6 +230,13 @@ infer env (PApply expr arg) = do
 infer (TypeEnvironment env) (PBind ide expr) = do
   pushTrace $ "Bind: " ++ ide
 
+  -- check that variable is not already defined in topmost scope
+  syms <- liftM (head . sym) get
+  when (isJust (Map.lookup ide syms) || isJust (Map.lookup ide env))
+    (throwRE $ "Redefining variable " ++ ide)
+
+  traceShow env $ return ()
+
   fresh <- freshTypeVar "rec"
   insertSym ide fresh
 
@@ -257,11 +264,7 @@ infer env (PReturn expr) = do
 unify :: Type -> Type -> String -> TC Substitution
 
 -- primitive base cases
-unify PIntegerType PIntegerType _ = return nullSubst
-unify PFloatType PFloatType     _ = return nullSubst
-unify PCharType PCharType       _ = return nullSubst
-unify PBoolType PBoolType       _ = return nullSubst
-unify PVoidType PVoidType       _ = return nullSubst
+unify a b _ | a == b = return nullSubst
 
 -- free type with any type
 unify ta (PTypeVar ide) _ = varBind ide ta

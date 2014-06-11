@@ -180,7 +180,7 @@ fold = |f, acc, xs| -> {
 fold1 :: (a -> b -> a) -> [b] -> a
 fold1 = |f, xs| -> {
   if empty (xs)
-    then head (xs)
+    then panic ("fold1: empty list")
     else fold (f, head (xs), tail (xs))
 }
 
