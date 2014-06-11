@@ -39,14 +39,13 @@ opNames = [('+', "KT_PLUS"),
 codegen :: [Decl] -> IO Source
 codegen decls = do
   let unlined = filter (not . (=='\n')) (Ch.unpack runtime)
-  let emitted = foldl (\full decl ->
-                        case decl of
-                          PDecl ide expr ->
-                            let decl = printf "var %s = %s" (safeId ide) (emit expr)
-                            in full ++ "\n" ++ decl
-                          _ -> fail "Unexpected type decl in CodegenJS"
-                        ) "" decls
-  return (unlined ++ emitted ++ ";main();")
+      emitted = map (\decl ->
+                      case decl of
+                        PDecl ide expr -> printf "var %s = %s" (safeId ide) (emit expr)
+                        _ -> fail "Unexpected type decl in CodegenJS"
+                    ) decls
+      linedDecls = intercalate "\n" emitted
+  return (unlined ++ linedDecls ++ ";main();")
 
 -- convert a string to a valid js identifier
 safeId str =
