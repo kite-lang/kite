@@ -17,6 +17,7 @@ As mentioned earlier, Kite uses static type checking to verify that types align 
 
 Let the following be predefined
 \begin{align*}
+  +      & : a \to a \to a   \quad\text{(infix)}\\
   head   & : [a] \to a   \\
   fst    & : (a, b) \to a
 \end{align*}
@@ -36,7 +37,7 @@ Using the last example above the intuition behind the algorithm is as follows
 \item $e = \fn{f, n}{f(\ldots)} \vdash f: d \to c$ \\
   $f$ is being applied to a single (yet unknown) value, thus we can infer that it is a function
 \item $e = \fn{f, n}{f(n + 1)} \vdash n : Int$ \\
-  We know that $f$ is applied to $n+1$ and we just derived $n:Int$ (by type unification, explained below) therefore we must have $f:Int \to c$
+  We see that $f$ is applied to $n+1$ and since $1: Int$ and $+:a \to a \to a$ then $a = Int$ and thus $n:Int$ (this is called type unification, explained below).
 \item $e = \fn{f, n}{f(n + 1)} \vdash e : (Int \to c) \to Int \to c$ \\
   There are no more expressions to infer so we end up with the final, most general type for $e$
 \end{enumerate}
