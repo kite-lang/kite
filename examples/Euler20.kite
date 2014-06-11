@@ -1,18 +1,18 @@
-factorial = |x| -> {
-  match x{
-    1 -> 1,
-    x -> x * factorial(x-1)
-  }
-}
+-- factorial = |x| -> {
+--   match x{
+--     1 -> 1,
+--     x -> x * factorial(x-1)
+--   }
+-- }
 fibonacciHelp = |a, b, n| -> {
   if n > 0
     then fibonacciHelp(b, a+b, n-1)
     else a
 }
 
-fibonacci = |n| -> {
-  fibonacciHelp(0,1,n)
-}
+-- fibonacci = |n| -> {
+--   fibonacciHelp(0,1,n)
+-- }
 
 
 
@@ -22,7 +22,7 @@ main = -> {
      -- sum = fold1(|x,y| -> {x+y} , facts)
      -- print(sum)
      
-     print(fibonacci(100))
+     -- print(fibonacci(100))
 
      fibs = [ x | x <- map(fibonacciHelp(0,1), range(1,100)) | x < 4000000, even(x) ]
 

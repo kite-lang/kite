@@ -7,33 +7,27 @@ analysis of the system is interesting, present it here as well.
 A few screenshots of the program can be included here as well. TODO
 
 
-In the following section we will describe the various tests we have performed in order to validate the correctness of the compiler. We will perform unit-tests for each module (as described in figure~\ref{fig:flow})
 
-\subsection{Preprocessing}
+\subsection{Tests}
 
-\subsection{Lexing}
+In the following we will describe the various tests we have performed in order to validate the correctness of the compiler, both throughout the development and of the final system.
 
-\subsection{Parsing}
-As the job of the parser is to generate the parse-tree, or yield an error upon incorrect source code, we have implemented tests to look at these cases of correct and incorrect code. In the case of incorrect code, the parser will yield an error stating where the error occurred.
+We have made use of both \textbf{unit} and \textbf{integration} tests. Unit testing has been used on each of the modules of the compiler. For instance, we have tested the parser module in cases where the output of the lexer should yield a parse error and in cases where it should not.
 
-An example of an \emph{incorrect} piece of Kite-code is the following:
+TODO integration tests
 
-\texttt{increment =  -> \{1 + \}}
-
-This is incorrect, as we do not allow infix operators to be partially applied - as this leads to a whole lot of ambiguity. Thus this is expected
-
-We do, however, allow the following
-
-
-\subsection{Desugaring}
-\subsection{Analysis}
 \subsection{Optimization}
-\subsection{Code generation}
+As our optimization pass removes unused function declarations from the parse tree, it is possible to achieve substantial reduction of the emitted code.
+
+A very simple program that concatenates the strings `Hello,' and ` World!' and prints them, is unoptimized emitted to 12.7kB of JavaScript, and optimized to 3.6kB. Thus optimization yields a size reduction of 72\%.
+
+A slightly larger program that sums the even Fibonacci numbers less than 4 million (problem 2 of the online collection of mathematical problems Project Euler\cite{euler}) the compiler emits 12.9kB and 6.8kB of JavaScript without and with optimization, respectively. The program makes use of list comprehensions, which is just syntactic sugar for flatten and map, which then again uses a cascade of functions from Foundation.kite. Thus it is expected that a lot of the code from the library is used. But a reduction of 47\% is still noteworthy, and imagining the use of functions from other Kite-libraries for more specific purposes, this optimization might be useful. 
 
 
+
+
+
+TODO: reduction of code size. Give examples
 \subsection{Known limitations (and bugs?)}
-TODO: The parse-errors are only exact down to lines, not columns.
-
-TODO: The optimizer expects a main-declaration and fails without. This is because the optimizer removes unused function-declarations, i.e.\ functions not called directly or indirectly by main.
-
-TODO: Not-exactly-a-negative-limitation: By syntax, only declarations can be done top-level, not application. Applications of functions has to be within the `main'-declaration (at some level!).
+TODO: Limitation with Hindley-Milner (it does not allow subtypes... #panic - groupleader)
+TODO: Limitation with CFG, and since we use Happy, we cannot do: TODO - example

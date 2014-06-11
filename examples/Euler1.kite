@@ -1,0 +1,5 @@
+main = -> {
+
+  ans = sum $ [x | x <- range(1,999) | ((x % 3) == 0) || ((x % 5) == 0)]
+  print(ans)
+}
