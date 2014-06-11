@@ -36,19 +36,16 @@ code, and convert it such that the machine will be able to execute the
 source code.
 
 \textbf{Recursion:} As recursion is one of the main properties of
-functional languages, recursion will be implemented in Kite. Recursion
+functional languages, recursion will be implemented in Kite. TODO: WHAT? Recursion
 is a function which calls itself to compute some corresponding $n$-th
-element, while upholding some boundaries. One of the most used example
-is the Fibonacci sequence, which can be defined in pseude-code as
-follows:
+element, while upholding some boundaries. TODO: WHAT?
+One of the most used example of recursion is the Fibonacci sequence, as a Fibonacci number is defined the sum of the two previous numbers in the sequence - i.e. recursively defined. A function computing a Fibonacci number can be defined in pseude-code as follows:
 \begin{pseudo}
 // Fibo
 function fibonacci(n) do
-  return if n is 0
-    then 0
-  return else if n is 1
-    then 1
-  else fibonacci(n - 1) + fibonacci(n - 2)
+  return if n < 2
+    then n
+    else fibonacci(n - 1) + fibonacci(n - 2)
 \end{pseudo}
 
 \subsection{Optional features}
