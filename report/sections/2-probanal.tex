@@ -1,6 +1,14 @@
 % TODO:
 % introduce notations for type
 % hindley milner does not support subtyping
+
+\subsection{Purpose of the project}
+Our project is not concerned with solving a specific problem related to compilation of functional programming languages. Rather it is a project in which we aim to gain a thourough understanding of modern compiler theory and implementation as well as become proficient with functional development. We have made an effort to implement the compiler as modern compilers are implemented today. That said, a compiler is a very complex piece of software and given our limited time, it is far beyond our scope to implement a language that could be used for production purposes. What we are striving for is a working language with all the elements of a basic functional language, expressive syntax, simple optimizations and target language that we can execute.
+
+We have been inspired by many other languages when designing and implementing Kite, most notably the GHC Haskell compiler\footnote{The Glasgow Haskell Compiler \url{http://www.haskell.org/ghc}}.
+
+Next we will describe some properties of functional languages and compilers that we would like to implement in Kite. Further we will introduce some of the notation used throughout the rest of the report.
+
 \subsection{Functional language properties}
 We will describe function types using the following notation; let $f$ be a function with one parameter of type $Int$ (integer) and return value $Float$. We denote this using $:$, meaning ``of type'' or ``has type''
 
@@ -39,9 +47,10 @@ which will take an $Int$ and add $1$ to it. Currying is closely related, but is 
 
 As can be observed from the above, functional languages are closely related to lambda calculus, and can be seen as an extension of it. Common for them is that almost everything is regarded as an expression, meaning that everything conveys a \emph{value}. For instance, in imperative languages the \code{if} construct is a statement, controlling flow of execution, whereas in a functional language, it's a choice between two values.
 
-When working in imperative language, mutation of variables is a core feature that is used in almost all parts of all programs. In a functional language however, it's common that variables are not in fact variable but rather declarations of values. For instance, to calculate the sum of a list of numbers (pseudo-code)
+When working in imperative language, mutation of variables is a core feature that is used in almost all parts of a program. In a functional language however, it's common that variables are not in fact variable in the sense of being mutable, but rather declarations of values. For instance, to calculate the sum of a list of numbers (pseudo-code)
 
 \begin{pseudo}
+
 // imperative style
 function sum(nums) do
   var s = 0
@@ -61,14 +70,15 @@ end
 
 Here we can see how the imperative code continuously mutates the \code{s} variable, and the functional code instead leverages recursion (and also is an example of the previously mentioned \code{if} as an expression).
 
-The idea of immutability is related to the strive for controlling side effects. In a purely functional language, a function will \emph{always} produce the same value, given the same input. This makes the code much easier to reason about, and can help the compiler make better optimizations. It is however not optimal for writing useful programs so solutions have been developed to keep a language pure while still maintaining side effecting operations such as IO. For instance Haskell uses the concept of Monads to force side effecting functions to declare which effects they might have and provide fallback strategies in case of failure.
+The idea of immutability is related to the strive for controlling side effects. In a purely functional language, a function will \emph{always} produce the same value, given the same input. This makes the code much easier to reason about, because one does not have to worry about what state a certain function is in at a given time. It can also help the compiler make optimizations, which we will discuss in more detail later. Pure languages are however not practical for writing useful programs because, for instance, IO is inherently not pure. You can't know in advance what input the user will give you, and a truly pure function cannot generate random numbers, get the time, etc. Solutions have been developed to keep a language pure while still maintaining side effecting operations such as IO. For instance Haskell uses the concept of Monads to force side effecting functions to declare which effects they might have and provide fallback strategies in case of failure.
 
-Functional languages often make extensive use of lists, which is indeed also the case for Kite. A list is an ordered array of items that can be transformed in many different ways. We use a common short-hand method for describing a list of things, using square brackets $[\ ]$. For instance, a $List(Int)$ (pronounced ``List of Ints'') is denoted $[Int]$ and a list of a type variables $a$ is $[a]$. Lists can be nested, allowing $List(List(Int))$ denoted $[[Int]]$.
 
-The pair type is also abbreviated using $(,)$, for instance the type $Pair(Int, Bool)$ is written $(Int, Bool)$
+\subsection{Challenges of implementing a compiler}
+
+
+
 
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: "../report"
 %%% End: 
-

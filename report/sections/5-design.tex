@@ -3,6 +3,12 @@
 %%% TeX-master: "../report"
 %%% End:
 
+%%% TODO: move this to kite design
+Functional languages often make extensive use of lists, which is indeed also the case for Kite. A list is an ordered array of items that can be transformed in many different ways. We use a common short-hand method for describing a list of things, using square brackets $[\ ]$. For instance, a $List(Int)$ (pronounced ``List of Ints'') is denoted $[Int]$ and a list of a type variables $a$ is $[a]$. Lists can be nested, allowing $List(List(Int))$ denoted $[[Int]]$.
+
+The pair type is also abbreviated using $(,)$, for instance the type $Pair(Int, Bool)$ is written $(Int, Bool)$
+%%%
+
 To describe the overall design of the Kite compiler, we will start by
 breaking it down into general parts, where each part or module has a
 specific task. Below we have a waterfall model including the main
