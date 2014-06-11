@@ -1,11 +1,15 @@
-In the requirements we will focus on the language specific features of
-Kite. Something something dark side
+TODO: SKAL DER MERE?? FLERE EKSEMPLER ELLER ANDET GODT?
+
+In the requirements we will focus more on the language specific features of
+Kite. As most of the compiler specific requirements are discussed in
+the design section, and are basic for most compilers, they will not
+be discussed here. 
 
 \subsection{Minimum requirements}
 As of our initial requirements for Kite, we've set a list of minimum
 requirements for our compiler.
 
-\textbf{Type system:} Standard types that should be included is as
+\textbf{Type system:} Standard types that should be included in Kite is as
 follows:
 \begin{itemize}
 \item [--] Float
@@ -13,10 +17,11 @@ follows:
 \item [--] Characters
 \item [--] Boolean
 \item [--] Lists
-\item [--] Tuples
+\item [--] Pairs
 \end{itemize}
+TODO Maaske mere? 
 
-\textbf{Static type check:} In our initial analysation we wanted to
+\textbf{Static type check:} In our initial analysis we wanted to
 implement a static type checker. A static type checker will ensure
 type safety in a given program. A program passing the static type
 check will be free of type errors. If a program is verified from the
@@ -28,9 +33,7 @@ any type error will be caught compile-time.
 high-level language, a step of code generation is needed. Kites code
 generator must be able to take some representation of the given source
 code, and convert it such that the machine will be able to execute the
-source code. The code generator will take a representation of the
-parse tree, the output of the parser, and generate code
-accordingly.
+source code.
 
 \textbf{Recursion:} As recursion is one of the main properties of
 functional languages, recursion will be implemented in Kite. Recursion
@@ -55,21 +58,27 @@ implement a standard module imported by default into all Kite
 modules. The standard module should include useful functions for
 arithmetic operations, string manipulations and list manipulation.
 
-\textbf{REPL:} A Read-eval-print-loop 
+\textbf{REPL:} A Read-eval-print-loop will allow the user to have an
+interactive Kite shell. TODO: Mere guf omkring REPL?
 
-\textbf{High order functions:} High order functions is when a
-function takes functions as parameters and can return a function.
+\textbf{High order functions:} The language should have the
+possibility to take functions as parameters and return functions.
 
-\textbf{Partial application:}
-
-\textbf{Mutability:}
+\textbf{Mutability:} In a pure functional language there will be
+immutability. As this is not perfect usefulness, we want at least some
+mutability.
 
 \textbf{Currying:} As we want all functions only to take one
-parameter, we want to include currying. Currying will allow us 
+parameter, we want to include currying. TODO: Mention lambda calculus
+somewhere, Hindley Milner...
 
-\textbf{Closures:} 
+\textbf{Partial application:} As a result of currying, we want to make
+use of partial application.
 
-\textbf{Lazy evaluation:} 
+\textbf{Closures:} TODO
+
+\textbf{Lazy evaluation:} The language should include lazy evaluation,
+which will allow evaluation of expressions to be delayed until it's needed.
 
 \textbf{Type inference:} This is an extension of the type
 checker. Type inference will let the analyzer automatically deduct
