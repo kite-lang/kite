@@ -38,10 +38,12 @@ findDecl :: Name -> Opti (Maybe Expr)
 findDecl name = do
   st <- get
   let decl = find (\d -> case d of
-                      PDecl dname _ -> dname == name) (decls st)
+                      PDecl dname _ -> dname == name
+                      _ -> False
+                  ) (decls st)
   case decl of
     Just (PDecl _ expr) -> return (Just expr)
-    Nothing -> return Nothing
+    _ -> return Nothing
 
 optimize :: [Decl] -> [Decl]
 optimize ds = do
@@ -52,8 +54,9 @@ optimize ds = do
   let Right names = used
       keep = "main" : (builtInNames ++ names)
 
-  filter (\d -> let PDecl name _ = d
-                in name `elem` keep) ds
+  filter (\d -> case d of
+             PDecl name _ -> name `elem` keep
+             _ -> False) ds
 
 optimize' :: Opti [Name]
 optimize' = do
