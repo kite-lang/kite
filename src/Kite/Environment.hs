@@ -53,6 +53,7 @@ type Frame = Map.Map Name Type
 type Stack = [Frame]
 
 data Environment = Environment { sym :: Stack,
+                                 types :: Frame,
                                  symCount :: Int,
                                  evalTrace :: [String],
                                  -- TODO: hack to infer pattern matches
@@ -77,6 +78,7 @@ newtype TypeEnvironment = TypeEnvironment (Map.Map String Scheme)
 type TC a = ErrorT TypeError (State Environment) a
 
 runTC f = runState (runErrorT f) Environment { sym = [initSymbols],
+                                               types = Map.empty,
                                                symCount = Map.size initSymbols,
                                                evalTrace = [],
                                                onlyFree = False,
@@ -211,3 +213,13 @@ insertSym ide val = do
   let (x:xs) = sym env
       newF = Map.insert ide val x
   put env{sym = newF:xs}
+
+insertType :: String -> Type -> TC ()
+insertType ide val = do
+  env <- get
+  put env{types = Map.insert ide val (types env)}
+
+lookupType :: String -> TC (Maybe Type)
+lookupType ide = do
+  env <- get
+  return $ Map.lookup ide (types env)

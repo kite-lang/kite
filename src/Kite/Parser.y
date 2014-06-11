@@ -66,8 +66,8 @@ Program :: { [Decl] }
          : Decls { $1 }
 
 Decl   :: { Decl }
-        : id '=' Expr                     { PDecl $1 $3 }
-        | '{' operator '}' '=' Expr       { PDecl $2 $5 }
+        : id '=' Expr                 { PDecl $1 $3 }
+        | '{' operator '}' '=' Expr   { PDecl $2 $5 }
         | id '::' Type                { PTypeDecl $1 $3 }
         | '{' operator '}' '::' Type  { PTypeDecl $2 $5 }
 
@@ -172,6 +172,7 @@ Type   :: { Type }
         | '[' Type ']'       { PListType $2 }
         | id                 { PTypeVar $1 }
         | Type '->' Type     { PLambdaType $1 $3 }
+        | '(' Type ')' '->' Type     { PLambdaType $2 $5 }
 
 -- TODO: support both single expr and blocks
 If     :: { Expr }

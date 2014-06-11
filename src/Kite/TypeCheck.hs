@@ -36,10 +36,17 @@ typeCheckDecls decls = do
 
                     (s, t) <- infer (TypeEnvironment Map.empty) expr
 
+                    typeDecl <- lookupType ide
+
+                    case typeDecl of
+                      Just ty -> unify ty t
+                                 ("Type declaration does not match inferred (%s and %s) of function " ++ ide)
+                      Nothing -> return nullSubst
+
                     removeSym ide
                     insertSym ide (apply s t)
 
-                  PTypeDecl ide ty -> return ()
+                  PTypeDecl ide ty -> insertType ide ty
               )
   return ()
 

@@ -3,64 +3,64 @@ pi = 3.14159265359
 
 --- Functional
 
--- a -> a
+id :: a -> a
 id = |x| -> { x }
 
--- (a -> b) -> a -> b
+{$} :: (a -> b) -> a -> b
 {$} = |f, x| -> {
   f (x)
 }
 
 -- composition
--- (b -> c) -> (a -> b) -> (a -> c)
+{.} :: (b -> c) -> (a -> b) -> (a -> c)
 {.} = |f, g| -> {
   |x| -> {
     f (g (x))
   }
 }
 
--- (a -> b -> c) -> (b -> a -> c)
+flip :: (a -> b -> c) -> (b -> a -> c)
 flip = |f, x, y| -> {
   f (y, x)
 }
 
 --- Boolean
 
--- Bool -> Bool
+not :: Bool -> Bool
 not = |p| -> {
   if p then False else True
 }
 
--- Bool -> Bool -> Bool
+{&&} :: Bool -> Bool -> Bool
 {&&} = |l, r| -> {
   if l then r else False
 }
 
--- Bool -> Bool -> Bool
+{||} :: Bool -> Bool -> Bool
 {||} = |l, r| -> {
   if l then True else r
 }
 
 --- Equality (built in: ==)
 
--- a -> a -> Bool
+{/=} :: a -> a -> Bool
 {/=} = |l, r| -> {
   not (l == r)
 }
 
 --- Ordering (built in: <=)
 
--- a -> a -> Bool
+{<} :: a -> a -> Bool
 {<} = |l, r| -> {
   not (r <= l)
 }
 
--- a -> a -> Bool
+{>} :: a -> a -> Bool
 {>} = |l, r| -> {
   (r <= l) && (r /= l)
 }
 
--- a -> a -> Bool
+{>=} :: a -> a -> Bool
 {>=} = |l, r| -> {
   (l > r) || (l == r)
 }
@@ -68,18 +68,22 @@ not = |p| -> {
 
 --- Pairs
 
+asPair :: a -> b -> (a, b)
 asPair = |a, b| -> {
   (a, b)
 }
 
+{<>} :: a -> b -> (a, b)
 {<>} = asPair
 
+fst :: (a, b) -> a
 fst = |p| -> {
   match p {
     (a , b) -> a
   }
 }
 
+fst :: (a, b) -> b
 snd = |p| -> {
   match p {
     (a , b) -> b
@@ -88,7 +92,7 @@ snd = |p| -> {
 
 --- Lists
 
--- [a] -> Int -> a
+{#} :: [a] -> Int -> a
 {#} = |xs, idx| -> {
   match xs {
     [] -> panic ("list index too large"),
@@ -100,7 +104,7 @@ snd = |p| -> {
   }
 }
 
--- [a] -> Int
+length :: [a] -> Int
 length = |xs| -> {
   match xs {
     [] -> 0,
@@ -108,7 +112,7 @@ length = |xs| -> {
   }
 }
 
--- [a] -> Bool
+empty :: [a] -> Bool
 empty = |xs| -> {
   match xs {
     [] -> True,
@@ -116,7 +120,7 @@ empty = |xs| -> {
   }
 }
 
--- [a] -> a
+head :: [a] -> a
 head = |xs| -> {
   match xs {
     [] -> panic ("can't take head of empty list"),
