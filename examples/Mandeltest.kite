@@ -1,0 +1,12 @@
+#include "Plot.kite"
+#include "Mandelbrot.kite"
+#include "Utils.kite"
+
+main = -> {
+
+  mandelPlot = |x| -> {
+    mandel(negatef(x), negatef(x), 0.05, 0.05)
+  }
+
+  animate(mandelPlot, 40, negatef(2.0), 6.0, 0.1)
+}
