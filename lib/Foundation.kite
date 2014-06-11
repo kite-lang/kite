@@ -83,7 +83,7 @@ fst = |p| -> {
   }
 }
 
-fst :: (a, b) -> b
+snd :: (a, b) -> b
 snd = |p| -> {
   match p {
     (a , b) -> b
@@ -128,7 +128,7 @@ head = |xs| -> {
   }
 }
 
--- [a] -> [a]
+tail :: [a] -> [a]
 tail = |xs| -> {
   match xs {
     [] -> panic ("can't take tail of empty list"),
@@ -136,7 +136,7 @@ tail = |xs| -> {
   }
 }
 
--- [a] -> [a]
+init :: [a] -> [a]
 init = |xs| -> {
   match xs {
     [] -> panic ("can't take init of empty list"),
@@ -144,7 +144,7 @@ init = |xs| -> {
   }
 }
 
--- [a] -> a
+last :: [a] -> a
 last = |xs| -> {
   match xs {
     [] -> panic ("can't take last of empty list"),
@@ -153,7 +153,7 @@ last = |xs| -> {
 }
 
 -- concatenation
--- [a] -> [a] -> [a]
+{++} :: [a] -> [a] -> [a]
 {++} = |l, r| -> {
   match l {
     [] -> r,
@@ -161,7 +161,7 @@ last = |xs| -> {
   }
 }
 
--- (a -> b) -> [a] -> [b]
+map :: (a -> b) -> [a] -> [b]
 map = |f, ls| -> {
   match ls {
     [] -> [],
@@ -169,7 +169,7 @@ map = |f, ls| -> {
   }
 }
 
--- (a -> b -> a) -> a -> [b] -> a
+fold :: (a -> b -> a) -> a -> [b] -> a
 fold = |f, acc, xs| -> {
   match xs {
     [] -> acc,
@@ -177,14 +177,14 @@ fold = |f, acc, xs| -> {
   }
 }
 
--- (a -> b -> a) -> [b] -> a
+fold1 :: (a -> b -> a) -> [b] -> a
 fold1 = |f, xs| -> {
   if empty (xs)
     then head (xs)
     else fold (f, head (xs), tail (xs))
 }
 
--- (a -> Bool) -> [a] -> [a]
+filter :: (a -> Bool) -> [a] -> [a]
 filter = |f, ls| -> {
   match ls {
     []    -> [],
@@ -194,14 +194,14 @@ filter = |f, ls| -> {
   }
 }
 
--- Int -> [a] -> [a]
+take :: Int -> [a] -> [a]
 take = |n, xs| -> {
   if (n <= 0) || empty (xs)
     then []
     else head (xs) : take (n - 1, tail (xs))
 }
 
--- Int -> [a] -> [a]
+drop :: Int -> [a] -> [a]
 drop = |n, xs| -> {
   if (n <= 0) || empty (xs)
     then xs
@@ -215,7 +215,7 @@ drop = |n, xs| -> {
 --   else (head (as), head (bs)) : zip (tail (as), tail (bs))
 -- }
 
--- [a] -> [b] -> [(a, b)]
+zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
 zipWith = |f, as, bs| -> {
   if empty (as)
   then []
@@ -225,38 +225,39 @@ zipWith = |f, as, bs| -> {
   }
 }
 
+zip :: [a] -> [b] -> [(a, b)]
 zip = zipWith (asPair)
 
--- [Bool] -> Bool
+and :: [Bool] -> Bool
 and = fold ((&&), True)
 
--- [Bool] -> Bool
+or :: [Bool] -> Bool
 or = fold ((||), False)
 
--- (a -> Bool) -> [a] -> Bool
+all :: (a -> Bool) -> [a] -> Bool
 all = |p| -> {
   and . map (p)
 }
 
--- (a -> Bool) -> [a] -> Bool
+any :: (a -> Bool) -> [a] -> Bool
 any = |p| -> {
   or . map (p)
 }
 
--- [[a]] -> [a]
+flatten :: [[a]] -> [a]
 flatten = fold1 ((++))
 
--- ([a] -> [b]) -> [[a]] -> [b]
+flapMap :: ([a] -> [b]) -> [[a]] -> [b]
 flatMap = |f| -> {
   flatten . map (f)
 }
 
--- a -> [a] -> Bool
+elem :: a -> [a] -> Bool
 elem = |el| -> {
   any ((el==))
 }
 
--- [a] -> [a]
+reverse :: [a] -> [a]
 reverse = |xs| -> {
   match xs {
     []    -> [],
@@ -265,12 +266,14 @@ reverse = |xs| -> {
 }
 
 -- union, intersect, takeWhile, dropWhile, find, delete, deleteBy
+union ::  [a] -> [a] -> [a]
 union = (flip . fold) (|acc, x| -> {
   if x `elem acc
     then acc
     else x : acc
 })
 
+intersect ::  [a] -> [a] -> [a]
 intersect = |xs| -> {
   f = |acc, x| -> {
     if x `elem xs
@@ -281,7 +284,7 @@ intersect = |xs| -> {
 }
 
 -- quicksort
--- (a -> a -> Bool) -> [a] -> [a]
+sortBy :: (a -> a -> Bool) -> [a] -> [a]
 sortBy = |cmp, xs| -> {
   match xs {
     []   -> [],
@@ -291,12 +294,12 @@ sortBy = |cmp, xs| -> {
   }
 }
 
--- [a] -> [a]
+sort :: [a] -> [a]
 sort = sortBy ((>))
 
 --- List utilities
 
--- Int -> Int -> Int -> [Int]
+rangeStep :: Int -> Int -> Int -> [Int]
 rangeStep = |from, to, step| -> {
   inner = |from, to, ls| -> {
     if from > to
@@ -306,7 +309,7 @@ rangeStep = |from, to, step| -> {
   inner(from, to, [])
 }
 
--- Int -> Int -> [Int]
+range :: Int -> Int -> [Int]
 range = |from, to| -> {
   rangeStep (from, to, 1)
 }
@@ -322,13 +325,14 @@ range = |from, to| -> {
 --   inner
 -- }
 
--- Int -> Int -> Int
+{**} :: Int -> Int -> Int
 {**} = |n, exp| -> {
   if exp == 0
     then 1
     else n * n ** (exp - 1)
 }
 
+pow :: Int -> Int -> Int -> Int 
 pow = |b, e, m| -> {
     if e == 0
        then 1
@@ -337,41 +341,41 @@ pow = |b, e, m| -> {
          else ((b * pow(b, (e - 1), m)) % m)
 }
 
--- [a] -> a
+sum :: [a] -> a
 sum = fold1 ((+))
 
--- [a] -> a
+product :: [a] -> a
 product = fold1 ((*))
 
--- a -> a -> a
+min :: a -> a -> a
 min = |a, b| -> {
   if a < b then a else b
 }
 
--- a -> a -> a
+max :: a -> a -> a
 max = |a, b| -> {
   if a > b then a else b
 }
 
--- [a] -> a
+minimum :: [a] -> a
 minimum = fold1 (min)
 
--- [a] -> a
+maximum :: [a] -> a
 maximum = fold1 (max)
 
--- Int -> Bool
+even :: Int -> Bool
 even = (== 0) . (% 2)
 
--- Int -> Bool
+odd :: Int -> Bool
 odd = not . even
 
--- Int -> Int
+negate :: Int -> Int
 negate = (0-)
 
--- Float -> Float
+negatef :: Float -> Float
 negatef = (0.0-)
 
--- Int -> Int
+abs :: Int -> Int
 abs = |n| -> {
   if n < 0
     then negate (n)
@@ -380,14 +384,14 @@ abs = |n| -> {
 
 --- Misc
 
--- (a -> Bool) -> (a -> a) -> a -> a
+until :: (a -> Bool) -> (a -> a) -> a -> a
 until = |p, f, x| -> {
   if p (x)
     then x
     else until (p, f, f (x))
 }
 
--- (a -> Bool) -> (a -> a) -> a -> a
+while :: (a -> Bool) -> (a -> a) -> a -> a
 while = |p, f, x| -> {
   until (not . p, f, x)
 }
