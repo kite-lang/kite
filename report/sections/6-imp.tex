@@ -1,24 +1,16 @@
 
 TODO: Implementation of all 9 compiler-parts
 
-TODO: (i language-deisgn) Write reserved names (Void, if, then, else, etc...)
+\subsection{Preprocessor}
+\subsection{Lexer}
+The lexer is implemented with the lexical generator Alex \cite{dornan01} (TODO: refernce).
 
-\subsection{Language constructs}
+\subsection{Parser}
+\subsection{Desugar}
+\subsection{Analyser}
 
-Kite consist of several different language constructs
+\subsubsection{Type inference}
 
-List
-Pair
-Match
-Bind
-Lambda
-Apply
-If
-Term
-Group
-
-\subsection{Type inference}
-TODO: make this a sub-subsection of compiler->analyser
 TODO: define +plus `+'
 
 As mentioned earlier, Kite uses static type checking to verify that types align at compile-time. We have used the Hindley-Milner type inference algorithm first described by Damas and Milner \cite{milner82}. They described an algorithm, named ``Algorithm W'', that given an expression will infer the most general type of that expression. We introduce the $\vdash$ to mean a derivation of type from expressions. For instance $x = 1 \vdash x : Int$ is read as ``given the expression $x = 1$ we can derive that $x$ has type $Int$''. To give a sense of what the algorithm does we first present a few examples. Recall that $:$ is pronounced ``has type''
@@ -50,7 +42,7 @@ Using the last example above the intuition behind the algorithm is as follows
 \end{enumerate}
 
 
-\subsubsection{Type unification}
+\subsubsubsection{Type unification}
 % TODO: ref to the section defining infix operators
 Above we implicitly used the common definition of the $+$ operator with type $a \to a \to a$. When the type of $n$ was inferred, we \emph{unified} $Int$ with $a$ since $1 : Int$ and we knew from the type of $+$ that $n$ had the same type. This is called type unification and is at the core of the algorithm.
 
@@ -63,6 +55,27 @@ no subtyping
 %TODO: lexer ~ regex ~ lexeme
 %TODO: lexical scoping
 %TODO: optimization inlining
+
+
+\subsection{Optimizer}
+\subsection{Code generation}
+
+TODO: (i language-deisgn) Write reserved names (Void, if, then, else, etc...)
+
+\subsection{Language constructs}
+
+Kite consist of several different language constructs
+
+List
+Pair
+Match
+Bind
+Lambda
+Apply
+If
+Term
+Group
+
 
 %%% Local Variables: 
 %%% mode: latex

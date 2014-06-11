@@ -46,9 +46,8 @@ compilers. It has the important task of processing some input and
 converting it to known, referencable tokens. This process is commonly
 known as \emph{tokenization}.
 
-Most lexers as quite simple, and does not contain much
-complexity. That is often reserved for the parser and analyzer, which
-we will describe in the following.
+Most lexers are quite simple, as they simply make tokens by matching the input with regular languages and classify the substrings according to these. Thus lexers do not perform any complex tasks - this is reserved for the parser and analyzer, which we will describe in the following.
+
 
 \subsection{Parser}
 The parser takes the list of tokens from the lexer and based on a
