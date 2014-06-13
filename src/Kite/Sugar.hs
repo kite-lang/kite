@@ -41,22 +41,17 @@ mkCompreGuards exprs guards =
 
 mkComprehension func draws guardFuncs =
   let ids = map (\ (PDraw id _) -> id) draws
-      params = map (\id -> PTypeArg (PTypeVar ("t"++id)) (PIdentifier id)) ids
       draws_ranges = map(\ (PDraw _ range) -> range) draws
-  -- in mkFunc params (PBlock [(PReturn func)])
   in generateFlatmaps ids draws_ranges ids guardFuncs func
 
 generateFlatmaps ids ranges ids_all guardFuncs finalFunc =
   case ids of
     [] -> let args = map (\id -> PIdentifier id) ids_all
           in PIf (generateGuards args guardFuncs) (PList [mkCalls finalFunc args]) (PList [])
-              -- in generateGuards args guardFuncs
     (id:_) -> (PApply
                 (PApply (PIdentifier "flatMap")
                  (mkFunc [id] (PBlock
                                 [(PReturn (generateFlatmaps (tail ids) (tail ranges) ids_all guardFuncs finalFunc))]))) (head ranges))
-
--- generateFinalFunc
 
 generateGuards args guardFuncs =
   case length guardFuncs of
