@@ -11,12 +11,14 @@ import Test.Tasty
 import Test.Tasty.HUnit
 
 import Kite.Lexer
+import Kite.Parser
 import Kite.Syntax
+import Kite.Environment
 import Kite.TypeCheck
 import Kite.Driver hiding (parse)
 
 fn    = PLambdaType
-free  = PFreeType
+free  = PTypeVar
 bool  = PBoolType
 int   = PIntegerType
 char  = PCharType
@@ -31,19 +33,20 @@ nullEnvironment = Environment { sym = [Map.empty],
                                 symCount = 0 }
 
 parse prog = do
-  env <- case (typeCheck False . parse . lex) prog of
-    Right env' -> return env'
-    Left err -> error (show err) >> return nullEnvironment
-  Map.assocs $ head (sym env)
+  let tokens = lex prog
+      decls = kiteparser tokens
+  case typeCheck False decls of
+    Right env -> (head . sym) env
+    Left err -> error (show err)
 
 -- test env
-test name prog ex  = testCase name $ case Map.lookup (fst ex) (Map.fromList (parse prog)) of
-  Just t -> t @?= snd ex
+test name prog ex  = testCase name $ case Map.lookup (fst ex) (parse prog) of
+  Just t -> t @?= (snd ex)
   Nothing -> error ("Expected identifier not found: " ++ fst ex)
 
 -- test env with basic types and/or simple functions
 base = "yes = True; one = 1; half = 0.5; str = \"foo\";"
-extra = base ++ "id = |x| -> { return x };"
+extra = "id = |x| -> { return x };"
 
 testEnv name prog ex = test name (base ++ prog) ex
 testExt name prog ex = testEnv name (extra ++ prog) ex

@@ -8,7 +8,7 @@ import Kite.Test.Exception
 import Kite.Test.Lexer
 import Kite.Test.TypeCheck
 import Kite.Test.Parser
--- import Kite.Test.Inference
+import Kite.Test.Inference
 
 
 main :: IO ()
@@ -20,7 +20,7 @@ tests = testGroup "Kite Tests"
           -- truthTests
           lexerTests
         , typeCheckTests
-        -- , inferenceTests
+        , inferenceTests
         , parserTests
         ]
 

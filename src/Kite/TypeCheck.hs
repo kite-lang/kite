@@ -17,7 +17,7 @@ import Text.Printf
 ---------------
 -- Interface --
 ---------------
-typeCheck :: Bool -> [Decl] -> Either (TypeError, [String]) [Decl]
+typeCheck :: Bool -> [Decl] -> Either (TypeError, [String]) Environment
 typeCheck debug decls = do
   let (r, env) = runTC $ typeCheckDecls decls
       stack = evalTrace env
@@ -25,7 +25,7 @@ typeCheck debug decls = do
   when debug (traceShow env $ return ())
 
   case r of
-    Right _ -> Right decls
+    Right _ -> Right env
     Left err -> Left (err, stack)
 
 typeCheckDecls :: [Decl] -> TC ()
