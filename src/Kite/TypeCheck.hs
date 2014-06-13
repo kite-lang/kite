@@ -32,8 +32,14 @@ typeCheckDecls :: [Decl] -> TC ()
 typeCheckDecls decls = do
   forM_ decls (\decl -> case decl of
                   PDecl ide expr -> do
-                    fresh <- freshTypeVar "tdecl"
-                    insertSym ide fresh
+
+                    syms <- liftM (last . sym) get
+                    when (isJust $ Map.lookup ide syms)
+                      (throwRE $ printf "Reassigning top level declaration '%s'" ide)
+
+                    when (isLambda expr) $ do
+                      fresh <- freshTypeVar "tdecl"
+                      insertSym ide fresh
 
                     (s, t) <- infer (TypeEnvironment Map.empty) expr
 
@@ -50,6 +56,9 @@ typeCheckDecls decls = do
                   PTypeDecl ide ty -> insertType ide ty
               )
   return ()
+
+isLambda (PLambda _ _) = True
+isLambda _ = False
 
 --------------------
 -- Type inference --
@@ -236,10 +245,9 @@ infer (TypeEnvironment env) (PBind ide expr) = do
   when (isJust (Map.lookup ide syms) || isJust (Map.lookup ide env))
     (throwRE $ "Redefining variable " ++ ide)
 
-  traceShow env $ return ()
-
-  fresh <- freshTypeVar "rec"
-  insertSym ide fresh
+  when (isLambda expr) $ do
+    fresh <- freshTypeVar "rec"
+    insertSym ide fresh
 
   (s1, t1) <- infer (TypeEnvironment env) expr
 

@@ -50,17 +50,17 @@ typeCheckTests =
     [ testE "Assignment"
       Nothing "one = 2"
 
-    , testE "Reassignment"
-      (Just TypeE) "one = 2; one = 1;"
-
     , testE "Reassignment (top level)"
-      (Just TypeE) "main = -> { one = 2; one = 1; }"
+      (Just RefE) "one = 2; one = 1;"
 
-    , testE "Illegal reassignment"
-      (Just TypeE) "one = 2; one = \"the\";"
+    , testE "Reassignment"
+      (Just RefE) "main = -> { one = 2; one = 1; }"
 
     , testE "Illegal reassignment (top level)"
-      (Just TypeE) "main = -> { one = 2; one = \"the\"; }"
+      (Just RefE) "one = 2; one = \"the\";"
+
+    , testE "Illegal reassignment"
+      (Just RefE) "main = -> { one = 2; one = \"the\"; }"
 
     , testE "Reference"
       Nothing "main = -> { one = 1; two = 1 + one; }"
