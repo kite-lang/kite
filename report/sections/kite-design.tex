@@ -1,4 +1,107 @@
-We have been inspired by many other languages when designing and implementing Kite, most notably the GHC Haskell compiler\footnote{The Glasgow Haskell Compiler \url{http://www.haskell.org/ghc}}.
+We have been inspired by many other languages when designing and
+implementing Kite, most notably the GHC Haskell compiler\footnote{The
+  Glasgow Haskell Compiler \url{http://www.haskell.org/ghc}}.
+
+\subsection{Syntax}
+
+TODO: Sugar, List Comprehensions, describe types, more on function declaration.
+
+Basic declaration of the types in Kite, types are inferred by the analyzer:
+\begin{kite}
+  
+  one = 1
+  two = 2.0
+  truth = True
+  list = [1, 2, 3, 4]
+  str = "foo" 
+  pair = (1, "one")
+\end{kite}
+
+Functional languages often make extensive use of lists, which is
+indeed also the case for Kite. A list is an ordered array of items
+that can be transformed in many different ways. We use a common
+short-hand method for describing a list of things, using square
+brackets $[\ ]$. For instance, a $List(Int)$ (pronounced ``List of
+Ints'') is denoted $[Int]$ and a list of a type variables $a$ is
+$[a]$. Lists can be nested, allowing $List(List(Int))$ denoted
+$[[Int]]$.
+
+The pair type is also abbreviated using $(,)$, for instance the type
+$Pair(Int, Bool)$ is written $(Int, Bool)$
+
+Basic operators in Kite and their use:
+\begin{kite}
+
+  two = one + one  ---->  2
+  str = "foo" + "bar" ----> "foobar"
+\end{kite}
+Function declaration in Kite:
+Anonymous functions:
+
+\begin{kite}
+  
+|ArgName, ... | -> { ... }
+\end{kite}
+Since all functions in Kite is anonymous, a function is simply a
+variable bound to a given anonymous function. A function is declared
+as follows:
+
+\begin{kite}
+  
+  function :: ArgType, ... -> ReturnType
+  function = |ArgName, ... | -> { ... }
+\end{kite}
+Example of valid function declaration in Kite:
+\begin{kite}
+  
+  foo :: Int -> Int
+  foo = |a| -> {
+    a + 1
+  }
+\end{kite}
+
+Using a preprocessor to include another code file, use the \#include
+keyword:
+\begin{kite}
+  
+  #include "foo.kite"
+\end{kite}
+
+By using a sugaring module, Kite will be able to express certain
+functions more clearly and readable. Syntactic sugar includes infix
+operators, multiple parameters on function calls, list of characters
+as strings and list comprehensions. An example of 
+
+List comprehensions is syntactic sugar for manipulating
+lists. An example of a list comprehension is as follows:
+\begin{kite}
+  
+  list = [ x*y | x <- range(3,5), y <- range(4,6) | (x+y) >= 10, y > 4]
+\end{kite}
+where the desugared version of the same example, will look as follows:
+\begin{kite}
+
+  list =
+  flatMap(|x| -> {
+    flatMap (|y| -> {
+      if (|x,y| -> {y > 4})(x,y) && (|x,y| -> {(x+y) >= 10})(x,y) 
+         then [(|x,y| -> {x*y})(x,y)] 
+         else []
+    } , range(4,6) )
+}, range(3,5) )
+\end{kite}
+Take note that list comprehensions uses functions defined in the
+foundation, which will be discussed later
+\subsection{Semantics}
+
+TODO: Recursion, HoF, Currying, pattern matching,
+partial application, Mutability. maaske mere.
+
+\subsection{Foundation}
+
+As earlier mentioned, the foundation of Kite is a standard library
+consisting of often used functions. Kites foundation is inspired by
+Haskells prelude, and includes many functions found in prelude.
 
 %%% Local Variables: 
 %%% mode: latex
