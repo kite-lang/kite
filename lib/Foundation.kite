@@ -247,7 +247,7 @@ any = |p| -> {
 flatten :: [[a]] -> [a]
 flatten = fold1 ((++))
 
-flapMap :: ([a] -> [b]) -> [[a]] -> [b]
+flatMap :: ([a] -> [b]) -> [[a]] -> [b]
 flatMap = |f| -> {
   flatten . map (f)
 }
@@ -332,7 +332,7 @@ range = |from, to| -> {
     else n * n ** (exp - 1)
 }
 
-pow :: Int -> Int -> Int -> Int 
+pow :: Int -> Int -> Int -> Int
 pow = |b, e, m| -> {
     if e == 0
        then 1
