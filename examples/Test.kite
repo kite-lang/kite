@@ -20,7 +20,7 @@ main = -> {
   -- print (fibo (10))
 
   sinPlot = |x| -> {
-    plot((*2.0) . sin, 0.25, 0.2, x, x + 10.0, negatef(2.0), 2.0)
+    plot((* 2f * sin(x/2f)) . sin, 0.25, 0.2, x, x + 10.0, negatef(2.0), 2.0)
   }
 
   animate(sinPlot, 10, 0.0, 50.0, 0.5)
