@@ -3,9 +3,16 @@ TODO: Implementation of all 9 compiler-parts
 
 \subsection{Preprocessor}
 \subsection{Lexer}
-The lexer is implemented with the lexical generator Alex \cite{dornan01} (TODO: refernce).
+The lexer is implemented with the lexical generator Alex \cite{dornan01}.
 
 \subsection{Parser}
+The parser is implemented with the LALR-parser generator Happy \cite{marlow01}. Happy automatically generates Haskell code from the file `src/Kite/Parser.y', which we have written in partially Haskell and partially Backus-Naur Form\footnote{This is a well known notation technique for specifying context-free grammars, which the more popular parser generator ANTLR also makes use of.}.
+
+The current parser generates more than 2,000 lines of quite unreadable Haskell code, which is used in the compilation of the compiler. Fortunately Happy allows setting a --info flag when it is used, which also generates a .info-file about the parser. For instance it yields very useful information about shift-reduce and reduce-reduce conflicts, which has been a great throughout the development.
+
+TODO (synes dette er lidt whack formuleret): `When a(/or a combination of) tokens are matched in the Parser, it is transformed into Haskell data-structures, from which we build the parse tree. TODO: Dette skal lede videre til syntactic zugar!
+
+
 \subsection{Desugar}
 \subsection{Analyser}
 
