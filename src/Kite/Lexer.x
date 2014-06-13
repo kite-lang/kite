@@ -12,13 +12,13 @@ $alphaNum		= [$alpha $digit]
 $symbols		= [\(\)\{\}\[\]\;\,\:\_]
 $operatorSymbols        = [\+\-\/\*\%\=\|\&\<\>\!\~\`\#\.\:\^\$]
 
-@keywords		= return | import | if | then | else | yolo | match
+@keywords		= return | if | then | else | match
 @operators		= [$operatorSymbols]+
 @string                 = \" (. # \")* \"
 @char                   = \' (\\?. # \') \'
 @identifier		= $downcase [$alphaNum \_ \' \! \?]*
-@bool			= "True" | "False"
-@void                   = "Void"
+@bool			= True | False
+@void                   = Void
 @typedecl               = "::"
 @type			= $upcase [$alphaNum]*
 @comment		= "--" .*
