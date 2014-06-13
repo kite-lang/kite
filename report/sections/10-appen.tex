@@ -2,3 +2,232 @@
 %%% mode: latex
 %%% TeX-master: "../report"
 %%% End:
+
+\subsection{Kite Foundation}
+
+This documentation is similar, and partly based on, Haskell's
+documentation of Prelude.
+
+\subsubsection{Constants}
+
+\texttt{pi :: Float}\ \\
+The constant $\pi$ (3.14159265359)
+
+
+\subsubsection{Functional}
+
+\texttt{id :: a -> a}\ \\
+Identity function
+
+
+\subsubsection{Composition}
+
+\texttt{{.} :: (b -> c) -> (a -> b) -> (a -> c)}\ \\
+Function composition
+
+\texttt{flip :: (a -> b -> c) -> (b -> a -> c)}\ \\
+\texttt{flip f} takes its (first) two arguments in the reverse order of \texttt{f}.
+
+
+\subsubsection{Boolean}
+
+\texttt{not :: Bool -> Bool}\ \\
+Logical NOT
+
+\texttt{{\&\&} :: Bool -> Bool -> Bool}\ \\
+Logical AND
+
+\texttt{{||} :: Bool -> Bool -> Bool}\ \\
+Logical OR
+
+\texttt{{==} :: a -> a -> Bool}\ \\
+Equality (\emph{built-in})
+
+\texttt{{/=} :: a -> a -> Bool}\ \\
+Negated equality
+
+\texttt{{<=} :: a -> a -> Bool}\ \\
+Logical less-than or equals (\emph{built-in})
+
+\texttt{{<} :: a -> a -> Bool}\ \\
+Logical less-than
+
+\texttt{{>} :: a -> a -> Bool}\ \\
+Logical greater-than
+
+\texttt{{>=} :: a -> a -> Bool}\ \\
+Logical greater-than or equals
+
+
+\subsubsection{Pairs}
+
+\texttt{asPair :: a -> b -> (a, b)}\ \\
+Pairs two first arguments
+
+\texttt{{<>} :: a -> b -> (a, b)}\ \\
+Infix operator for \texttt{asPair}
+
+\texttt{fst :: (a, b) -> a}\ \\
+First element of pair
+
+\texttt{snd :: (a, b) -> b}\ \\
+Second element of pair
+
+
+\subsubsection{Lists}
+
+\texttt{{\#} :: [a] -> Int -> a}\ \\
+List index
+
+\texttt{length :: [a] -> Int}\ \\
+Length of list
+
+\texttt{empty :: [a] -> Bool}\ \\
+Test for empty list
+
+\texttt{head :: [a] -> a}\ \\
+First element of list
+
+\texttt{tail :: [a] -> [a]}\ \\
+Elements of list, \emph{after} head
+
+\texttt{init :: [a] -> [a]}\ \\\ \\
+ements of list, \emph{except} head
+
+\texttt{last :: [a] -> a}\ \\
+Last element of list
+
+\texttt{{++} :: [a] -> [a] -> [a]}\ \\
+Join two lists
+
+\texttt{map :: (a -> b) -> [a] -> [b]}\ \\
+\texttt{map f xs} is the list of results, of applying \texttt{f} to each element in \texttt{xs}
+
+\texttt{fold :: (a -> b -> a) -> a -> [b] -> a}\ \\
+\texttt{fold}, applied to a binary operator, a starting value and a list,
+   reduces the list using the binary operator, from left to right
+
+\texttt{fold1 :: (a -> b -> a) -> [b] -> a}\ \\
+\texttt{fold1}, applied to a binary operator and a list, reduces the list
+   using the binary operator, from left to right, with head as
+   starting value
+
+\texttt{filter :: (a -> Bool) -> [a] -> [a]}\ \\
+\texttt{filter f xs} returns the list of results which holds for the
+   predicate function \texttt{f}, where \texttt{f} is applied to each element in \texttt{xs}
+
+\texttt{take :: Int -> [a] -> [a]}\ \\
+\texttt{take n xs} returns the \texttt{n} first elements in \texttt{xs}
+
+\texttt{drop :: Int -> [a] -> [a]}\ \\\ \\
+\texttt{drop n xs} returns the elements of \texttt{xs}, \emph{after} the \texttt{n} first elements
+
+\texttt{zip :: [a] -> [b] -> [(a, b)]}\ \\
+\texttt{zip} takes two lists and returns a list of corresponding pairs. If
+   one input list is short, excess elements of the longer list are
+   discarded
+
+\texttt{zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]}\ \\
+\texttt{zipWith} takes a function and two lists, and returns a the
+   function applied to an element of the first list and the
+   corresponding element of the second list. If one input list is
+   short, excess elements of the longer list are discarded
+
+\texttt{and :: [Bool] -> Bool}\ \\
+Conjunction of Boolean list
+
+\texttt{or :: [Bool] -> Bool}\ \\
+Disjunction of Boolean list
+
+\texttt{all :: (a -> Bool) -> [a] -> Bool}\ \\
+\texttt{all f xs} tests if all elements in \texttt{xs} hold for predicate
+   functions \texttt{f}, where \texttt{f} is applied to each element
+
+\texttt{any :: (a -> Bool) -> [a] -> Bool}\ \\
+\texttt{any f xs} tests if any of the elements in \texttt{xs} hold for predicate
+   functions \texttt{f}, where \texttt{f} is applied to each element
+
+\texttt{flatten :: [[a]] -> [a]}\ \\
+Concatenates all lists into single list
+
+\texttt{flatMap :: ([a] -> [b]) -> [[a]] -> [b]}\ \\
+\texttt{flatMap f xs} applies each list in \texttt{xs} to function \texttt{f} and
+   flattens the result into single list
+
+\texttt{elem :: a -> [a] -> Bool}\ \\
+\texttt{elem x xs} tests if element \texttt{x} is in \texttt{xs}
+
+\texttt{reverse :: [a] -> [a]}\ \\
+Returns list in reverse order
+
+\texttt{union ::  [a] -> [a] -> [a]}\ \\
+Returns the list of all distinct elements in both lists ($\cup$ in set-theory)
+
+\texttt{intersect ::  [a] -> [a] -> [a]}\ \\
+Returns the list of elements which exists in both lists ($\cap$ in set-theory)
+
+\texttt{sortBy :: (a -> a -> Bool) -> [a] -> [a]}\ \\
+Sort list by predicate function
+
+\texttt{sort :: [a] -> [a]}\ \\
+Sort list with quick-sort algorithm
+
+
+\subsubsection{utilities}
+
+\texttt{range :: Int -> Int -> [Int]}\ \\
+\texttt{range x y} returns a list of Integer numbers ranging from \texttt{x} to \texttt{y}
+
+\texttt{rangeStep :: Int -> Int -> Int -> [Int]}\ \\
+\texttt{rangeStep x y z} returns a list of Integer numbers ranging from
+   \texttt{x}, \texttt{x + z}, \texttt{x + 2z} up to \texttt{y}
+
+
+\subsubsection{Numeric}
+
+\texttt{{**} :: Int -> Int -> Int}\ \\
+Exponentiation
+
+\texttt{pow :: Int -> Int -> Int -> Int}\ \\
+Exponentiation with base
+
+\texttt{sum :: [a] -> a}\ \\
+Sum of elements in list
+
+\texttt{product :: [a] -> a}\ \\
+Product of elements in list
+
+\texttt{min :: a -> a -> a}\ \\
+Smallest of two arguments
+
+\texttt{max :: a -> a -> a}\ \\
+Largest of two arguments
+
+\texttt{minimum :: [a] -> a}\ \\
+Smallest element in list
+
+\texttt{maximum :: [a] -> a}\ \\
+Largest element in list
+
+\texttt{even :: Int -> Bool}\ \\
+Test if number is even
+
+\texttt{odd :: Int -> Bool}\ \\
+Test if number is odd
+
+\texttt{negate :: Int -> Int}\ \\
+Negate Integer number
+
+\texttt{negatef :: Float -> Float}\ \\
+Negate Float number
+
+\texttt{abs :: Int -> Int}\ \\
+Absolute value of Integer number
+
+\subsubsection{Misc}
+
+\texttt{while :: (a -> Bool) -> (a -> a) -> a -> a}\ \\
+\texttt{while p f x} applies \texttt{f} to \texttt{x}, while \texttt{p x} is True
+
+\texttt{until :: (a -> Bool) -> (a -> a) -> a -> a}\ \\
+\texttt{until p f x} applies \texttt{f} to \texttt{x}, until \texttt{p x} becomes False
