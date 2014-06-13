@@ -6,7 +6,7 @@ implementing Kite, most notably the GHC Haskell compiler\footnote{The
 
 TODO: Sugar, List Comprehensions, describe types, more on function declaration.
 
-Basic declaration of the types in Kite, types are inferred by the analyzer:
+Basic declaration of the variables in Kite, types are inferred by the analyzer:
 \begin{kite}
   
   one = 1
@@ -16,6 +16,9 @@ Basic declaration of the types in Kite, types are inferred by the analyzer:
   str = "foo" 
   pair = (1, "one")
 \end{kite}
+
+The basic types will be Int, Float, Bool, Lists, Chars and
+pairs.
 
 Functional languages often make extensive use of lists, which is
 indeed also the case for Kite. A list is an ordered array of items
@@ -29,12 +32,62 @@ $[[Int]]$.
 The pair type is also abbreviated using $(,)$, for instance the type
 $Pair(Int, Bool)$ is written $(Int, Bool)$
 
-Basic operators in Kite and their use:
+Strings is represented as syntactic sugar for lists of characters,
+which will be discussed later.
+
+Basic arithmetic operators in Kite and their us
 \begin{kite}
 
-  two = one + one  ---->  2
-  str = "foo" + "bar" ----> "foobar"
+  two = 1 + 1  ---->  2
+  str = "foo" ++ "bar" ----> "foobar"
+  xor = 10 ^ 8 ----> 2
+  mod = 10 % 2 ---> 0
 \end{kite}
+
+\begin{table}[H]
+\centering
+    \begin{tabular}{|l|l|}
+    \hline
+    Operation    & Meaning              \\ \hline
+    x + y        & Additition           \\ \hline
+    x - y        & Subtraction          \\ \hline
+    x * y        & Multiplication       \\ \hline
+    x / y        & Division             \\ \hline
+    x**y         & Exponentiation       \\ \hline
+    x \% m       & Remainder of x / y   \\ \hline
+    pow(x, y, m) & Modulo exponentation \\ \hline
+    \end{tabular}
+\end{table}
+
+Basic boolean operators:
+\begin{kite}
+  
+  foo = 1 < 2  ----> True
+  bar = 1 == 2 ----> False
+  baz = 1 != 10 ----> True
+\end{kite}
+Basic boolean operators include 
+\begin{table}[H]
+\centering
+    \begin{tabular}{|l|l|}
+    \hline
+    Operation & Meaning                 \\ \hline
+    $==$        & equal                   \\ \hline
+    $\=$        & Not equal               \\ \hline
+    $<=$        & Less than or equal than \\ \hline
+    $>=$        & Greater than or equal   \\ \hline
+    $<$         & Less than               \\ \hline
+    $>$         & Greater than            \\ \hline
+    \end{tabular}
+\end{table}
+
+basic bitwise
+\begin{kite}
+  
+  xor = 10 ^ 8 ----> 2
+\end{kite}
+
+TODO Conditional statements 
 Function declaration in Kite:
 Anonymous functions:
 
@@ -45,13 +98,13 @@ Anonymous functions:
 Since all functions in Kite is anonymous, a function is simply a
 variable bound to a given anonymous function. A function is declared
 as follows:
-
 \begin{kite}
   
   function :: ArgType, ... -> ReturnType
   function = |ArgName, ... | -> { ... }
 \end{kite}
-Example of valid function declaration in Kite:
+Example of valid function declaration in Kite, taking one parameter of
+the type Int and returning an Int.
 \begin{kite}
   
   foo :: Int -> Int
@@ -59,7 +112,11 @@ Example of valid function declaration in Kite:
     a + 1
   }
 \end{kite}
-
+A runnable program must always include a main function:
+\begin{kite}
+  
+  main = -> { ... }
+\end{kite}
 Using a preprocessor to include another code file, use the \#include
 keyword:
 \begin{kite}
@@ -70,7 +127,49 @@ keyword:
 By using a sugaring module, Kite will be able to express certain
 functions more clearly and readable. Syntactic sugar includes infix
 operators, multiple parameters on function calls, list of characters
-as strings and list comprehensions. An example of 
+as strings and list comprehensions.
+
+infix:
+\begin{kite}
+  
+  foo = 1 + 2
+\end{kite}
+
+Desugar
+
+\begin{kite}
+
+  foo = ((+) (1)) (2)
+\end{kite}
+
+multiple parameters:
+\begin{kite}
+  
+  foo = |a, b| -> {
+    a + b
+  }
+\end{kite}
+desugar:
+
+\begin{kite}
+
+  foo = |a| -> {
+    return |b| -> {
+      return ((+) (a)) (b)
+    }
+  }
+\end{kite}
+Strings 
+\begin{kite}
+  
+  str = "Hello"
+\end{kite}
+Desugar:
+\begin{kite}
+  
+  str = ["H", "e", "l", "l", "o"]
+\end{kite}
+
 
 List comprehensions is syntactic sugar for manipulating
 lists. An example of a list comprehension is as follows:
@@ -97,11 +196,23 @@ foundation, which will be discussed later
 TODO: Recursion, HoF, Currying, pattern matching,
 partial application, Mutability. maaske mere.
 
+Example of pattern matching
+\begin{kite}
+
+fibo = |a, b, n| -> {
+    match n {
+    0 -> a,
+    n -> fibo(b, (a + b), (n - 1))
+    }
+}
+\end{kite}
+
 \subsection{Foundation}
 
 As earlier mentioned, the foundation of Kite is a standard library
 consisting of often used functions. Kites foundation is inspired by
 Haskells prelude, and includes many functions found in prelude.
+TODO: MORE FUN FUN FUN
 
 %%% Local Variables: 
 %%% mode: latex
