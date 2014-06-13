@@ -21,16 +21,30 @@ The current parser generates more than 2,000 lines of quite unreadable Haskell c
 We have implemented a desugaring module which receives the matched tokens and converts them into the parse tree data-structures. We have implemented the following syntactic sugar:
 
 \begin{itemize}
-  \item Infix operators
-  \item Strings
-  \item List comprehensions
+  \item \textbf{Infix function application}
+    
+    This is implemented in the parser, as it simply takes the two arguments of the application and parses it as a normal function call with two arguments.
+
+  \item \textbf{Multiple parameters and arguments}
+
+    \texttt{foo(a,b,c)} (TODO: args) TODO: se LambdaSignatur i parser.y
+
+    \texttt{bar = |x,y,z| -> { ... }} (TODO: params) TODO: se i parser under mkCalls
+
+
+
+  \item \textbf{Strings}
+
+    As the representation of `strings' outputted from the lexer is a Haskell-list, where each element is a letter, we just map each element to a `PChar' and wrap it within a `PList'. Thus it has become a list of characters in the parse tree.
+
+  \item \textbf{List comprehensions}
     
     As list comprehensions are composed of an output expression, draws and guards, the desugaring is implemented as follows (for an example of a list comprehension, and its desugared version,  please see section \ref{sec:ex-listcomp}):
     \begin{description}
       \item[First] the identifiers from the draws are extracted as these will be used as arguments to the various functions.
-      \item[Secondly,] a flatMap\footnote{flatMaps takes as arguments a lambda-expression and a list, maps the function to the list, and flattens the result} is generated for each of the draws, with the function taking as argument the identifier of the current draw and the list-expression as defined right-hand-side of the ` \texttt{<-}', e.g. `\texttt{x <- [1, 2, 3]}' or `\texttt{x <- range(1,3)}'. The body of the lambda expression is either a nested flatMap or an if-expression (TODO: the final step?).
-        \item[Thirdly,] the guards are inserted as bodies to functions which take all the extracted identifiers as arguments. These lambda-expressions are then combined as conjunctions in the condition of the \textbf{if}-expression.
-      \item[Finally,] the \textbf{then}-branch of the \textbf{if}-expression is the output expression, and the \textbf{else}-branch is simply an empty list. This implies that only the elements that pass the guards are outputted, as flatMap gets rid of empty elements.
+      \item[Secondly,] a flatMap\footnote{flatMaps takes as arguments a lambda-expression and a list, maps the function to the list, and flattens the result} is generated for each of the draws, with the function taking as argument the identifier of the current draw and the list-expression as defined right-hand-side of the ` \texttt{<-}', e.g. `\texttt{[1, 2, 3]}' in `\texttt{x <- [1, 2, 3]}'. The body of the lambda expression is either a nested flatMap or the final if-expression.
+        \item[Thirdly,] the guards are inserted as bodies into functions which take all the extracted identifiers as arguments. These lambda-expressions are then conjoined in the condition of the \textbf{if}-expression.
+      \item[Finally,] the \textbf{then}-branch of the \textbf{if}-expression is a function with the output expression as its body and the extracted identifiers as its arguments. The \textbf{else}-branch is simply an empty list. This implies that only the elements that pass the guards are outputted, as flatMap gets rid of empty elements.
     \end{description}
 
     
