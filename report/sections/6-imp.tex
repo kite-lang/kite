@@ -6,7 +6,67 @@ TODO: Implementation of all 9 compiler-parts
 The preprocessor in Kite is almost identical to the \code{C} language preprocessor. We use a library called \code{cpphs}\footnote{\url{http://projects.haskell.org/cpphs}} that mimics the \code{C} version, and provides an embeddable Haskell library. This is the reason for the \code{\#include "file.kite"} syntax. Preprocessing is the first step of the compilation, and generates a single source code file which is a recursive concatenation of all included source files referenced from the main file.
 
 \subsection{Lexer}
-The lexer is implemented with the lexical generator Alex \cite{dornan01}. The lexer splits in
+The lexer converts the raw input source to a list of tokens, a process known as tokenization. There are multiple types of tokens that represent different kinds of lexical elements. A \emph{lexeme} is the textual value that the lexer sees and maps to a token. Some tokens can have multiple possible lexemes, for instance in the case of identifiers and numeric constants, so in those cases the lexeme is saved together with the token for further use (by the parser).
+
+Kite's lexer is implemented using the lexical generator Alex. Alex is a tool for generating lexical analyzers in Haskell, given a description of the tokens to be recognized in the form of regular expressions\cite[p. 4]{dornan01}. The description of the analyzer consists of \emph{macro definitions} and \emph{rules}. A macro definition is either a regular expression bound to an identifier describing a particular sequence of characters, denoted by a \code{\$} prefix, or it is a combination of the former prefixed by \code{@}. These macros are combined to make up the rules, which define the actual definitions for tokens. Macros and rules are separated by the symbol \code{:-} and the preceding \code{kite} is just for documentation\cite[p. 7]{dornan01}. Further the description file defines the Haskell data structures used to represent the tokens, enclosed in \code{\{ \}}.
+
+Figure~\ref{fig:lexer} shows an excerpt from the description file. The macro definitions describe common patterns such as a sequence of digits (\code{\$digit}), lowercase characters (\code{\$downcase}), alpha numeric sequences (\code{\$alphaNum}) etc. Also defined are reserved keywords (\code{\@keywords}) and the void type (\code{@void}). Another interesting macro is the \code{@comment} macro, which matches two dashes followed by anything (implicitly anything but a newline).
+
+The macros are then used in the rules to define tokens. A rule consist of a combination of macros followed by a Haskell code block that produce the token data structure. The code block must be a function accepting a position data structure and the matched lexeme. The position node is used to keep track of tokens where found in the source file to be able to give useful error messages. The lexeme is sometimes coerced to another value matching the one required by the respective token structure. The \code{@void} rule defines the \code{Void} type which is the only token possible from that rule, and therefore it does not use the provided lexeme.
+
+Note that the (\code{@comment}) rule defines no code block but just a \code{;} which means that the pattern is matched, consumed and ignored, which is exactly what we want for comments.
+
+At the bottom we see the data constructors used to create the tokens.
+
+\begin{figure}[p]
+\begin{lstlisting}
+$downcase		= a-z
+$upcase			= A-Z
+$digit			= 0-9
+$alpha			= [$downcase $upcase]
+$alphaNum		= [$alpha $digit]
+
+@keywords		= return | if | then | else | match
+@identifier		= $downcase [$alphaNum \_ \' \! \?]*
+@void           = Void
+@comment		= "--" .*
+
+kite :-
+  @comment		    ;
+  @keywords		    { \p s -> TKeyword p s }
+  $digit+\.$digit+	{ \p s -> TFloat p (read s) }
+  $digit+		    { \p s -> TInteger p (read s) }
+  @identifier		{ \p s -> TIdentifier p s }
+  @void		        { \p s -> TVoid p }
+
+{
+data Token = TIdentifier AlexPosn String
+           | TInteger    AlexPosn Int
+           | TFloat      AlexPosn Float
+           | TKeyword    AlexPosn String
+           | TVoid       AlexPosn
+           deriving (Eq,Show)
+}
+\end{lstlisting}
+\label{fig:lexer}
+\caption{Excerpt from the lexer description file}
+\end{figure}
+
+Kite uses 12 different tokens briefly described in table \ref{tbl:lexical_tokens}.
+%TODO finish table
+\begin{table}[h]
+  \centering
+  \begin{tabular}{lll}
+    \hline
+    Token      & Description                            & Sample lexemes    \\ \hline
+    Symbol     & Single character symbols               & \code{;, !}              \\ \hline
+    Identifier & Identifiers for referencable variables & \code{map, x', \_foobar} \\ \hline
+  \end{tabular}
+
+  \label{fig:lexer}
+  \caption{Excerpt from the lexer description file}
+\end{table}
+TSymbol, TIdentifier, TType, TInteger, TFloat, TBool, TVoi, TString, TChar, TKeyword, TOperator, TEOF
 
 \subsection{Parser}
 The parser is implemented with the LALR-parser generator Happy \cite{marlow01}. Happy automatically generates Haskell code from the file `src/Kite/Parser.y', which we have written in partially Haskell and partially Backus-Naur Form\footnote{This is a well known notation technique for specifying context-free grammars, which the more popular parser generator ANTLR also makes use of.}.
