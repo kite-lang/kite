@@ -208,21 +208,11 @@ drop = |n, xs| -> {
     else drop (n - 1, tail (xs))
 }
 
--- [a] -> [b] -> [(a, b)]
--- zip = |as, bs| -> {
---   if empty (as) || empty (bs)
---   then []
---   else (head (as), head (bs)) : zip (tail (as), tail (bs))
--- }
-
 zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
 zipWith = |f, as, bs| -> {
-  if empty (as)
+  if empty (as) || empty (bs)
   then []
-  else match bs {
-    [] -> [],
-    x,xs -> f (head (as), x) : zipWith (f, tail (as), xs)
-  }
+  else f(head (as), head (bs)) : zipWith (tail (as), tail (bs))
 }
 
 zip :: [a] -> [b] -> [(a, b)]

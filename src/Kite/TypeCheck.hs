@@ -57,8 +57,23 @@ typeCheckDecls decls = do
               )
   return ()
 
+-- | Freshen a type by substituing all type vars with fresh one
+-- this ensures that callers of the function will not be assigned the same
+-- type var thus wrongly constraining a type
+freshenType :: Type -> TC Type
+freshenType ty = do
+  let frees = ftv ty
+  newFresh <- mapM (\ft -> do
+                       new <- freshTypeVar "t"
+                       return (ft, new)) (Set.toList frees)
+  let sub = Map.fromList newFresh
+  return (apply sub ty)
+
 isLambda (PLambda _ _) = True
 isLambda _ = False
+
+isLambdaType (PLambdaType _ _) = True
+isLambdaType _ = False
 
 --------------------
 -- Type inference --
@@ -93,18 +108,21 @@ infer env (PBlock exprs) = do
 
 infer (TypeEnvironment env) (PIdentifier ide) = do
   pushTrace ("Identifier " ++ ide)
-  e <- get
-  if onlyFree e
-    then liftM ((,) nullSubst) (freshTypeVar "t")
-    else do
-    symEnv <- get
-    ty <- case Map.lookup ide env of
-      Just f -> instantiate f
-      Nothing -> case findit (sym symEnv) of
-        Just t' -> return t'
-        Nothing -> throwRE $ printf "Reference to undefined variable '%s'" ide
-    popTrace
-    return (nullSubst, ty)
+
+  symEnv <- get
+  ty <- case Map.lookup ide env of
+    Just f -> instantiate f
+    Nothing -> case findit (sym symEnv) of
+      Just t' -> return t'
+      Nothing -> throwRE $ printf "Reference to undefined variable '%s'" ide
+
+  popTrace
+
+  if isLambdaType ty
+    then do t <- freshenType ty
+            return (nullSubst, t)
+    else return (nullSubst, ty)
+
   where findit stack =
           if null stack
           then Nothing
