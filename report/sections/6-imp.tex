@@ -59,14 +59,24 @@ Kite uses 12 different tokens briefly described in table \ref{tbl:lexical_tokens
   \begin{tabular}{lll}
     \hline
     Token      & Description                            & Sample lexemes    \\ \hline
-    Symbol     & Single character symbols               & \code{;, !}              \\ \hline
+
+    Symbol     & Single character symbols & \code{;, !} \\ \hline
     Identifier & Identifiers for referencable variables & \code{map, x', \_foobar} \\ \hline
+    Type       & Capitalized identifier, denoting a type construct & \code{Bool, Int, Void} \\ \hline
+    Integer    & Integer sequence & \code{0, 1, 1337}\\ \hline
+    Float      & Floating point values & \code{0.0, 3.14, 2f} \\ \hline
+    Bool       & Boolean values & \code{True, False} \\ \hline
+    Void       & The void type & \code{Void} \\ \hline
+    String     & Sequence of characters enclosed in \code{\"} & \code{\"Hello, world!\"} \\ \hline
+    Char       & Single character enclosed in \code{\'} & \code{'a', '!', ' '} \\ \hline
+    Keyword    & Reserved keywords used in the Kite syntax & \code{if, return, match} \\ \hline
+    Operator   & List of symbol characters & \code{=, /, <=, !!} \\ \hline
+    EOF        & The end of file marker & n/a as it's non-visual
   \end{tabular}
 
-  \label{fig:lexer}
-  \caption{Excerpt from the lexer description file}
+  \label{tbl:lexical_tokens}
+  \caption{Tokens recognized by the lexical analyzer}
 \end{table}
-TSymbol, TIdentifier, TType, TInteger, TFloat, TBool, TVoi, TString, TChar, TKeyword, TOperator, TEOF
 
 \subsection{Parser}
 The parser is implemented with the LALR-parser generator Happy \cite{marlow01}. Happy automatically generates Haskell code from the file `src/Kite/Parser.y', which we have written in partially Haskell and partially Backus-Naur Form\footnote{This is a well known notation technique for specifying context-free grammars, which the more popular parser generator ANTLR also makes use of.}.
