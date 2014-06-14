@@ -72,7 +72,7 @@ Basic boolean operators include
     \begin{tabular}{|l|l|}
     \hline
     Operation & Meaning                 \\ \hline
-    $==$        & equal                   \\ \hline
+    $==$        & Equal                   \\ \hline
     $/\ =$        & Not equal               \\ \hline
     $<=$        & Less than or equal than \\ \hline
     $>=$        & Greater than or equal   \\ \hline
@@ -81,22 +81,28 @@ Basic boolean operators include
     \end{tabular}
 \end{table}
 
-basic bitwise
+A single basic bitwise operator:
 \begin{kite}
   
   xor = 10 ^ 8 ----> 2
 \end{kite}
 
-TODO Conditional statements 
-Function declaration in Kite:
+Kite features a single conditional expression, which is the if-expression:
+\begin{kite}
+
+  if 1337 < 42 then True else False ----> False
+\end{kite}
+
+
+Function declaration in Kite: TODO - er dette ikke det nedenunder?
+
 Anonymous functions:
 
 \begin{kite}
   
 |ArgName, ... | -> { ... }
 \end{kite}
-Since all functions in Kite is anonymous, a function is simply a
-variable bound to a given anonymous function. A function is declared
+Since all functions in Kite are anonymous, a function is simply an anonymous function bound to a given variable. A function is declared
 as follows:
 \begin{kite}
   
@@ -112,13 +118,12 @@ the type Int and returning an Int.
     a + 1
   }
 \end{kite}
-A runnable program must always include a main function:
+A runnable program must always include the `main' function, which will be called once when the emitted code is run by Node.js:
 \begin{kite}
   
   main = -> { ... }
 \end{kite}
-Using a preprocessor to include another code file, use the \#include
-keyword:
+In order to use the preprocessor to include another code file, use the \texttt{\#include} keyword:
 \begin{kite}
   
   #include "foo.kite"
@@ -164,10 +169,10 @@ Strings
   
   str = "Hello"
 \end{kite}
-Desugar:
+Desugar (note the distinction between strings using double-quite (") and characters using single-quite ('):
 \begin{kite}
   
-  str = ["H", "e", "l", "l", "o"]
+  str = ['H', 'e', 'l', 'l', 'o']
 \end{kite}
 
 \label{sec:ex-listcomp}
@@ -177,7 +182,7 @@ lists. An example of a list comprehension is as follows:
   
   list = [ x*y | x <- range(3,5), y <- range(4,6) | (x+y) >= 10, y > 4]
 \end{kite}
-where the desugared version of the same example, will look as follows:
+where the desugared version of the given example, will look as follows:
 \begin{kite}
 
   list =
@@ -196,7 +201,7 @@ foundation, which will be discussed later
 TODO: Recursion, HoF, Currying, pattern matching,
 partial application, Mutability. maaske mere.
 
-Example of pattern matching
+Both pattern matching and recursion is used in the example below:
 \begin{kite}
 
 fibo = |a, b, n| -> {
@@ -206,6 +211,8 @@ fibo = |a, b, n| -> {
     }
 }
 \end{kite}
+
+TODO Pattern matching can also be applied on lists and pairs.
 
 \subsection{Foundation}
 

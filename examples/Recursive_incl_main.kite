@@ -1,0 +1,9 @@
+
+#include "Recursive_incl_1.kite"
+#include "Recursive_incl_2.kite"
+
+main = ->
+
+{
+        print(2)
+}

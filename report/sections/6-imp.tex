@@ -73,7 +73,7 @@ The parser is implemented with the LALR-parser generator Happy \cite{marlow01}. 
 
 When a(/a combination of) tokens are matched in the parser, it is transformed into Haskell data-structures, from which we build the parse tree. Some matches are first transformed into temporary syntactic sugaring structures before being inserted into the parse tree. This is described further in section \ref{sec:imp-sugar}
 
-The current parser generates more than 2,000 lines of quite unreadable Haskell code, which is used in the compilation of the compiler. Fortunately Happy allows setting a --info flag when it is used, which also generates a .info-file about the parser. For instance it yields very useful information about shift-reduce and reduce-reduce conflicts, which has been a great throughout the development.
+The current parser generates more than 2,000 lines of quite unreadable Haskell code, which is used in the compilation of the compiler. Fortunately Happy allows setting a --info flag when it is used, which also generates a .info-file about the parser. For instance it yields very useful information about shift-reduce and reduce-reduce conflicts, which has been quite helpful throughout the development.
 
 
 \subsection{Syntactic sugar}

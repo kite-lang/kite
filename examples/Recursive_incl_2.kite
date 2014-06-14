@@ -1,0 +1,6 @@
+
+#include "Recursive_incl_1.kite"
+test2 = ->
+{
+        print("222")
+}
