@@ -9,7 +9,7 @@ TODO: Sugar, List Comprehensions, describe types, more on function declaration.
 
 TODO: Parameterless functions, implicit return, blocks
 
-\textbf{Basic types and declarations}
+\subsubsection{Basic types and declarations}
 
 Basic declaration of the variables in Kite, types are inferred by the analyzer:
 \begin{kite}
@@ -91,7 +91,7 @@ A single basic bitwise operator:
 \end{kite}
 Kite only includes xor bitwise operator as of now.
 
-\textbf{Function declaration}
+\subsubsection{Function declaration}
 
 Every function in Kite is declared as an anonymous function:
 \begin{kite}
@@ -128,7 +128,7 @@ In order to use the preprocessor to include another code file, use the \texttt{\
   #include "foo.kite"
 \end{kite}
 
-\textbf{Syntactic sugar}
+\subsubsection{Syntactic sugar}
 
 By using a sugaring module, Kite will be able to express certain
 functions more clearly and readable. Syntactic sugar includes infix
@@ -149,7 +149,7 @@ Where the desugared version of the same expression is given as:
 \end{kite}
 
 As Kite functions will only take one parameter, sugaring of multiple
-parameter functions (or currying, see currying in \ref{sec:currying})
+parameter functions (or currying, see currying in \ref{subsubsec:currying})
 will allow the usage of multiple parameter functions. Example of usage
 of multiple parameters:
 \begin{kite}
@@ -204,6 +204,7 @@ using double-quite (") and characters using single-quite (') will be:
   str = ['H', 'e', 'l', 'l', 'o']
 \end{kite}
 
+
 \label{sec:ex-listcomp}
 \textbf{List comprehensions} are syntactic sugar for manipulating
 lists. An example of a list comprehension is as follows:
@@ -225,18 +226,13 @@ where the desugared version of the given example, will look as follows:
 \end{kite}
 Take note that list comprehensions uses functions defined in the
 foundation, which will be discussed later
-\\
 
-\label{sec:currying}
-
-\\
-
-\textbf{Recursion} 
+\subsubsection{Recursion}
 
 We have implemented recursion, and examples hereof are in the following where we also show pattern matching.
-\\
 
-\textbf{Conditionals}
+
+\subsubsection{Conditionals}
 
 Kite features two conditional expressions, the if-expression and pattern matching.
 
@@ -292,10 +288,8 @@ fst = |p| -> {
   }
 }
 \end{kite}
-\\
 
-\textbf{Higher order functions (HoF)}
-
+\subsubsection{High order functions (HoF)}
 Kite features HoF, and the map-function is an example hereof. It takes a function and applies to every element of a list and returns the modified list:
 
 \begin{kite}
@@ -309,9 +303,11 @@ map = |f, ls| -> {
 }
 \end{kite}
 
+\subsubsection{Currying}
+\label{subsubsec:currying}
 TODO: Currying
 
-\textbf{Partial application}
+\subsubsection{Partial application}
 
 An example of partial application is the function `increment', which partially applies addition:
 
@@ -321,9 +317,6 @@ increment :: Int -> Int
 increment = (1+)
 
 \end{kite}
-
-
-
 
 \subsection{Foundation}
 
