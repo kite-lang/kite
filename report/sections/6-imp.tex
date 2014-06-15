@@ -67,7 +67,7 @@ Kite uses 12 different tokens briefly described in table \ref{tbl:lexical_tokens
     Float      & Floating point values & \code{0.0, 3.14, 2f} \\ \hline
     Bool       & Boolean values & \code{True, False} \\ \hline
     Void       & The void type & \code{Void} \\ \hline
-    String     & Sequence of characters enclosed in \code{\"} & \code{\"Hello, world!\"} \\ \hline
+    String     & Sequence of characters enclosed in \code{``''} & \code{``Hello, world!''} \\ \hline
     Char       & Single character enclosed in \code{\'} & \code{'a', '!', ' '} \\ \hline
     Keyword    & Reserved keywords used in the Kite syntax & \code{if, return, match} \\ \hline
     Operator   & List of symbol characters & \code{=, /, <=, !!} \\ \hline
@@ -146,45 +146,50 @@ Here the parser, when seeing an \code{'a'} as the current symbol and \code{'b'} 
 
 \subsection{Syntactic sugar}
 \label{sec:imp-sugar}
-We have implemented a desugaring module which receives the matched tokens and converts them into the parse tree data-structures. We have implemented the following syntactic sugar:
+Because of the simplistic nature of the Kite AST it would be terse to write programs that directly translates to AST nodes. The \code{Desugar} module allows Kite programs to be written in a succinct manner and further enables a powerful feature known as \emph{list comprehensions}. It makes the language ``sweeter'' for human use; things can be expressed more clearly, more concisely, or in an alternative style that some may prefer.\cite{wiki-sugar14}. The process of converting sugared syntax to standard form is called \emph{desugaring} of code.
 
-\begin{itemize}
-  \item \textbf{Infix function application}
+We have decided to integrate desugaring directly in the parser because we avoid the need for an intermediate AST representation to be desugared after parsing. The \code{Desugar} module defines functions to desugar specific cases of sugar, that are used in the Haskell code snippets. For instance in the rule for function application, \code{Apply}:
 
-    This is implemented in the parser, as it simply takes the two arguments of the application and parses it as a normal function call with two arguments.
+\begin{lstlisting}
+Apply   :: { Expr }
+        : Expr '(' Exprs ')'    { mkCalls $1 $3 }
+        | Expr '`' Expr Expr    { PApply (PApply $3 $1) $4 }
+        | ...
+\end{lstlisting}
 
-  \item \textbf{Multiple parameters and arguments}
+Here the function \code{mkCalls} is defined in the \code{Desugar} module and converts multiple arguments to a function to a series of applications. Next we give a more detailed description of all the syntactic sugar supported in Kite. Most of the desugaring is straight forward and the details of their use is described in section \ref{sec:kite-design-sugar}, but we will explain the most interesting parts next
 
-    \texttt{foo(a,b,c)} (TODO: args) TODO: se LambdaSignatur i parser.y
+\paragraph{Strings}
+As the representation of strings outputted from the lexer is a Haskell \code{String} type (which is a type synonym for \code{[Char]}), we simply map the \code{PChar} constructor over each letter and construct a \code{PList} containing the resulting list. This way a string end of having the type \code{PList PChar} in the AST.
 
-    \texttt{bar = |x,y,z| -> { ... }} (TODO: params) TODO: se i parser under mkCalls
+\paragraph{Multiple arguments in function application}
+The \code{mkCalls} function converts a function call with multiple arguments to a sequence of applications. The Haskell code is the following
 
+\begin{haskell}
 
+mkCalls f [] = PApply f PVoid
+mkCalls f (a:as) = foldl PApply (PApply f a) as
+\end{haskell}
 
-  \item \textbf{Strings}
+Where \code{(a:as)} is the destructured\footnote{Destructuring means breaking up a data structure into its parts by using pattern matching. Kite features a simple implementation of this in it's \code{match} expressions} list of arguments, and we reduce the list by folding with a \code{PApply} data constructor.
 
-    As the representation of `strings' outputted from the lexer is a Haskell-list, where each element is a letter, we just map each element to a `PChar' and wrap it within a `PList'. Thus it has become a list of characters in the parse tree.
+\paragraph{List comprehensions}
+As list comprehensions are composed of an output expression, draws and guards, the desugaring is implemented as follows (for an example of a list comprehension, and its desugared version, see section \ref{sec:ex-listcomp}):
 
-  \item \textbf{List comprehensions}
+\begin{enumerate}
 
-    As list comprehensions are composed of an output expression, draws and guards, the desugaring is implemented as follows (for an example of a list comprehension, and its desugared version,  please see section \ref{sec:ex-listcomp}):
-    \begin{description}
-      \item[First] the identifiers from the draws are extracted as these will be used as arguments to the various functions.
-      \item[Secondly,] a flatMap\footnote{flatMaps takes as arguments a lambda-expression and a list, maps the function to the list, and flattens the result} is generated for each of the draws, with the function taking as argument the identifier of the current draw and the list-expression as defined right-hand-side of the ` \texttt{<-}', e.g. `\texttt{[1, 2, 3]}' in `\texttt{x <- [1, 2, 3]}'. The body of the lambda expression is either a nested flatMap or the final if-expression.
-        \item[Thirdly,] the guards are inserted as bodies into functions which take all the extracted identifiers as arguments. These lambda-expressions are then conjoined in the condition of the \textbf{if}-expression.
-      \item[Finally,] the \textbf{then}-branch of the \textbf{if}-expression is a function with the output expression as its body and the extracted identifiers as its arguments. The \textbf{else}-branch is simply an empty list. This implies that only the elements that pass the guards are outputted, as flatMap gets rid of empty elements.
-    \end{description}
+\item The identifiers from the draws are extracted as these will be used as arguments to the various functions.
 
+\item A flatMap\footnote{\code{flatMap} takes as arguments a lambda-expression and a list, maps the function to the list, and \code{flatten}s the result} is generated for each of the draws, with the function taking as argument the identifier of the current draw and the list-expression as defined on the right-hand side of the \code{<-}, e.g. \code{[1, 2, 3]} in \code{x <- [1, 2, 3]}. The body of the lambda expression is either a nested flatMap or the final if-expression of generated from the guards:
 
-\end{itemize}
+\item The guards are inserted as bodies into functions which take all the extracted identifiers as arguments. These lambda-expressions are then conjoined in the condition of the \code{if}-expression.
 
-TODO: infix
+\item The \code{then}-branch of the \code{if}-expression is a function with the output expression as its body and the extracted identifiers as its arguments. The \code{else}-branch is simply an empty list. This implies that only the elements that pass the guards are outputted, as flatMap gets rid of empty elements.
 
-TODO: strings
+\end{enumerate}
 
-TODO: multiple parameters
-
-\subsection{Analyser}
+\subsection{Analyzer}
+TODO: analyzer in general
 
 \subsubsection{Type inference}
 
@@ -227,52 +232,52 @@ When the type of $n$ was inferred, we \emph{unified} the known type of $+:a \to 
 
 Formally the unification algorithm takes two types and either fails or returns a \emph{substitution} that maps the most general type to the most specific of the two. The algorithm is here formulated in Haskell code and is equivalent to that of our actual implementation (though simplified and not compilable)
 
-\begin{haskell}[]
--- Note:
--- <+> is an infix function that composes (union) two substituions
--- nullSubst is an empty substituion
-
-unify :: Type -> Type -> String -> TC Substitution
-
--- primitive base cases
--- empty substitutions
-unify IntegerType IntegerType = return nullSubst
-unify FloatType FloatType     = return nullSubst
-unify CharType CharType       = return nullSubst
-unify BoolType BoolType       = return nullSubst
-unify VoidType VoidType       = return nullSubst
-
--- type var with any type
--- binds the type var name to the other type
-unify ta (PTypeVar name) = varBind name ta
-unify (PTypeVar name) tb = varBind name ta
-
--- list
-unify (PListType ta) (PListType tb) = unify ta tb
-
--- pair
-unify (PPairType ta tb) (PPairType ta' tb') = do
-  sa = unify ta ta'
-  sb = unify tb tb'
-  return (sa <+> sb)
-
--- lambda
-unify (PLambdaType paramA returnA) (PLambdaType paramB returnB) =
-  sParam <- unify paramB paramA
-  sReturn <- unify (apply sParam ra) (apply sParam rb)
-  return (sParam <+> s2)
-
--- if nothing matched it's an error
-unify ta tb err = throwTE (printf err (show ta) (show tb))
-
--- perform occurs check
--- creates a substituion
-varBind :: Name -> Type -> TC Substitution
-varBind ide t | t == PTypeVar ide = return nullSubst
-              | ide `Set.member` ftv t = throwTE $ "Occurs in type: " ++ ide ++ " vs. " ++ show t
-              | otherwise = return $ Map.singleton ide t
-
-\end{haskell}
+%\begin{haskell}
+%-- Note:
+%-- <+> is an infix function that composes (union) two substituions
+%-- nullSubst is an empty substituion
+%
+%unify :: Type -> Type -> String -> TC Substitution
+%
+%-- primitive base cases
+%-- empty substitutions
+%unify IntegerType IntegerType = return nullSubst
+%unify FloatType FloatType     = return nullSubst
+%unify CharType CharType       = return nullSubst
+%unify BoolType BoolType       = return nullSubst
+%unify VoidType VoidType       = return nullSubst
+%
+%-- type var with any type
+%-- binds the type var name to the other type
+%unify ta (PTypeVar name) = varBind name ta
+%unify (PTypeVar name) tb = varBind name ta
+%
+%-- list
+%unify (PListType ta) (PListType tb) = unify ta tb
+%
+%-- pair
+%unify (PPairType ta tb) (PPairType ta' tb') = do
+%  sa = unify ta ta'
+%  sb = unify tb tb'
+%  return (sa <+> sb)
+%
+%-- lambda
+%unify (PLambdaType paramA returnA) (PLambdaType paramB returnB) =
+%  sParam <- unify paramB paramA
+%  sReturn <- unify (apply sParam ra) (apply sParam rb)
+%  return (sParam <+> s2)
+%
+%-- if nothing matched it's an error
+%unify ta tb err = throwTE (printf err (show ta) (show tb))
+%
+%-- perform occurs check
+%-- creates a substituion
+%varBind :: Name -> Type -> TC Substitution
+%varBind ide t | t == PTypeVar ide = return nullSubst
+%              | ide `Set.member` ftv t = throwTE $ "Occurs in type: " ++ ide ++ " vs. " ++ show t
+%              | otherwise = return $ Map.singleton ide t
+%
+%\end{haskell}
 
 
 \paragraph{Limitations of Hindley-Milner}
@@ -285,7 +290,6 @@ Consider the function $foo : Person \to Int$. Now, if we have the type $Manager 
 %TODO: lexer ~ regex ~ lexeme
 %TODO: lexical scoping
 %TODO: optimization inlining
-
 
 \subsection{Optimizer}
 
@@ -302,9 +306,6 @@ bindings for Haskell.
 
 
 \textbf{JavaScript as backend:}
-
-
-
 
 %%% Local Variables:
 %%% mode: latex
