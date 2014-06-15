@@ -2,17 +2,75 @@
 %%% mode: latex
 %%% TeX-master: "../report"
 %%% End:
+
 TODO:Present test methodology as well as results in this section. In addition, if performance
 analysis of the system is interesting, present it here as well.
 A few screenshots of the program can be included here as well. TODO
 
+
+\subsection{Preprocessor}
+As we use \texttt{cpphs}\cite{wallace04} for preprocessing, which is a
+port of the C-preprocessor in Haskell, one will have to take certain
+considerations when including files.
+
+One major pitfall is creating circular dependencies. If two files includes
+each other, using the \texttt{\#include file.kite} syntax, this will
+cause an infinite loop of the files including each-other, resulting in
+a stack-overflow. Circular dependencies are not detected which can
+cause confusing errors, without any detailed feedback.
+
+Another pitfall is including the same file twice. Take for example the
+following set of files and inclusions:
+
+\begin{lstlisting}[caption=\texttt{grandfather.kite}]
+  foo = -> { bar }
+\end{lstlisting}
+
+\begin{lstlisting}[caption=\texttt{father.kite}]
+  #include 'gradfather.kite'
+  ...
+\end{lstlisting}
+
+\begin{lstlisting}[caption=\texttt{child.kite}]
+  #include 'gradfather.kite'
+  #include 'father.kite'
+  ...
+\end{lstlisting}
+
+This will cause a compile-time error, as the \texttt{foo} function is
+declared twice, which is not allowed.
+
+Both of these pitfalls can be avoided using include
+guards~\footnote{\url{http://en.wikipedia.org/wiki/Include_guard}},
+ensuring that a file is only included if a specific flag is not
+defined, meaning the file has not yet been included.
+
+\begin{lstlisting}[caption=\texttt{grandfather.kite}]
+  #ifndef GRANDFATHER_H
+  #define GRANDFATHER_H
+
+  foo = -> { bar }
+
+  #endif
+\end{lstlisting}
+
+\begin{lstlisting}[caption=\texttt{father.kite}]
+  #include 'gradfather.kite'
+  ...
+\end{lstlisting}
+
+\begin{lstlisting}[caption=\texttt{child.kite}]
+  #include 'gradfather.kite'
+  #include 'father.kite'
+  ...
+\end{lstlisting}
 
 
 \subsection{Tests}
 
 In the following we will describe the various tests we have performed in order to validate the correctness of the compiler, both throughout the development and of the final system.
 
-We have made use of both \textbf{unit} and \textbf{integration} tests. Unit testing has been used on each of the modules of the compiler. For instance, we have tested the parser module in cases where the output of the lexer should yield a parse error and in cases where it should not. 
+We have made use of both \textbf{unit} and \textbf{integration} tests. Unit testing has been used on each of the modules of the compiler. For instance, we have tested the parser module in cases where the output of the lexer should yield a parse error and in cases where it should not.
 
 TODO: More examples of unit testing?
 
@@ -28,8 +86,7 @@ As our optimization pass removes unused function declarations from the parse tre
 
 A very simple program that concatenates the strings `Hello,' and ` World!' and prints them, is unoptimized emitted to 12.5kB of JavaScript, and optimized to 3.5kB. Thus optimization yields a size reduction of 72\%.
 
-A slightly larger program that sums the even Fibonacci numbers less than 4 million (problem 2 of the online collection of mathematical problems Project Euler\cite{euler}) the compiler emits 12.9kB and 6.8kB of JavaScript without and with optimization, respectively. The program makes use of list comprehensions, which is just syntactic sugar for flatten and map, which then again uses a cascade of functions from Foundation.kite. Thus it is expected that a lot of the code from the library is used. But a reduction of 47\% is still noteworthy, and imagining the use of functions from other Kite-libraries for more specific purposes, this optimization might be useful. 
-
+A slightly larger program that sums the even Fibonacci numbers less than 4 million (problem 2 of the online collection of mathematical problems Project Euler\cite{euler}) the compiler emits 12.9kB and 6.8kB of JavaScript without and with optimization, respectively. The program makes use of list comprehensions, which is just syntactic sugar for flatten and map, which then again uses a cascade of functions from Foundation.kite. Thus it is expected that a lot of the code from the library is used. But a reduction of 47\% is still noteworthy, and imagining the use of functions from other Kite-libraries for more specific purposes, this optimization might be useful.
 
 \begin{center}
   \begin{tabulary}{0.9\textwidth}{|L| L |L| C | L | }
@@ -44,8 +101,7 @@ A slightly larger program that sums the even Fibonacci numbers less than 4 milli
     & & & & \\
     Mandeltest.kite       & 15.1 kB & 8.3 kB & 45 \% & A program that plots the Mandelbrot fractal as animated ASCII art in the console\\
     \hline
-  \end{tabulary}  
+  \end{tabulary}
 
-Above is a summation of the different Kite-programs we have made and optimized.
+  Above is a summation of the different Kite-programs we have made and optimized.
 \end{center}
-
