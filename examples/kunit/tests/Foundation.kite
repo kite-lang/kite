@@ -1,0 +1,29 @@
+lists = cases ("Lists", [
+  ("head should return first element", -> {
+     head ([1, 2, 3]) == 1
+  }),
+
+  ("tail should return all but first element", -> {
+     tail ([1, 2, 3]) == [2, 3]
+  }),
+
+  ("tail should return empty list on singleton list", -> {
+     tail ([1]) == []
+  }),
+])
+
+pairs = cases ("Pairs", [
+  ("fst should return first part of pair", -> {
+     pair = ("foo", 42)
+     fst (pair) == "foo"
+  }),
+
+  ("snd should return first part of pair", -> {
+     pair = ("foo", 42)
+     snd (pair) == 42
+  }),
+])
+
+
+
+foundationTests = ("Foundation", [lists, pairs])

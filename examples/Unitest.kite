@@ -1,0 +1,4 @@
+describe = |name, tests| -> {
+  print ("Running: " ++ name)
+  map
+}

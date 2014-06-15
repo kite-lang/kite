@@ -16,6 +16,10 @@ var print = function (str) {
     console.log(_print(str));
 };
 
+var show = function (expr) {
+    _print(expr);
+};
+
 var put = function (s) { process.stdout.write(s); };
 
 var panic = function (s) {

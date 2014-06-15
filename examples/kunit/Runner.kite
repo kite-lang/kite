@@ -1,0 +1,6 @@
+#include "Kunit.kite"
+#include "tests/Foundation.kite"
+
+main = -> {
+  runTestHarness (foundationTests)
+}

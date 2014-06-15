@@ -1,0 +1,30 @@
+cases = asPair
+
+runTestCase = |testCase| -> {
+  -- pair, all the things
+  description = fst (testCase)
+  test = snd (testCase)
+  --expected = fst (test)
+  --actual = snd (test)
+  
+  if test()
+    then print ("  OK    " ++ description)
+    else print ("  FAIL  " ++ description)
+}
+
+runTestCases = |testCases| -> {
+  name = fst (testCases)
+  cases = snd (testCases)
+
+  print ("Testing: " ++ name)
+  map (runTestCase, cases)
+}
+
+runTestHarness = |harness| -> {
+  name = fst (harness)
+  cases = snd (harness)
+
+  print ("--- " ++ name ++ " ---")
+  map (runTestCases, cases)
+  print(" ")
+}

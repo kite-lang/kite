@@ -15,7 +15,7 @@ import Kite.Syntax
 
 type Source = String
 
-reserved = ["while", "for", "arguments"]
+reserved = ["while", "for", "arguments", "case", "switch"]
 kitePrefix = "KT_"
 
 runtime = $(embedFile "js/kt_runtime.js")
