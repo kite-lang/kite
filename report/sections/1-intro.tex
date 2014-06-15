@@ -1,8 +1,3 @@
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: "../report"
-%%% End:
-TODO: 1-2 pages
 \subsection{Programming languages and compilers in general}
 
 Programming languages are the means for programmers to express what the machine should compute, or in other words: What a program should do.
@@ -22,10 +17,15 @@ Another imperative approach is \textbf{procedural} languages like \code{C}, whic
 
 A very different style is the highly declarative \textbf{logic} programming, in which execution order and control-flow does not exist, but programs consist of logic clauses that define relationships and implications.
 
-The final paradigm we will describe is \textbf{functional} programming. This is another declarative approach, which is characterized by functions as the fundamental means of expressing computations. Often programs are written in such a way that most functions are pure, meaning that they will \emph{always} return the same output given the same input.
+The final paradigm we will describe is \textbf{functional} programming. This is another declarative approach, which is characterized by functions and their composition as the fundamental means of expressing computations. Often programs are written in such a way that most functions are pure, meaning that they will \emph{always} return the same output given the same input.
 
 \subsection{The problem}
 The goal of this project is to gain knowledge in a field which we have only little prior knowledge about, as we at the beginning of this project have not had any formal education within the subject. In short we strive to get a good understanding of the concepts of functional programming and compilation of programming languages in general. We will achieve this by implementing a compiler for a functional language named Kite.
 
 \subsection{The structure of the report}
+The report is structured such that it somewhat follows the steps we have taken from idea to working product. We initially describe the problem and purpose of the project (chapter \ref{sec:probanal}), and then define what our requirements for completion are (chapter \ref{sec:requirements}). Next we will talk about the syntactic and semantic design of the Kite language (chapter \ref{sec:kite-design}) and how we architecturally designed the corresponding compiler (chapter \ref{sec:compiler-design}). Then follows an in-depth explanation of the implementation of each of the involved modules and their purpose (chapter \ref{sec:impl}). Finally we evaluate how the implementation turned out (chapter \ref{sec:evaluation}) and discuss what further development of Kite could lead to.
 
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "../report"
+%%% End: 
