@@ -1,7 +1,4 @@
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: "../report"
-%%% End:
+
 
 To describe the overall design of the Kite compiler, we will start by
 breaking it down into general parts, where each part or module has a
@@ -76,6 +73,31 @@ accordingly.
 
 TODO: Inital, not done.
 
-TODO: Write about LLVM
+As for generation of code, Kite should be flexible and allow for
+multiple backends.
 
-TODO: Write about JavaScript and Node.js
+\textbf{LLVM as backend:} The LLVM compiler
+infrastructure\footnote{LLVM Project \url{http://llvm.org/}} will allow
+for low level binary machine code generation. The generation can be
+done using LLVM bindings for Haskell. The LLVM infrastructure
+will take a representation of the parse tree and emit a LLVM
+intermediate representation (IR) which can be used for code
+generation. Since LLVM is strong statically typed, a modified variant
+of Kites parse tree is needed. The LLVM infrastructure will also provide
+optimization passes for a given LLVM IR.
+
+\textbf{JavaScript as backend:} As an alternative, a JavaScript emitter
+can be implemented and used as backend. Since JavaScript is untyped,
+Kite can rely on the typechecker and emit JavaScript. The emitted
+JavaScript should not contain type errors, as the analyzer will
+catch type errors. The emitted JavaScript will run on the
+Node.js platform\footnote{ The Node.js platform \url{nodejs.org}}.
+Node.js makes use of the Google V8 JavaScript engine \footnote{Google
+  V8 engine \url{http://code.google.com/p/v8/}} which compiles JavaScript to
+native machine code. The result is faster and more optimized
+JavaScript execution.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "../report"
+%%% End: 
