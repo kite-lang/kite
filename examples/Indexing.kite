@@ -1,0 +1,6 @@
+main = ->
+{
+  teens = range(13,19)
+  sweet_sixteen = teens # 3 ----> 16
+  print(sweet_sixteen)
+}

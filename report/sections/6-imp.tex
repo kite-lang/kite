@@ -1,5 +1,3 @@
-TODO: Implementation of all 9 compiler-parts
-
 
 \subsection{Preprocessor}
 
@@ -296,6 +294,8 @@ Consider the function $foo : Person \to Int$. Now, if we have the type $Manager 
 The optimizer implemented in Kite is currently only a simple dead-code elimination algorithm. The algorithm is given a starting declaration (usually the \code{main} declaration) and recursively traverses the AST beginning with the expressions defined in the starting node. When an identifier node is detected (except in a bind node) it's name is saved and recursion continues. The part of the AST that has been traversed, is the derivation tree that will be executed when running the program, thus all referenced identifiers will have been detected. The full list of declarations is now filtered by only persisting the ones that were detected during traversal, since we can be certain that they will never be accessed.
 
 In it's current state the algorithm only eliminates unused top-level declarations, thus leaving unused locally scoped variables in the code. The algorithm can however be extended to eliminate local variables by transforming the AST during traversal. Using a stack of used identifiers we could, when entering a new local scope (a lambda or match case), push a new frame to the stack, add accessed variables found in the current scope to it, and when leaving the scope filter out the variables that were not accessed.
+
+TODO - mention `target'-specific optimization - standard binary math functions get emitted nicer - TODO Groupleader AKA Simon
 
 \subsection{Code generation}
 

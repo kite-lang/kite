@@ -3,11 +3,6 @@
 %%% TeX-master: "../report"
 %%% End:
 
-TODO:Present test methodology as well as results in this section. In addition, if performance
-analysis of the system is interesting, present it here as well.
-A few screenshots of the program can be included here as well. TODO
-
-
 \subsection{Development}
 \subsubsection{Source code management}
 Through out this project we have used
@@ -85,18 +80,12 @@ defined, meaning the file has not yet been included.
 
 
 \subsection{Tests}
-In the following section we will describe the various tests we have
-implemented in order to validate the correctness of the compiler, both
-throughout the development and of the final system.
+In the following section we will describe the various tests we have implemented in order to validate the correctness of the compiler, both throughout the development and of the final system.
 
-We have made use of both \textbf{unit}- and \textbf{integration}
-tests. Unit-testing for ensuring that each component, e.i. module, of the compiler,
-e.g. the lexer, parser etc., are \emph{indidually} functioning as
-expected. Where as, the integration-tests have been focused on that
-the interface between the various components are functioning as
-expected.
+We have made use of both \textbf{unit}- and \textbf{validation}-tests. Unit-testing for ensuring that each component, i.e.\ module, of the compiler, e.g.\ the lexer, parser etc., are \emph{indidually} functioning as expected. The validation-tests have been focused on that the interface between all the various components are functioning as expected.
 
-\subsubsection{Unit-testing}
+\subsubsection{Unit-testing}  TODO: implementer tests af type-declarations?
+
 Unit testing has been used on each of the modules of the
 compiler. For instance, we have tested the parser module in cases
 where the output of the lexer should yield a parse error and in cases
@@ -117,16 +106,18 @@ we check that a legal list assignment should \emph{not} yield an
 error, while the second, where a list is declared with distinct types,
 should yield a type error of type \code{TypeE}.
 
-\subsubsection{Integration-tests}
-As for integration-tests, we have written small programs in Kite which
-we compile and pipe the emitted code into Node.js, and manually check
-whether it yields the expected result. By doing this we can test
-whether the entire flow of the compiler is working as expected.
+\subsubsection{Validation-tests}
 
-This can be run command-line with: \code{\$ kite --target=javascript examples/Test.kite | node}
+As for validation-tests, we have written a test program in Kite itself that tests whether the functions implemented in \nameref{foundation} yields the expected results. In this manner we can test whether the entire flow of the compiler is working as expected.
+
+This can be run command-line with: \code{\$ kite --target=javascript SOMETHING/DARKSIDE.kite | node} TODO: fix the filepath
+
+
+TODO: fyr simons tests i kite her i teksten
+
 
 \subsubsection{Continuous integration}
-Through out the development of the Kite-compiler we have used
+Throughout the development of the Kite-compiler we have used
 continuous integration (CI) to incrementally check that new changed as
 not broken anything in the compiler. We have done this by triggering a
 make of the code-base, when changes are pushed to the master branch of

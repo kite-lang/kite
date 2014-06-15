@@ -77,7 +77,7 @@ Decls  :: { [Decl] }
         | Decl Decls       { $1 : $2 }
         | Decl ';' Decls   { $1 : $3 }
 
---- Pattern matching
+-- Pattern matching
 
 Match :: { Expr }
        : match Expr '{' Patterns '}'           { PMatch $2 $4 }

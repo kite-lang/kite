@@ -2,10 +2,13 @@ We have been inspired by many other languages when designing and
 implementing Kite, most notably the GHC Haskell compiler\footnote{The
   Glasgow Haskell Compiler \url{http://www.haskell.org/ghc}}.
 
+
 \subsection{Syntax and semantics}
 In this section we will describe how to use the different features of Kite and how they work, i.e. the syntax and semantics.
 
-TODO: Sugar, List Comprehensions, describe types, more on function declaration.
+TODO: Describe the panic-function
+
+TODO: describe types, more on function declaration.
 
 TODO: Parameterless functions, implicit return, blocks
 
@@ -87,7 +90,7 @@ Basic boolean operators include
 A single basic bitwise operator:
 \begin{kite}
   
-  xor = 10 ^ 8 ----> 2
+  foo = 10 ^ 8 ----> 2
 \end{kite}
 Kite only includes xor bitwise operator as of now.
 
@@ -154,7 +157,8 @@ parameter functions (or currying, see currying in \ref{subsubsec:currying})
 will allow the usage of multiple parameter functions. Example of usage
 of multiple parameters:
 \begin{kite}
-  
+
+  foo :: a -> a -> a
   foo = |a, b| -> {
     a + b
   }
@@ -163,6 +167,7 @@ of multiple parameters:
 Which will be syntactic sugar for the following code:
 \begin{kite}
 
+  foo :: a -> a -> a
   foo = |a| -> {
     return |b| -> {
       return ((+) (a)) (b)
@@ -255,6 +260,7 @@ A more advanced form of conditional is \textbf{pattern matching}. Some pattern m
 Below we show the matching of `n' on 0, which is an expression, and `otherwise', which is written `\_':
 \begin{kite}
 
+fibo :: a -> b -> Int -> a
 fibo = |a, b, n| -> {
     match n {
     0 -> a,
@@ -263,7 +269,7 @@ fibo = |a, b, n| -> {
 }
 \end{kite}
 
-An example of pattern matching on lists is our implementation of the function `reverse' \ref{foundation} (TODO ref to Foundation), which matches `xs' with an expression, the empty list, and the head and tail of `xs':
+An example of pattern matching on lists is our implementation of the function `reverse' \ref{foundation}, which matches `xs' with an expression, the empty list, and the head and tail of `xs':
 
 \begin{kite}
 
@@ -275,8 +281,6 @@ reverse = |xs| -> {
 }
 
 \end{kite}
-
-TODO - skriv at vi ikke kan matche nestede ting
 
 The final case is matching on pairs. The example below shows our implementation of the function `fst' (first):
 \begin{kite}
@@ -305,7 +309,33 @@ map = |f, ls| -> {
 
 \subsubsection{Currying}
 \label{subsubsec:currying}
-TODO: Currying
+Besides every function in Kite is curried\footnote{Which should be fairly easy to see when looking at the type-declarations of the functions}, we have also implemented a curry (and uncurry) function, which given a function with a single pair as the argument, returns the same function taking two arguments corresponding to the values of the pair:
+
+\begin{kite}
+
+curry :: ((a, b) -> c) -> (a -> b -> c)
+curry = |f| -> {
+  |a,b| -> {
+    f((a,b))
+  }       
+}
+\end{kite}
+
+Uncurry naturally does the opposite, meaning it takes a function taking two parameters and returns the same taking a single pair as an argument.
+
+\begin{kite}
+
+uncurry :: (a -> b -> c) -> ((a, b) -> c)
+uncurry = |f| -> {
+  |p| -> {
+    match p {
+      (a, b) -> f(a,b)
+    }         
+  } 
+}
+\end{kite}
+
+We have chosen to include these two functions from \nameref{foundation}) in this section as they reflect an essential part of Kite and functional programming languages in general.
 
 \subsubsection{Partial application}
 
@@ -318,41 +348,71 @@ increment = (1+)
 
 \end{kite}
 
+Increment can then be applied to an integer:
+
+\begin{kite}
+  
+  two = increment(1) ----> 2
+\end{kite}
+
+
+It should be noted that the addition operator, `+', has type \code{a -> a -> a}. Thus partial application yields \code{a -> a} and since it is partially applied with an integer, the type of \code{increment} becomes \code{Int -> Int}
+
 \subsection{Foundation}
 
-As earlier mentioned, the foundation of Kite is a standard library
-consisting of often used functions. Kites foundation is inspired by
-Haskells prelude, and includes many functions found in
-prelude. 
+As mentioned earlier in the report (TODO - ref!), the `Foundation' of Kite is a standard library implemented in Kite consisting of often used functions. Kite's Foundation is inspired by Haskell's `Prelude', and includes many functions found in
+Prelude. 
+
 TODO: MORE FUN FUN FUN
 
-Foundation examples.
-List concatenation:
+Below are two examples from Foundation.
+\subsubsection{List concatenation}
+
+List concatenation does as the name suggests, namely concatenating two lists into a single one:
 \begin{kite}
 
-  {++} :: [a] -> [a] -> [a]
-  {++} = |l, r| -> {
-    match l {
-      [] -> r,
-      x,xs -> x : (xs ++ r)
-    }
+{++} :: [a] -> [a] -> [a]
+{++} = |l, r| -> {
+  match l {
+    [] -> r,
+    x,xs -> x : (xs ++ r)
   }
+}
 \end{kite}
-Can be used to concatenate lists and strings.
 
-List index:
+For example, as strings are simply lists of characters, \code{++} can be used as follows:
+
 \begin{kite}
 
-  {#} :: [a] -> Int -> a
-  {#} = |xs, idx| -> {
-    match xs {
-      [] -> panic ("list index too large"),
-      x,xs -> if idx == 0 then x else xs # (idx - 1)
-    }
-  }
+"Hello," ++ " World!" ----> "Hello, World!"
 \end{kite}
 
-For documentation of rest of Foundation, see \nameref{foundation}
+\subsubsection{List indexing}
+
+List indexing retrieves the n'th element\footnote{Starting from 0, meaning Kite uses 0-indexing} of a list:
+\begin{kite}
+
+{#} :: [a] -> Int -> a
+{#} = |xs, idx| -> {
+  match xs {
+    [] -> panic ("list index too large"),
+    x,xs -> if idx == 0 then x else xs # (idx - 1)
+  }
+}
+\end{kite}
+
+
+A simple example of list indexing is as follows:
+
+\begin{kite}
+
+teens = range(13,19)
+sweetSixteen = teens # 3 ----> 16
+\end{kite}
+
+
+
+For the rest of the documentation of Foundation, please see \nameref{foundation}
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: "../report"

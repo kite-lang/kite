@@ -90,6 +90,22 @@ snd = |p| -> {
   }
 }
 
+curry :: ((a, b) -> c) -> (a -> b -> c)
+curry = |f| -> {
+  |a,b| -> {
+    f((a,b))
+  }       
+}
+
+uncurry :: (a -> b -> c) -> ((a, b) -> c)
+uncurry = |f| -> {
+  |p| -> {
+    match p {
+      (a, b) -> f(a,b)
+    }         
+  } 
+}
+
 --- Lists
 
 {#} :: [a] -> Int -> a
