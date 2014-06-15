@@ -27,37 +27,61 @@
 %   url
 \newcommand{\refonline}[4]{\refgeneral{#1}{#2}{#3} \\\url{<#4>}}
 
-% pseudo code environment
+\definecolor{Brown}{cmyk}{0,0.81,1,0.60}
+\definecolor{OliveGreen}{cmyk}{0.64,0,0.95,0.40}
+\definecolor{CadetBlue}{cmyk}{0.62,0.57,0.23,0}
+\definecolor{lightlightgray}{gray}{0.95}
+\definecolor{lightgray}{gray}{0.85}
+
+
+\definecolor{sh_comment}{rgb}{0.12, 0.38, 0.18 } %adjusted, in Eclipse: {0.25, 0.42, 0.30 } = #3F6A4D
+\definecolor{sh_keyword}{rgb}{0.37, 0.38, 0.75}  % #5F1441
+\definecolor{sh_string}{rgb}{0.06, 0.10, 0.98} % #101AF9
+
 \lstset{
-  keywordstyle=\color{blue},
-  commentstyle=\color{ForestGreen},
-  stringstyle=\color{Maroon},%
-  basicstyle=\ttfamily\small,
+  basicstyle=\small\ttfamily,
+  stringstyle=\color{sh_string},
+  keywordstyle = \color{sh_keyword}\bfseries,
+  commentstyle=\color{sh_comment},
+  backgroundcolor=\color{lightlightgray},
   frame=single,
-  framesep=10pt,
-  xleftmargin=30pt,
-  xrightmargin=30pt,
+  rulecolor=\color{lightgray},
+  framesep=3pt,
+  numbersep=5pt,
+  xleftmargin=10pt,
+  xrightmargin=10pt,
   showspaces=false,
   showstringspaces=false,
   tabsize=4,
-  aboveskip=10pt,
-  belowskip=10pt,
+  aboveskip=5pt,
+  belowskip=5pt,
   lineskip=2pt,
+  captionpos=b,
   numbers=left,
   numberstyle=\tiny,
   stepnumber=1,
-  numbersep=5pt,
+  numbersep=100pt,
   breaklines,
+  numbersep=5pt,
+  breakatwhitespace=false,
+  showspaces=false,
+  showtabs=false
 }
 
+% pseudo code environment
 \lstnewenvironment{pseudo}[1]{
-\lstset{morekeywords={if, then, else, return, function, var, for, foreach, do, end}}}
+\lstset{
+language=Haskell,
+morekeywords={if, then, else, return, function, var, for, foreach, do, end}
+}}
 {}
 
 \lstnewenvironment{kite}[1]{
-\lstset{morekeywords={if, then, else, return, yolo, match},
+\lstset{
+language=Haskell,
 }}
 {}
+
 \lstnewenvironment{haskell}[1]{
 \lstset{language=haskell}}
 {}
