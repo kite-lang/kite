@@ -6,6 +6,8 @@ implementing Kite, most notably the GHC Haskell compiler\footnote{The
 
 TODO: Sugar, List Comprehensions, describe types, more on function declaration.
 
+\textbf{Basic types and declarations}
+
 Basic declaration of the variables in Kite, types are inferred by the analyzer:
 \begin{kite}
   
@@ -13,8 +15,8 @@ Basic declaration of the variables in Kite, types are inferred by the analyzer:
   two = 2.0
   truth = True
   list = [1, 2, 3, 4]
-  str = "foo" 
-  pair = (1, "one")
+  char = 'a' 
+  pair = (1, 'a')
 \end{kite}
 
 The basic types will be Int, Float, Bool, Lists, Chars and
@@ -39,8 +41,6 @@ Basic arithmetic operators in Kite and their us
 \begin{kite}
 
   two = 1 + 1  ---->  2
-  str = "foo" ++ "bar" ----> "foobar"
-  xor = 10 ^ 8 ----> 2
   mod = 10 % 2 ---> 0
 \end{kite}
 
@@ -58,13 +58,13 @@ Basic arithmetic operators in Kite and their us
     pow(x, y, m) & Modulo exponentation \\ \hline
     \end{tabular}
 \end{table}
+Note: some operators will only work on certain types.
 
 Basic boolean operators:
 \begin{kite}
   
   foo = 1 < 2  ----> True
   bar = 1 == 2 ----> False
-  baz = 1 != 10 ----> True
 \end{kite}
 Basic boolean operators include 
 \begin{table}[H]
@@ -73,7 +73,7 @@ Basic boolean operators include
     \hline
     Operation & Meaning                 \\ \hline
     $==$        & Equal                   \\ \hline
-    $/\ =$        & Not equal               \\ \hline
+    $\backslash=$        & Not equal               \\ \hline
     $<=$        & Less than or equal than \\ \hline
     $>=$        & Greater than or equal   \\ \hline
     $<$         & Less than               \\ \hline
@@ -86,27 +86,35 @@ A single basic bitwise operator:
   
   xor = 10 ^ 8 ----> 2
 \end{kite}
+Kite only includes xor bitwise operator as of now.
 
-Kite features a single conditional expression, which is the if-expression:
+\textbf{Conditionals}
+
+
+TODO Conditional statements:
+Kite includes basic if-then-else-statements:
 \begin{kite}
-
-  if 1337 < 42 then True else False ----> False
+  
+  if BoolStatement then Statement else Statement
 \end{kite}
+A more advanced form of the if-then-else-statement is the pattern
+matching, which will be discussed later.
+Function declaration in Kite:
 
+\textbf{Function declaration}
 
-Function declaration in Kite: TODO - er dette ikke det nedenunder?
-
-Anonymous functions:
-
+Every function in Kite is declared as an anonymous function:
 \begin{kite}
   
 |ArgName, ... | -> { ... }
 \end{kite}
-Since all functions in Kite are anonymous, a function is simply an anonymous function bound to a given variable. A function is declared
+
+Since everything in Kite is an expression, functions is simply a
+variable bound to a given anonymous function. A function is declared
 as follows:
 \begin{kite}
   
-  function :: ArgType, ... -> ReturnType
+  function :: ArgType -> ... -> ReturnType
   function = |ArgName, ... | -> { ... }
 \end{kite}
 Example of valid function declaration in Kite, taking one parameter of
@@ -123,39 +131,44 @@ A runnable program must always include the `main' function, which will be called
   
   main = -> { ... }
 \end{kite}
+
 In order to use the preprocessor to include another code file, use the \texttt{\#include} keyword:
 \begin{kite}
   
   #include "foo.kite"
 \end{kite}
 
+\textbf{Syntactic sugar}
+
 By using a sugaring module, Kite will be able to express certain
 functions more clearly and readable. Syntactic sugar includes infix
 operators, multiple parameters on function calls, list of characters
 as strings and list comprehensions.
-
-infix:
+Infix operators will allow infix use of certain functions in Kite. An
+example of infix operators is the basic + arithmetic operation:
 \begin{kite}
   
   foo = 1 + 2
 \end{kite}
 
-Desugar
+Where the desugared version of the same statement is given as:
 
 \begin{kite}
 
   foo = ((+) (1)) (2)
 \end{kite}
 
-multiple parameters:
+As Kite functions will only take one parameter, sugaring of multiple
+parameter functions (or currying, see currying in \ref{sec:currying})
+will allow the usage of multiple parameter functions. Example of usage
+of multiple parameters:
 \begin{kite}
   
   foo = |a, b| -> {
     a + b
   }
 \end{kite}
-desugar:
-
+Which will be a syntactic sugar for the following code:
 \begin{kite}
 
   foo = |a| -> {
@@ -164,12 +177,17 @@ desugar:
     }
   }
 \end{kite}
-Strings 
+
+Strings are syntactic sugar for list of characters, $List(Char)$,
+which will allow for easier representations of character lists. An
+example of a string is as follows:
 \begin{kite}
   
   str = "Hello"
 \end{kite}
-Desugar (note the distinction between strings using double-quite (") and characters using single-quite ('):
+
+Where the corresponding desugar (note the distinction between strings
+using double-quite (") and characters using single-quite (') will be:
 \begin{kite}
   
   str = ['H', 'e', 'l', 'l', 'o']
@@ -197,9 +215,13 @@ where the desugared version of the given example, will look as follows:
 Take note that list comprehensions uses functions defined in the
 foundation, which will be discussed later
 \subsection{Semantics}
+\label{sec:currying}
 
 TODO: Recursion, HoF, Currying, pattern matching,
-partial application, Mutability. maaske mere.
+partial application, Mutability, conditionals maaske mere.
+
+\textbf{Pattern matching}
+
 
 Both pattern matching and recursion is used in the example below:
 \begin{kite}
@@ -218,9 +240,37 @@ TODO Pattern matching can also be applied on lists and pairs.
 
 As earlier mentioned, the foundation of Kite is a standard library
 consisting of often used functions. Kites foundation is inspired by
-Haskells prelude, and includes many functions found in prelude.
+Haskells prelude, and includes many functions found in
+prelude. 
 TODO: MORE FUN FUN FUN
 
+Foundation examples.
+List concatenation:
+\begin{kite}
+
+  {++} :: [a] -> [a] -> [a]
+  {++} = |l, r| -> {
+    match l {
+      [] -> r,
+      x,xs -> x : (xs ++ r)
+    }
+  }
+\end{kite}
+Can be used to concatenate lists and strings.
+
+List index:
+\begin{kite}
+
+  {#} :: [a] -> Int -> a
+  {#} = |xs, idx| -> {
+    match xs {
+      [] -> panic ("list index too large"),
+      x,xs -> if idx == 0 then x else xs # (idx - 1)
+    }
+  }
+\end{kite}
+
+For documentation of rest of Foundation, see \nameref{foundation}
 %%% Local Variables: 
 %%% mode: latex
 %%% TeX-master: "../report"
