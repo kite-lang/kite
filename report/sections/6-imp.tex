@@ -6,6 +6,7 @@ TODO: Implementation of all 9 compiler-parts
 The preprocessor in Kite is almost identical to the \code{C} language preprocessor. We use a library called \code{cpphs}\footnote{\url{http://projects.haskell.org/cpphs}} that mimics the \code{C} version, and provides an embeddable Haskell library. This is the reason for the \code{\#include "file.kite"} syntax. Preprocessing is the first step of the compilation, and generates a single source code file which is a recursive concatenation of all included source files referenced from the main file.
 
 \subsection{Lexer}
+\label{sec:impl-lexer}
 The lexer converts the raw input source to a list of tokens, a process known as tokenization. There are multiple types of tokens that represent different kinds of lexical elements. A \emph{lexeme} is the textual value that the lexer sees and maps to a token. Some tokens can have multiple possible lexemes, for instance in the case of identifiers and numeric constants, so in those cases the lexeme is saved together with the token for further use (by the parser).
 
 Kite's lexer is implemented using the lexical generator Alex. Alex is a tool for generating lexical analyzers in Haskell, given a description of the tokens to be recognized in the form of regular expressions\cite[p. 4]{dornan01}. The description of the analyzer consists of \emph{macro definitions} and \emph{rules}. A macro definition is either a regular expression bound to an identifier describing a particular sequence of characters, denoted by a \code{\$} prefix, or it is a combination of the former prefixed by \code{@}. These macros are combined to make up the rules, which define the actual definitions for tokens. Macros and rules are separated by the symbol \code{:-} and the preceding \code{kite} is just for documentation\cite[p. 7]{dornan01}. Further the description file defines the Haskell data structures used to represent the tokens, enclosed in \code{\{ \}}.
@@ -53,8 +54,7 @@ data Token = TIdentifier AlexPosn String
 \end{figure}
 
 Kite uses 12 different tokens briefly described in table \ref{tbl:lexical_tokens}.
-%TODO finish table
-\begin{table}[h]
+\begin{table}[H]
   \centering
   \begin{tabular}{lll}
     \hline
@@ -79,12 +79,70 @@ Kite uses 12 different tokens briefly described in table \ref{tbl:lexical_tokens
 \end{table}
 
 \subsection{Parser}
-The parser is implemented with the LALR-parser generator Happy \cite{marlow01}. Happy automatically generates Haskell code from the file `src/Kite/Parser.y', which we have written in partially Haskell and partially Backus-Naur Form\footnote{This is a well known notation technique for specifying context-free grammars, which the more popular parser generator ANTLR also makes use of.}.
+The parser is implemented with the LALR-parser (\textbf{L}ook \textbf{A}head, \textbf{L}eft-to-Right, \textbf{R}ightmost derivation) generator Happy, which is a parser generator system for Haskell, similar to the tool yacc\footnote{Yacc: Yet Another Compiler-Compiler: \url{http://dinosaur.compilertools.net/yacc}} for C. It takes a file containing a specification of a grammar and produces a Haskell module containing a parser for the grammar\cite{marlow01}. The grammar file (\code{Parser.y}), is similar in format to the lexical analysis description file described in section \ref{sec:impl-lexer}. It uses Backus-Naur Form (BNF) notation to define a context-free grammar specifying the legal syntax of the Kite language. A BNF grammar consists of a set of derivation rules, also known as production rules, which describe all legal combinations of the tokens read by the lexer. A production rule has the following format
 
-When a(/a combination of) tokens are matched in the parser, it is transformed into Haskell data-structures, from which we build the parse tree. Some matches are first transformed into temporary syntactic sugaring structures before being inserted into the parse tree. This is described further in section \ref{sec:imp-sugar}
+\begin{lstlisting}
+Name :: { Type }
+      : Expression_1 { Haskell code }
+      | Expression_2 { Haskell code }
+      ...
+      | Expression_n { Haskell code }
+\end{lstlisting}
 
-The current parser generates more than 2,000 lines of quite unreadable Haskell code, which is used in the compilation of the compiler. Fortunately Happy allows setting a --info flag when it is used, which also generates a .info-file about the parser. For instance it yields very useful information about shift-reduce and reduce-reduce conflicts, which has been quite helpful throughout the development.
+The \code{Type} specifies the type of Haskell data constructor that the rule will produce and is optional but useful for debugging purposes and readability. A rule can have multiple different legal expressions, separated by \code{|}, which are defined as a sequence of symbols. A symbol can be either a \emph{terminal} or another production rule. A terminal is an expression that cannot be further expanded, thus terminating the recursion of that branch. Consider for instance the production rule for the bind syntax (the bind node is named \code{PBind} in the Haskell code)
 
+\begin{lstlisting}
+Bind :: { Expr }
+        : id '=' Expr                  { PBind $1 $3 }
+        | '{' operator '}' '=' Expr    { PBind $2 $5 }
+\end{lstlisting}
+
+The \code{Bind} rule produces a node of type \code{Expr}. In the first choice we see the \code{id} terminal that is equivalent to the \code{Identifier} token from the lexer. Other terminals are \code{'='}, \code{'\{'} and \code{'\}'}. The right-hand side of the rules are the code snippets that defines what Happy will generate when a rule is matched, where \code{\$n} means that the nth symbol of the BNF notated grammar, will be inserted. In the first rule this means that a \code{PBind} will be created with the \code{id} as the first argument and the \code{Expr} rules as the second.
+
+Production rules can be recursively defined, so that an expression can contain the rule itself. Consider for instance the grammar for defining lists
+
+\begin{lstlisting}
+Exprs :: { [Expr] }
+        : {- nothing -}    { [] }
+        | Expr             { [$1] }
+        | Expr ',' Exprs   { $1 : $3 }
+
+List   :: { Expr }
+        : '[' Exprs ']'           { PList $2 }
+\end{lstlisting}
+
+The \code{Exprs} rule defines a comma-separated list of \code{Expr} rules. The \code{\{- nothing -\}} defined the empty match, equivalent to the $\epsilon$ common mathematical notation.
+
+The first rule in the grammar defines the entry point of the parser and thus the resulting type that the generated parser will produce. In the case of Kite the entry rule is \code{Program} and produced the type \code{[Decl]}.
+
+\paragraph{Syntactic sugar}
+Some matches are first transformed into temporary syntactic sugaring structures before being inserted into the parse tree. This is described further in section \ref{sec:imp-sugar}.
+
+Happy generates more than 2,000 lines of quite unreadable Haskell code, which is used in the compilation of the compiler. This is not useful for debugging, but fortunately Happy can produce an information file by setting the \code{--info} flag when run, which will generate a \code{.info}-file. This file yields very useful information about shift-reduce and reduce-reduce conflicts, which has been quite helpful throughout the development.
+
+\paragraph{Shift-reduce parsing}
+Happy generates a shift-reduce parser. This means that when it reads a symbol it can either reduce the symbol thus ``ending'' a rule and producing a result, or it can shift the symbol and look for more symbols to match before reducing. This is the point of a Look-Ahead parser, since it can look at the next symbol to be consumed before deciding what to do. Happy generates LALR(1) which means that it looks 1 symbol ahead.
+
+A common hurdle when implementing shift-reduce context-free grammars (and indeed parsers in general) is conflicts, or ambiguities, in the grammar. There are two types of conflict, namely \emph{shift/reduce} and \emph{reduce/reduce} conflicts. A reduce/reduce conflict occurs if there are two or more rules that apply to the same sequence of symbols\cite[sec 5.6]{bison13}.
+
+
+When the parser sees a symbol and can \emph{reduce} to two different rules, it is called a reduce-reduce conflict. This is usually a critical problem because the parser has no reasonable way of choosing which rule to reduce to. Happy simply reduces to the rule defined first. Below is the most simple example of a reduce/reduce conflict (in simplified BNF notation)
+
+\begin{lstlisting}
+Foo : 'a'
+Bar : 'a'
+\end{lstlisting}
+
+When seeing a \code{'a'} the parser cannot decide whether to reduce to \code{Foo} or \code{Bar}.
+
+A shift-reduce conflict happens when the parser has the option to either reduce to a rule or shift the symbol and continue. This is much less critical because the obvious choice is always to shift. Consider the following example of a
+
+\begin{lstlisting}
+Foo : 'a' 'b'
+Bar : 'a'
+\end{lstlisting}
+
+Here the parser, when seeing an \code{'a'} as the current symbol and \code{'b'} as the look-ahead symbol, it can either reduce the \code{Bar} rule or shift the \code{'a'} and continue parsing the \code{'b'}.
 
 \subsection{Syntactic sugar}
 \label{sec:imp-sugar}
@@ -92,7 +150,7 @@ We have implemented a desugaring module which receives the matched tokens and co
 
 \begin{itemize}
   \item \textbf{Infix function application}
-    
+
     This is implemented in the parser, as it simply takes the two arguments of the application and parses it as a normal function call with two arguments.
 
   \item \textbf{Multiple parameters and arguments}
@@ -108,7 +166,7 @@ We have implemented a desugaring module which receives the matched tokens and co
     As the representation of `strings' outputted from the lexer is a Haskell-list, where each element is a letter, we just map each element to a `PChar' and wrap it within a `PList'. Thus it has become a list of characters in the parse tree.
 
   \item \textbf{List comprehensions}
-    
+
     As list comprehensions are composed of an output expression, draws and guards, the desugaring is implemented as follows (for an example of a list comprehension, and its desugared version,  please see section \ref{sec:ex-listcomp}):
     \begin{description}
       \item[First] the identifiers from the draws are extracted as these will be used as arguments to the various functions.
@@ -117,7 +175,7 @@ We have implemented a desugaring module which receives the matched tokens and co
       \item[Finally,] the \textbf{then}-branch of the \textbf{if}-expression is a function with the output expression as its body and the extracted identifiers as its arguments. The \textbf{else}-branch is simply an empty list. This implies that only the elements that pass the guards are outputted, as flatMap gets rid of empty elements.
     \end{description}
 
-    
+
 \end{itemize}
 
 TODO: infix
