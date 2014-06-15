@@ -112,6 +112,7 @@ prettyDecls decls = intercalate "\n\n" (map prettyDecl decls)
 
 prettyDecl :: Decl -> String
 prettyDecl (PDecl name expr) = printf "%s = %s" name (prettyExpr expr)
+prettyDecl _ = ""
 
 prettyExpr :: Expr -> String
 prettyExpr (PInteger val) = show val

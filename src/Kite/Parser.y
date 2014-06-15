@@ -139,8 +139,8 @@ Apply   :: { Expr }
         | '(' operator Expr ')'    { mkPartialRightInfixCall $2 $3 }
 
 ListComp :: { Expr }
-        : '[' Expr '|' Draws '|' Exprs ']' { mkComprehension (mkCompreExpr $2 $4) $4 (mkCompreGuards $6 $4) }
-        | '[' Expr '|' Draws ']' { mkComprehension (mkCompreExpr $2 $4) $4 (mkCompreGuards [] $4) }
+        : '[' Expr '|' Draws '|' Exprs ']' { mkComprehension $2 $4 $6 }
+        | '[' Expr '|' Draws ']'           { mkComprehension $2 $4 [] }
 
 Bind :: { Expr }
         : id '=' Expr                  { PBind $1 $3 }
