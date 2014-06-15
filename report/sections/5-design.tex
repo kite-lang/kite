@@ -78,13 +78,12 @@ multiple backends.
 
 \textbf{LLVM as backend:} The LLVM compiler
 infrastructure\footnote{LLVM Project \url{http://llvm.org/}} will allow
-for low level binary machine code generation. The generation can be
-done using LLVM bindings for Haskell. The LLVM infrastructure
+for low level binary machine code generation. The LLVM infrastructure
 will take a representation of the parse tree and emit a LLVM
 intermediate representation (IR) which can be used for code
 generation. Since LLVM is strong statically typed, a modified variant
 of Kites parse tree is needed. The LLVM infrastructure will also provide
-optimization passes for a given LLVM IR.
+optimization passes for a given LLVM IR. 
 
 \textbf{JavaScript as backend:} As an alternative, a JavaScript emitter
 can be implemented and used as backend. Since JavaScript is untyped,

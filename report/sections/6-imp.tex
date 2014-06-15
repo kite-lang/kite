@@ -295,9 +295,14 @@ In it's current state the algorithm only eliminates unused top-level declaration
 
 \subsection{Code generation}
 
-The
+The implementation of code generation is split into parts for LLVM and JavaScript.
 
-TODO: (i language-deisgn) Write reserved names (Void, if, then, else, etc...)
+\textbf{LLVM as backend:} The generation can be done using LLVM
+bindings for Haskell. 
+
+
+\textbf{JavaScript as backend:}
+
 
 
 
@@ -305,3 +310,4 @@ TODO: (i language-deisgn) Write reserved names (Void, if, then, else, etc...)
 %%% mode: latex
 %%% TeX-master: "../report"
 %%% End:
+
