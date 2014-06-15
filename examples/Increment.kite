@@ -1,0 +1,8 @@
+
+increment :: Int -> Int
+increment = (1+)
+
+main = -> 
+{
+        print(increment(2))
+}

@@ -322,6 +322,7 @@ range = |from, to| -> {
     else n * n ** (exp - 1)
 }
 
+-- Mod-power
 pow :: Int -> Int -> Int -> Int
 pow = |b, e, m| -> {
     if e == 0

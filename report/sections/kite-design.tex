@@ -2,9 +2,12 @@ We have been inspired by many other languages when designing and
 implementing Kite, most notably the GHC Haskell compiler\footnote{The
   Glasgow Haskell Compiler \url{http://www.haskell.org/ghc}}.
 
-\subsection{Syntax}
+\subsection{Syntax and semantics}
+In this section we will describe how to use the different features of Kite and how they work, i.e. the syntax and semantics.
 
 TODO: Sugar, List Comprehensions, describe types, more on function declaration.
+
+TODO: Parameterless functions, implicit return, blocks
 
 \textbf{Basic types and declarations}
 
@@ -88,19 +91,6 @@ A single basic bitwise operator:
 \end{kite}
 Kite only includes xor bitwise operator as of now.
 
-\textbf{Conditionals}
-
-
-TODO Conditional statements:
-Kite includes basic if-then-else-statements:
-\begin{kite}
-  
-  if BoolStatement then Statement else Statement
-\end{kite}
-A more advanced form of the if-then-else-statement is the pattern
-matching, which will be discussed later.
-Function declaration in Kite:
-
 \textbf{Function declaration}
 
 Every function in Kite is declared as an anonymous function:
@@ -151,7 +141,7 @@ example of infix operators is the basic + arithmetic operation:
   foo = 1 + 2
 \end{kite}
 
-Where the desugared version of the same statement is given as:
+Where the desugared version of the same expression is given as:
 
 \begin{kite}
 
@@ -168,7 +158,8 @@ of multiple parameters:
     a + b
   }
 \end{kite}
-Which will be a syntactic sugar for the following code:
+
+Which will be syntactic sugar for the following code:
 \begin{kite}
 
   foo = |a| -> {
@@ -178,7 +169,27 @@ Which will be a syntactic sugar for the following code:
   }
 \end{kite}
 
-Strings are syntactic sugar for list of characters, $List(Char)$,
+\textbf{Parameterless functions} are also syntactic sugar. For instance the main function is often declared as follows:
+
+\begin{kite}
+
+main = -> 
+{
+  ...
+}
+\end{kite}
+
+and this is simply shorthand for
+
+\begin{kite}
+
+main = |Void| -> 
+{
+  ...
+}
+\end{kite}
+
+\textbf{Strings} are syntactic sugar for list of characters, $List(Char)$,
 which will allow for easier representations of character lists. An
 example of a string is as follows:
 \begin{kite}
@@ -194,7 +205,7 @@ using double-quite (") and characters using single-quite (') will be:
 \end{kite}
 
 \label{sec:ex-listcomp}
-List comprehensions are syntactic sugar for manipulating
+\textbf{List comprehensions} are syntactic sugar for manipulating
 lists. An example of a list comprehension is as follows:
 \begin{kite}
   
@@ -214,27 +225,105 @@ where the desugared version of the given example, will look as follows:
 \end{kite}
 Take note that list comprehensions uses functions defined in the
 foundation, which will be discussed later
-\subsection{Semantics}
+\\
+
 \label{sec:currying}
 
-TODO: Recursion, HoF, Currying, pattern matching,
-partial application, Mutability, conditionals maaske mere.
+\\
 
-\textbf{Pattern matching}
+\textbf{Recursion} 
+
+We have implemented recursion, and examples hereof are in the following where we also show pattern matching.
+\\
+
+\textbf{Conditionals}
+
+Kite features two conditional expressions, the if-expression and pattern matching.
 
 
-Both pattern matching and recursion is used in the example below:
+
+The \textbf{if-expression} is not to be confused with an if-statement, as our implementation is not a control flow statement. It will always return an expression, and the return-types of the consequence and alternative must be the same.
+
+
+\begin{kite}
+  
+  if BoolExpression then Expression else Expression
+\end{kite}
+
+
+A more advanced form of conditional is \textbf{pattern matching}. Some pattern matching is possible in Kite. As we haven't implemented type declaration (TODO - sry, Groupleader) ...
+
+... we have hardcoded the most basic cases of pattern matching. This includes matching pairs, expressions, lists and `otherwise'.
+
+
+Below we show the matching of `n' on 0, which is an expression, and `otherwise', which is written `\_':
 \begin{kite}
 
 fibo = |a, b, n| -> {
     match n {
     0 -> a,
-    n -> fibo(b, (a + b), (n - 1))
+    _ -> fibo(b, (a + b), (n - 1))
     }
 }
 \end{kite}
 
-TODO Pattern matching can also be applied on lists and pairs.
+An example of pattern matching on lists is our implementation of the function `reverse' \ref{foundation} (TODO ref to Foundation), which matches `xs' with an expression, the empty list, and the head and tail of `xs':
+
+\begin{kite}
+
+reverse = |xs| -> {
+  match xs {
+    []    -> [],
+    x,xs  -> reverse (xs) ++ [x]
+  }
+}
+
+\end{kite}
+
+TODO - skriv at vi ikke kan matche nestede ting
+
+The final case is matching on pairs. The example below shows our implementation of the function `fst' (first):
+\begin{kite}
+
+fst :: (a, b) -> a
+fst = |p| -> {
+  match p {
+    (a , b) -> a
+  }
+}
+\end{kite}
+\\
+
+\textbf{Higher order functions (HoF)}
+
+Kite features HoF, and the map-function is an example hereof. It takes a function and applies to every element of a list and returns the modified list:
+
+\begin{kite}
+
+map :: (a -> b) -> [a] -> [b]
+map = |f, ls| -> {
+  match ls {
+    [] -> [],
+    x,xs -> f (x) : map (f, xs)
+  }
+}
+\end{kite}
+
+TODO: Currying
+
+\textbf{Partial application}
+
+An example of partial application is the function `increment', which partially applies addition:
+
+\begin{kite}
+
+increment :: Int -> Int
+increment = (1+)
+
+\end{kite}
+
+
+
 
 \subsection{Foundation}
 
