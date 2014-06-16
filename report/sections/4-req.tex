@@ -1,16 +1,16 @@
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../report"
+%%% End:
+
 TODO: SKAL DER MERE?? FLERE EKSEMPLER ELLER ANDET GODT?
 
-In the requirements we will focus more on the language specific features of
-Kite. As most of the compiler specific requirements are discussed in
-the design section, and are basic for most compilers, they will not
-be discussed here. 
+In the requirements-section we will focus more on the language specific features of Kite. As most of the compiler specific requirements are discussed in the design-section, and are basic for most compilers, they will not be discussed here.
 
 \subsection{Minimum requirements}
-As of our initial requirements for Kite, we've set a list of minimum
-requirements for our compiler.
+As of our initial requirements for Kite, we have set a list of minimum requirements for our compiler.
 
-\textbf{Type system:} Standard types that should be included in Kite is as
-follows:
+\textbf{Type system:} Standard types that should be included in Kite is as follows:
 \begin{itemize}
 \item [--] Float
 \item [--] Integers
@@ -19,90 +19,71 @@ follows:
 \item [--] Lists
 \item [--] Pairs
 \end{itemize}
-TODO Maaske mere? 
+TODO Maaske mere?
 
-\textbf{Static type check:} In our initial analysis we wanted to
-implement a static type checker. A static type checker will ensure
-type safety in a given program. A program passing the static type
-check will be free of type errors. If a program is verified from the
-analyzer, the compiler will be able to trust the intermediate
-representation given from the type checker. This will also result in
-any type error will be caught compile-time.
+\textbf{Static type check:}
+In our initial analysis, we want to implement a static type-checker. This will ensure type safety in a given program, e.i. a program passing the static type-check will be free of type errors. If a program is verified by the analyzer, the compiler will be able to trust the intermediate representation given from the type-checker. This will also result in any type error will be caught compile-time.
 
-\textbf{Code generation:} For the machine to be able to understand the
-high-level language, a step of code generation is needed. Kites code
-generator must be able to take some representation of the given source
-code, and convert it such that the machine will be able to execute the
-source code.
+\textbf{Code generation:}
+For a machine to be able to understand the high-level language, the process of code generation is needed. Kite's code generator must be able to take some representation of the given source code, and convert it such that the machine will be able to execute the resulting output.
 
-\textbf{Recursion:} As recursion is one of the main properties of
-functional languages, recursion will be implemented in Kite. TODO: WHAT? Recursion
-is a function which calls itself to compute some corresponding $n$-th
-element, while upholding some boundaries. TODO: WHAT?
-One of the most used example of recursion is the Fibonacci sequence, as a Fibonacci number is defined the sum of the two previous numbers in the sequence - i.e. recursively defined. A function computing a Fibonacci number can be defined in pseude-code as follows:
+\textbf{Recursion:}
+As recursion is one of the main properties of a functional language, it will have to be central aspect of Kite. In general, recursion is the method of dividing a problem into sub-problems. This is top-down approach to problem-solving and is commonly referred to as the technique ``divide and conquer''. A more specific example of recursion is a function calling it-self until one or more given base-cases are met. One of the most used examples of recursion is the computation of Fibonacci numbers. As a Fibonacci number is defined as the sum of the two previous numbers, it easily implemented with recursion:
+
 \begin{pseudo}
-// Fibo
+// fibonacci
 function fibonacci(n) do
   return if n < 2
     then n
     else fibonacci(n - 1) + fibonacci(n - 2)
+end
 \end{pseudo}
+
 
 \subsection{Optional features}
 
-\textbf{Standard library:} Inspired by Haskells prelude, we want to
-implement a standard module imported by default into all Kite
-modules. The standard module should include useful functions for
-arithmetic operations, string manipulations and list manipulation.
+\textbf{Standard library:}
+Inspired by Haskell's prelude~\footnote{\url{http://hackage.haskell.org/package/base-4.7.0.0/docs/Prelude.html}}, we want to implement a standard function library, imported by default into all Kite modules. This standard module should include useful functions for common operations as arithmetic operations, string manipulations and list manipulation.
 
-\textbf{REPL:} A Read-eval-print-loop will allow the user to have an
-interactive Kite shell. TODO: Mere guf omkring REPL?
+\textbf{REPL:}
+A Read-Eval-Print-Loop, or an \emph{interactive top-level}, will allow a user to have a simple interactive program to give simple input, e.g. a single expression, evaluate it and get the return value, without creating an file and compiling it.
 
-\textbf{High order functions:} The language should have the
-possibility to take functions as parameters and return functions.
+\textbf{Higher-order functions:}
+The language should provide the possibility to create function that take functions as parameters, and returns functions.
 
-\textbf{Mutability:} In a pure functional language there will be
-immutability.
+\textbf{Mutability:}
+In a pure functional language there will be immutability. There will therefor have to be implemented some extra feature to provide mutability of variables.
 
-\textbf{Currying:} As we want all functions only to take one
-parameter, we want to include currying. TODO: Mention lambda calculus
-somewhere, Hindley Milner...
+\textbf{Currying:}
+As we want all functions only to take one parameter, we want to include currying.
+TODO: Mention lambda calculus somewhere, Hindley Milner...
 
-\textbf{Partial application:} As a result of currying, we want to make
-use of partial application.
+\textbf{Partial application:}
+As a result of currying, we want to make use of partial application. E.i. construct the foundation of function in such a way that a function takes a fixed number of arguments, returning a new function of smaller arity~\footnote{the number of arguments or operands the function or operation accepts}.
 
-\textbf{Closures:} TODO
+\textbf{Closures:}
+The principle of closures is that when a function is referenced, it is referenced together with a \emph{referencing environment}. This environment includes a table of all non-local variables of that function. This allows a function access to non-local  variables also when invoked outside its immediate lexical scope.
 
-\textbf{Lazy evaluation:} The language should include lazy evaluation,
-which will allow evaluation of expressions to be delayed until it's needed.
+\textbf{Lazy evaluation:}
+The language should include lazy evaluation, which will allow evaluation of expressions to be delayed until it's needed. This technique can greatly decrease the run-time of certain code patterns.
 
-\textbf{Type inference:} This is an extension of the type
-checker. Type inference will let the analyzer automatically deduct
-types of expressions. 
+\textbf{Type inference:}
+This is an extension of the type-checker. Type inference will let the analyzer automatically deduct types of expressions, thus removed the need to declaring the types of the parameters and return types of a function.
 
-\textbf{I/O:} Input/Output is needed for user interaction between the
-user and computer. To make the language more usable, a minimum of I/O
-must be present.
+\textbf{I/O:}
+Input/Output is needed for user interaction between the user and computer. To make the language more usable, a minimum of I/O must be present. Optional features would be read/write from file etc.
 
-\textbf{Syntactic sugar:} To make some expressions more readable, we want to
-implement a sugaring module.
+\textbf{Syntactic sugar:}
+To make some expressions and code pattern more readable, we want to implement a sugaring module. With this module, features as list comprehension can be added (see below).
 
-\textbf{List comprehensions:} As list comprehensions is syntactic
-sugar for creating new lists from already existing lists, this is an
-extension of sugaring. List comprehensions will output new lists, as a
-result of some operation performed on each element of another list (or
-lists). It should also be possible to create a subsequence of the
-elements of another list, by implying that each element in the created
-list should satisfy a number of conditions.
+\textbf{List comprehensions:}
+List comprehensions is syntactic sugar for creating new lists from already existing lists, which is an extension of syntactic sugaring. List comprehensions will output new lists, as a result of some operation performed on each element of another list (or lists). It should also be possible to create a sub-sequence of the elements of another list, by implying that each element in the created list should satisfy a number of conditions.
 
-\textbf{Preprocessing:} To make it possible to include another file
-into a given program we want to make use of a preprocessor. The
-preprocessor should be C-like where '\#include' is used. The
-preprocessor should just be able to import external files into the
-current program.
+\textbf{Preprocessing:}
+To make it possible to include another file into a given program, we want to make use of a preprocessor. The preprocessor should be C-like where '\#include' is used to specify which external files to be included. A simple preprocessor will suffice, like the C-preprocessor.
 
 
-% Mutability
+% Mutaddfdfbghnjghfhgrbhgfdghfdvfdgbhgfdghtdehgfhgfdfbgfdbility
 % REPL
 % StdLib
 % HoF
@@ -131,8 +112,3 @@ current program.
 % Int
 % Float/double
 % Tuples/structs
-
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-master: "../report"
-%%% End: 
