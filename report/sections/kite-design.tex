@@ -22,11 +22,18 @@ pair = (1, 'a')
 
 The basic types will be Int, Float, Bool, Lists, Chars and pairs.
 
-Functional languages often make extensive use of lists, which is indeed also the case for Kite. A list is an ordered array of items that can be transformed in many different ways. We use a common short-hand method for describing a list of things, using square brackets $[\ ]$. For instance, a $List(Int)$ (pronounced ``List of Ints'') is denoted $[Int]$ and a list of a type variables $a$ is $[a]$. Lists can be nested, allowing $List(List(Int))$ denoted $[[Int]]$.
+Functional languages often make extensive use of lists, which is
+indeed also the case for Kite. A list is an ordered array of items
+that can be transformed in many different ways. We use a common
+short-hand method for describing a list of things, using square
+brackets \code{[\ ]}. For instance, a \code{List(Int)} (pronounced ``List of
+Ints'') is denoted \code{[Int]} and a list of a type variables $a$ is
+\code{[a]}. Lists can be nested, allowing \code{List(List(Int))} denoted \code{[[Int]]}.
 
-The pair type is also abbreviated using $(\ ,\ )$, for instance the type $Pair(Int, Bool)$ is written $(Int, Bool)$
+The pair type is also abbreviated using $(\ ,\ )$, for instance the type \code{Pair(Int, Bool)} is written \code{(Int, Bool)}
 
-Strings is represented as syntactic sugar for lists of characters. For instance, $['f', 'o', 'o']$ has the sugared version $``foo''$. This will be discussed later.
+Strings is represented as syntactic sugar for lists of characters. For
+instance, \code{['f', 'o', 'o']} has the sugared version \code{"foo"}. This will be discussed later.
 
 Basic arithmetic operators:
 \begin{kite}
@@ -173,13 +180,13 @@ main = |Void| -> {
 }
 \end{kite}
 
-As mentioned earlier, \textbf{Strings} are syntactic sugar for list of characters, $List(Char)$, which will allow for easier representations of character lists. An example of a strings:
+As mentioned earlier, \textbf{Strings} are syntactic sugar for list of characters, \code{List(Char)}, which will allow for easier representations of character lists. An example of a strings:
 
 \begin{kite}
 str = "Hello"
 \end{kite}
 
-Where the corresponding desugar (note the distinction between strings using double-quotes (``...'') and characters using single-quotes ('...') will be:
+Where the corresponding desugar (note the distinction between strings using double-quotes ("...") and characters using single-quotes ('...') will be:
 
 \begin{kite}
 str = ['H', 'e', 'l', 'l', 'o']
@@ -264,7 +271,8 @@ if booleanExpression then consequenceExpression else alternativeExpression
 
 A more advanced form of conditional is \textbf{pattern matching}. It works by matching an expression to a list of cases, which can be either a normal expression or it can be a destructuring of a list or a pair.
 
-Below we show the matching of `n' on 0, which is an expression, and `otherwise', which is written `\_':
+Below we show the matching of \code{n} on 0, which is an expression,
+and \code{otherwise}, which is written \code{"\_"}:
 
 \begin{kite}
 fibo :: a -> b -> Int -> a
