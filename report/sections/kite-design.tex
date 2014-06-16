@@ -45,7 +45,6 @@ which will be discussed later.
 
 Basic arithmetic operators in Kite and their us
 \begin{kite}
-
 two = 1 + 1  ---->  2
 mod = 10 % 2 ---> 0
 \end{kite}
@@ -68,7 +67,6 @@ Note: some operators will only work on certain types.
 
 Basic boolean operators:
 \begin{kite}
-
 foo = 1 < 2  ----> True
 bar = 1 == 2 ----> False
 \end{kite}
@@ -89,7 +87,6 @@ Basic boolean operators include
 
 A single basic bitwise operator:
 \begin{kite}
-
 10 ^ 8 ----> 2
 \end{kite}
 Kite only includes xor bitwise operator as of now.
@@ -106,14 +103,12 @@ Since everything in Kite is an expression, functions is simply a
 variable bound to a given anonymous function. A function is declared
 as follows:
 \begin{kite}
-
 function :: ArgType -> ... -> ReturnType
 function = |ArgName, ... | -> { ... }
 \end{kite}
 Example of valid function declaration in Kite, taking one parameter of
 the type Int and returning an Int.
 \begin{kite}
-
 foo :: Int -> Int
 foo = |a| -> {
   a + 1
@@ -148,7 +143,6 @@ foo = 1 + 2
 Where the desugared version of the same expression is given as:
 
 \begin{kite}
-
 foo = ((+) (1)) (2)
 \end{kite}
 
@@ -157,7 +151,6 @@ parameter functions (or currying, see currying in \ref{subsubsec:currying})
 will allow the usage of multiple parameter functions. Example of usage
 of multiple parameters:
 \begin{kite}
-
 foo :: a -> a -> a
 foo = |a, b| -> {
   a + b
@@ -166,7 +159,6 @@ foo = |a, b| -> {
 
 Which will be syntactic sugar for the following code:
 \begin{kite}
-
 foo :: a -> a -> a
 foo = |a| -> {
   return |b| -> {
@@ -178,7 +170,6 @@ foo = |a| -> {
 \textbf{Parameterless functions} are also syntactic sugar. For instance the main function is often declared as follows:
 
 \begin{kite}
-
 main = -> 
 {
   ...
@@ -188,7 +179,6 @@ main = ->
 and this is simply shorthand for
 
 \begin{kite}
-
 main = |Void| -> 
 {
   ...
@@ -220,7 +210,6 @@ list = [ x*y | x <- range(3,5), y <- range(4,6) | (x+y) >= 10, y > 4]
 \end{kite}
 where the desugared version of the given example, will look as follows:
 \begin{kite}
-
 list =
 flatMap(|x| -> {
   flatMap (|y| -> {
@@ -243,23 +232,17 @@ Kite features two conditional expressions, the if-expression and pattern matchin
 
 
 
-The \textbf{if-expression} is not to be confused with an if-statement, as our implementation is not a control flow statement. It will always return an expression, and the return-types of the consequence and alternative must be the same.
+The \textbf{if-expression} is not to be confused with an if-statement, as our implementation is not a control flow statement. It will always return an expression, and the return-types of the consequent and alternative must be the same.
 
 
 \begin{kite}
-  
 if BoolExpression then Expression else Expression
 \end{kite}
 
-
-A more advanced form of conditional is \textbf{pattern matching}. Some pattern matching is possible in Kite. As we haven't implemented type declaration (TODO - sry, Groupleader) ...
-
-... we have hardcoded the most basic cases of pattern matching. This includes matching pairs, expressions, lists and `otherwise'.
-
+A more advanced form of conditional is \textbf{pattern matching}. It works by matching an expression to a list of cases, which can be either a normal expression or it can be a destructuring of a list or a pair.
 
 Below we show the matching of `n' on 0, which is an expression, and `otherwise', which is written `\_':
 \begin{kite}
-
 fibo :: a -> b -> Int -> a
 fibo = |a, b, n| -> {
     match n {
@@ -272,7 +255,6 @@ fibo = |a, b, n| -> {
 An example of pattern matching on lists is our implementation of the function `reverse' \ref{foundation}, which matches `xs' with an expression, the empty list, and the head and tail of `xs':
 
 \begin{kite}
-
 reverse = |xs| -> {
   match xs {
     []    -> [],
@@ -284,7 +266,6 @@ reverse = |xs| -> {
 
 The final case is matching on pairs. The example below shows our implementation of the function `fst' (first):
 \begin{kite}
-
 fst :: (a, b) -> a
 fst = |p| -> {
   match p {
@@ -297,7 +278,6 @@ fst = |p| -> {
 Kite features HoF, and the map-function is an example hereof. It takes a function and applies to every element of a list and returns the modified list:
 
 \begin{kite}
-
 map :: (a -> b) -> [a] -> [b]
 map = |f, ls| -> {
   match ls {
@@ -312,7 +292,6 @@ map = |f, ls| -> {
 Besides every function in Kite is curried\footnote{Which should be fairly easy to see when looking at the type-declarations of the functions}, we have also implemented a curry (and uncurry) function, which given a function with a single pair as the argument, returns the same function taking two arguments corresponding to the values of the pair:
 
 \begin{kite}
-
 curry :: ((a, b) -> c) -> (a -> b -> c)
 curry = |f| -> {
   |a,b| -> {
@@ -324,7 +303,6 @@ curry = |f| -> {
 Uncurry naturally does the opposite, meaning it takes a function taking two parameters and returns the same taking a single pair as an argument.
 
 \begin{kite}
-
 uncurry :: (a -> b -> c) -> ((a, b) -> c)
 uncurry = |f| -> {
   |p| -> {
@@ -342,7 +320,6 @@ We have chosen to include these two functions from \nameref{foundation}) in this
 An example of partial application is the function `increment', which partially applies addition:
 
 \begin{kite}
-
 increment :: Int -> Int
 increment = (1+)
 \end{kite}
@@ -369,7 +346,6 @@ Below are two examples from Foundation.
 
 List concatenation does as the name suggests, namely concatenating two lists into a single one:
 \begin{kite}
-
 {++} :: [a] -> [a] -> [a]
 {++} = |l, r| -> {
   match l {
@@ -382,7 +358,6 @@ List concatenation does as the name suggests, namely concatenating two lists int
 For example, as strings are simply lists of characters, \code{++} can be used as follows:
 
 \begin{kite}
-
 "Hello," ++ " World!" ----> "Hello, World!"
 \end{kite}
 
@@ -390,7 +365,6 @@ For example, as strings are simply lists of characters, \code{++} can be used as
 
 List indexing retrieves the n'th element\footnote{Starting from 0, meaning Kite uses 0-indexing} of a list:
 \begin{kite}
-
 {#} :: [a] -> Int -> a
 {#} = |xs, idx| -> {
   match xs {
@@ -404,7 +378,6 @@ List indexing retrieves the n'th element\footnote{Starting from 0, meaning Kite 
 A simple example of list indexing is as follows:
 
 \begin{kite}
-
 teens = range(13,19)
 sweetSixteen = teens # 3 ----> 16
 \end{kite}
