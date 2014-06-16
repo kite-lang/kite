@@ -1,19 +1,11 @@
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: "../report"
-%%% End:
-
-TODO: declaration of infix functions
-
 We have been inspired by many other languages when designing and implementing Kite, most notably the GHC Haskell Compiler~\footnote{The Glasgow Haskell Compiler \url{http://www.haskell.org/ghc}}.
 
 
 \subsection{Syntax and semantics}
 In this section we will describe how to use the different features of Kite and how they work, i.e. the syntax and semantics.
 
-TODO: Describe the panic-function
-TODO: describe types, more on function declaration.
-TODO: Parameterless functions, implicit return, blocks
+TODO: Implicit return, blocks - Meget kort beskrevet under
+functions. Mere?
 
 
 \subsubsection{Basic types and declarations}
@@ -39,7 +31,7 @@ Strings is represented as syntactic sugar for lists of characters. For instance,
 Basic arithmetic operators:
 \begin{kite}
 two = 1 + 1  ---->  2
-mod = 10 % 2 ---> 0
+rest = 10 % 2 ---> 0
 \end{kite}
 
 \begin{table}[H]
@@ -53,7 +45,7 @@ mod = 10 % 2 ---> 0
     $x / y$        & Division             \\ \hline
     $x**y$         & Exponentiation       \\ \hline
     $x \% m$       & Remainder of x / y   \\ \hline
-    $pow(x, y, m)$ & Modulo exponentation \\ \hline
+    $powmod(x, y, m)$ & Modulo exponentation \\ \hline
   \end{tabular}
   \label{tbl:kite-design-arith-op}
   \caption{Basic arithmetic operators in Kite}
@@ -96,6 +88,11 @@ Every function in Kite is declared as an anonymous function:
 |argOne, argTwo, ...| -> { ... }
 \end{kite}
 
+A function is defined as a list of arguments and a block. A block is
+defined as a list of expressions, where it is implicit that the last
+expression is returned TODO: reference til implementation?. Each block
+has its own immediate scope.
+
 Since everything in Kite is an expression, functions is simply a variable bound to a given anonymous function. A function is declared as follows:
 
 \begin{kite}
@@ -112,18 +109,19 @@ foo = |a| -> {
 }
 \end{kite}
 
-A runnable program must always include the `main' function, which will be called once when the emitted code is run (by Node.js~\footnote{http://nodejs.org/} if target is JavaScript):
+A runnable program must always include the `main' function, which will
+be called once when the emitted code is run (by
+Node.js~\footnote{http://nodejs.org/} if target code generation
+backend is JavaScript):
 
 \begin{kite}
 main = -> { ... }
 \end{kite}
 
 In order to use the preprocessor to include another code file, use the \code{\#include} keyword:
-
 \begin{kite}
 #include "foo.kite"
 \end{kite}
-
 
 \subsubsection{Syntactic sugar}
 \label{sec:kite-design-sugar}
@@ -207,14 +205,55 @@ flatMap(|x| -> {
 }, range(3,5) )
 \end{kite}
 
-Note that list comprehensions uses functions defined in \nameref{foundation}), which will be discussed later.
+Note that list comprehensions uses functions defined in
+\nameref{foundation}), which will be discussed later.
 
+\textbf{Infix functions} Kite allows for use of infix functions. Infix
+functions is syntactic sugar for prefix function calls, with some
+given parameters. Using \code{`} (backtick) will imply the use of
+infix function calls
+
+A common example of infix function calls, is the \code{elem}
+-function, which is defined as follows (from \nameref{foundation}):
+\begin{kite}
+  elem :: a -> [a] -> Bool
+  elem = |el| -> {
+    any ((el==))
+  }
+\end{kite}
+The following Kite example will be an example of usage of
+\code{elem}. \code{elem} is here used as an infix function call.
+\begin{kite}
+  foo =  -> {
+    list = [1, 2, 3]
+    1 `elem list
+  }
+\end{kite}
+The resulting desugared version of same example will look as follows:
+
+\begin{kite}
+  foo = |Void| -> {
+    list = [1,2,3];
+    a = ((elem) (1)) (list);
+    return a
+  }
+\end{kite}
 
 \subsubsection{Recursion}
-We have implemented recursion, and examples hereof are will follow where we also show pattern matching.
-
+Kite supports recursion, which allows functions to call itself in
+programs. Basic recursion will have the following syntax:
+\begin{kite}
+  foo :: Int -> Int
+  foo = |a| -> {
+    if a == 1 then 1
+    else a + foo(a - 1)
+  }
+\end{kite}
+Kite also supports recursion in pattern matching, which will be
+discussed later in \nameref{subsubsec:conditionals}.
 
 \subsubsection{Conditionals}
+\label{subsubsec:conditionals}
 Kite features two conditional expressions, the if-expression and pattern matching.
 
 The \textbf{if-expression} is not to be confused with an if-statement, as our implementation is not a control flow statement. It will always return an expression, and the return-types of the consequent and alternative must be the same.
@@ -313,16 +352,35 @@ Increment can then be applied to an integer:
 two = increment(1) ----> 2
 \end{kite}
 
-It should be noted that the addition operator, `+', has type \code{a -> a -> a}. Thus, partial application yields \code{a -> a} and since it is partially applied with an integer, the type of \code{increment} becomes \code{Int -> Int}
+It should be noted that the addition operator, `+', has type \code{a
+  -> a -> a}. Thus, partial application yields \code{a -> a} and since
+it is partially applied with an integer, the type of \code{increment}
+becomes \code{Int -> Int}
+
+\subsubsection{Error handling}
+Kite supports exceptions using the keyword \code{panic}. \code{panic}
+will stop Kite execution.
+
+An example of the \code{panic} function in use:
+\begin{kite}
+  head :: [a] -> a
+  head = |xs| -> {
+    match xs {
+      [] -> panic ("can't take head of empty list"),
+      x,xs -> x
+    }
+  }
+\end{kite}
+Where if a user tries to take the head of an empty list, Kite
+execution will stop and the error message will be shown.
+TODO: Lidt random...
 
 
 \subsection{Foundation}
-As mentioned earlier in the report (TODO: ref), the `Foundation' of Kite is a standard library implemented in Kite, consisting of often used functions. Kite's \nameref{foundation}) is inspired by Haskell's `Prelude', and includes many functions found in Prelude.
-
-TODO: MORE FUN FUN FUN
+As mentioned earlier in the \nameref{sec:requirements}, the `Foundation' of Kite is a standard library implemented in Kite consisting of often used functions. Kite's Foundation is inspired by Haskell's `Prelude', and includes many functions found in
+Prelude. 
 
 Below are two examples from Foundation.
-
 \subsubsection{List concatenation}
 List concatenation does as the name suggests, namely concatenating two lists into a single list:
 
@@ -362,4 +420,10 @@ teens = range(13,19)
 sweetSixteen = teens # 3 ----> 16
 \end{kite}
 
-For a full documentation of Foundation, please see \nameref{foundation}.
+For a full documentation of Foundation, please see
+\nameref{foundation}.
+
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "../report"
+%%% End: 

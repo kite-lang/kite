@@ -1,3 +1,8 @@
+foo =  -> {
+    list = [1, 2, 3]
+    1 `elem list
+}
+
 main = -> {
-  print("Hello, " ++ "World!")
+  print $ foo()
 }
