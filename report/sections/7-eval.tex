@@ -11,7 +11,7 @@ the kite-compiler and its dependencies. The repository is hosted at
 GitHub~\footnote{\url{https://github.com/}} and can be found publicly at
 \url{https://github.com/altschuler/kite}.
 
-\subsection{IDE}
+\subsubsection{IDE}
 For development of kite code, we have made a kite-mode to integrate in
 Emacs~\footnote{\url{http://www.gnu.org/software/emacs/}}. This
 provides syntax-highlighting and shortcuts for compilation and
@@ -84,8 +84,7 @@ In the following section we will describe the various tests we have implemented 
 
 We have made use of both \textbf{unit}- and \textbf{validation}-tests. Unit-testing for ensuring that each component, i.e.\ module, of the compiler, e.g.\ the lexer, parser etc., are \emph{indidually} functioning as expected. The validation-tests have been focused on that the interface between all the various components are functioning as expected.
 
-\subsubsection{Unit-testing}  TODO: implementer tests af type-declarations?
-
+\subsubsection{Unit-tests}  TODO: implementer tests af type-declarations?
 Unit testing has been used on each of the modules of the
 compiler. For instance, we have tested the parser module in cases
 where the output of the lexer should yield a parse error and in cases
@@ -156,5 +155,6 @@ A slightly larger program that sums the even Fibonacci numbers less than 4 milli
   Above is a summation of the different Kite-programs we have made and optimized.
 \end{center}
 
+
 \subsection{Code generation}
-TODO: SKRIV OM JABBATHEHUTSCRIPT
+TODO: skriv om jabbathehutscript
