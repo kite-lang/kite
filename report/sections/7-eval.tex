@@ -5,39 +5,24 @@
 
 \subsection{Development}
 \subsubsection{Source code management}
-Through out this project we have used
-git~\footnote{\url{http://git-scm.com/}} to manage the source code of
-the kite-compiler and its dependencies. The repository is hosted at
-GitHub~\footnote{\url{https://github.com/}} and can be found publicly at
-\url{https://github.com/altschuler/kite}.
+Through out this project we have used git~\footnote{\url{http://git-scm.com/}} to manage the source code of the Kite-compiler and its dependencies. The repository is hosted at GitHub~\footnote{\url{https://github.com/}} and can be found publicly at \url{https://github.com/altschuler/kite}.
 
 \subsubsection{IDE}
-For development of kite code, we have made a kite-mode to integrate in
-Emacs~\footnote{\url{http://www.gnu.org/software/emacs/}}. This
-provides syntax-highlighting and shortcuts for compilation and
-execution of javascript with Node.js.
+For development of kite code, we have made a kite-mode to integrate in Emacs~\footnote{\url{http://www.gnu.org/software/emacs/}}. This provides syntax-highlighting and various shortcuts for compilation and execution of JavaScript with Node.js.
 
-The source of kite-mode is located in the \code{utils} directory of
-the repository. See~\ref{kite-mode}, for the source.
+The source of kite-mode is located in the \code{utils} directory of the repository. See~\ref{kite-mode}, for the source.
 
 
 \subsection{Preprocessor}
-As we use \code{cpphs}\cite{wallace04} for preprocessing, which is a
-port of the C-preprocessor in Haskell, one will have to take certain
-considerations when including files.
+As we use \code{cpphs}\cite{wallace04} for preprocessing, which is a port of the C-preprocessor in Haskell, one will have to take certain considerations when including files.
 
-One major pitfall is creating circular dependencies. If two files includes
-each other, using the \code{\#include file.kite} syntax, this will
-cause an infinite loop of the files including each-other, resulting in
-a stack-overflow. Circular dependencies are not detected which can
-cause confusing errors, without any detailed feedback.
+One major pitfall is creating circular dependencies. If two files includes each other, using the \code{\#include file.kite} syntax, this will cause an infinite loop of the files including each-other, resulting in a stack-overflow. Circular dependencies are not detected which can cause confusing errors, without any detailed feedback.
 
-Another pitfall is including the same file twice. Take for example the
-following set of files and inclusions:
+Another hurdle is including the same file twice. Take for example the following set of files and inclusions:
 
-\begin{lstlisting}[caption=\code{grandfather.kite}]
+\begin{kite}[caption=\code{grandfather.kite}]
   foo = -> { bar }
-\end{lstlisting}
+\end{kite}
 
 \begin{lstlisting}[caption=\code{father.kite}]
   #include 'grandfather.kite'
@@ -50,13 +35,9 @@ following set of files and inclusions:
   ...
 \end{lstlisting}
 
-This will cause a compile-time error, as the \code{foo} function is
-declared twice, which is not allowed.
+This will cause a compile-time error, as the \code{foo} function is declared twice, which is not allowed.
 
-Both of these pitfalls can be avoided using include
-guards~\footnote{\url{http://en.wikipedia.org/wiki/Include_guard}},
-ensuring that a file is only included if a specific flag is not
-defined, meaning the file has not yet been included.
+Both of these pitfalls can be avoided using include guards~\footnote{\url{http://en.wikipedia.org/wiki/Include_guard}}, ensuring that a file is only included if a specific flag is not defined, meaning the file has not yet been included.
 
 \begin{lstlisting}[caption=\code{grandfather.kite}]
   #ifndef GRANDFATHER_H
@@ -85,10 +66,7 @@ In the following section we will describe the various tests we have implemented 
 We have made use of both \textbf{unit}- and \textbf{validation}-tests. Unit-testing for ensuring that each component, i.e.\ module, of the compiler, e.g.\ the lexer, parser etc., are \emph{indidually} functioning as expected. The validation-tests have been focused on that the interface between all the various components are functioning as expected.
 
 \subsubsection{Unit-tests}  TODO: implementer tests af type-declarations?
-Unit testing has been used on each of the modules of the
-compiler. For instance, we have tested the parser module in cases
-where the output of the lexer should yield a parse error and in cases
-where it should not.
+Unit testing has been used on each of the modules of the compiler. For instance, we have tested the parser module in cases where the output of the lexer should yield a parse error and in cases where it should not.
 
 \begin{lstlisting}[caption=\code{Kite.Test.TypeCheck.hs} snippet]
   ...
@@ -100,10 +78,7 @@ where it should not.
   ...
 \end{lstlisting}
 
-Above we have two test cases of the type checker module. In the first
-we check that a legal list assignment should \emph{not} yield an
-error, while the second, where a list is declared with distinct types,
-should yield a type error of type \code{TypeE}.
+Above we have two test cases of the type checker module. In the first we check that a legal list assignment should \emph{not} yield an error, while the second, where a list is declared with distinct types, should yield a type error of type \code{TypeE}.
 
 \subsubsection{Validation-tests}
 
@@ -111,20 +86,10 @@ As for validation-tests, we have written a test program in Kite itself that test
 
 This can be run command-line with: \code{\$ kite --target=javascript examples/kunit/Runner.kite | node}
 
-
-
 \subsubsection{Continuous integration}
-Throughout the development of the Kite-compiler we have used
-continuous integration (CI) to incrementally check that new changed as
-not broken anything in the compiler. We have done this by triggering a
-make of the code-base, when changes are pushed to the master branch of
-the source-code repository. For this we have used a free service
-called Travis~\footnote{\url{https://travis-ci.org/}}.
+Throughout the development of the Kite-compiler we have used continuous integration (CI) to incrementally check that new changed as not broken anything in the compiler. We have done this by triggering a make of the code-base, when changes are pushed to the master branch of the source-code repository. For this we have used a free service called Travis~\footnote{\url{https://travis-ci.org/}}.
 
-The advantages of using CI is that any changes that breaks the build
-will immediately be detected, and that the party to blame will be
-notified so he/she can fix it before it disrupts further development.
-
+The advantages of using CI is that any changes that breaks the build will immediately be detected, and that the party to blame will be notified so he/she can fix it before it disrupts further development.
 
 For up-to-date status of the build, go to \url{https://travis-ci.org/altschuler/kite}.
 
