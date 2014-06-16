@@ -1,15 +1,16 @@
 cases = asPair
 
 runTestCase = |testCase| -> {
-  -- pair, all the things
   description = fst (testCase)
   test = snd (testCase)
-  --expected = fst (test)
-  --actual = snd (test)
   
-  if test()
+  pass = test()
+
+  if pass
     then print ("  OK    " ++ description)
     else print ("  FAIL  " ++ description)
+
+  pass
 }
 
 runTestCases = |testCases| -> {
@@ -20,11 +21,18 @@ runTestCases = |testCases| -> {
   map (runTestCase, cases)
 }
 
-runTestHarness = |harness| -> {
+runTestSuite = |harness| -> {
   name = fst (harness)
   cases = snd (harness)
 
+
   print ("--- " ++ name ++ " ---")
-  map (runTestCases, cases)
+  results = flatMap (runTestCases, cases)
+
+  total = length (results)
+  passed = length $ filter (id, results)
+
+  print(" ")
+  print(show (passed) ++ " of " ++ show (total) ++ " tests passed")
   print(" ")
 }

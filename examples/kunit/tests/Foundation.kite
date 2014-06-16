@@ -1,4 +1,112 @@
-lists = cases ("Lists", [
+foundationTests = ("Foundation", [
+
+cases ("Functional", [
+  ("id should return the identity value for simple structures", -> {
+    id (2) == 2
+  }),
+
+  ("id should return the identity value for complex structures", -> {
+    id ([[1], [2], [3]]) == [[1], [2], [3]]
+  }),
+
+  ("($) should act as application", -> {
+    id $ 1 == id (1)
+  }),
+
+  ("(.) should compose functions", -> {
+    f = (3+) . (2*)
+    f (2) == 7
+  }),
+
+  ("(.) should compose multiple functions", -> {
+    f = (3+) . (2*) . (-1)
+    f (2) == 5
+  }),
+
+  ("flip should flip function parameters", -> {
+    flipped = flip (asPair)
+    flipped ('1', '2') == ('2', '1')
+  }),
+]),
+
+cases ("Boolean", [
+  ("not should invert boolean values", -> {
+    not (True) == False && not (False) == True
+  }),
+
+  ("&& should conjoin booleans", -> {
+    (True && False) == False
+    && (False && True) == False
+    && (False && False) == False
+    && (True && True) == True
+  }),
+
+  ("|| should disjoin booleans", -> {
+    (True || False) == True
+    && (False || True) == True
+    && (False || False) == False
+    && (True || True) == True
+  }),
+]),
+
+cases ("Equality", [
+  ("/= should be truthy for non-equal values", -> {
+    (1 /= 2)
+    && ("foo" /= "bar")
+    && ([1, 2] /= [1, 2, 3])
+    && (('a', 1) /= ('b', 1))
+  }),
+]),
+
+cases ("Ordering", [
+  ("< should compare using less-than", -> {
+    1 < 2
+  }),
+
+  ("< should compare using greater-than", -> {
+    2 > 1
+  }),
+
+  (">= should compare using greater-than-or-equal", -> {
+    (2 >= 1)
+    && (2 >= 2)
+  }),
+]),
+
+cases ("Pairs", [
+  ("fst should return first part of pair", -> {
+     pair = ("foo", 42)
+     fst (pair) == "foo"
+  }),
+
+  ("snd should return first part of pair", -> {
+     pair = ("foo", 42)
+     snd (pair) == 42
+  }),
+
+  ("asPair should return a pair of values", -> {
+     asPair ("foo", 42) == ("foo", 42)
+  }),
+
+  ("(<>) should be alias of asPair", -> {
+      ("foo" <> 42) == ("foo", 42)
+  }),
+]),
+
+cases ("Lists", [
+  ("(#) should return nth element in list", -> {
+     ([1, 2, 3] # 1) == 2
+  }),
+
+  ("length should return the number of elements in a list", -> {
+     length ([1, 2, 3]) == 3
+  }),
+
+  ("empty should compare a list to the empty list", -> {
+     (empty ([1]) == False)
+     && (empty ([]) == True)
+  }),
+
   ("head should return first element", -> {
      head ([1, 2, 3]) == 1
   }),
@@ -10,20 +118,183 @@ lists = cases ("Lists", [
   ("tail should return empty list on singleton list", -> {
      tail ([1]) == []
   }),
-])
 
-pairs = cases ("Pairs", [
-  ("fst should return first part of pair", -> {
-     pair = ("foo", 42)
-     fst (pair) == "foo"
+  ("init should return all but the last element in a list", -> {
+     init ([1, 2, 3]) == [1, 2]
   }),
 
-  ("snd should return first part of pair", -> {
-     pair = ("foo", 42)
-     snd (pair) == 42
+  ("last should return the last element in a list", -> {
+     last ([1, 2, 3]) == 3
   }),
+
+  ("(++) should concatenate two lists", -> {
+     ([1, 2] ++ [3, 4]) == [1, 2, 3, 4]
+  }),
+
+  ("map should map a function over all elements in a list", -> {
+     map ((+5), [1, 2, 3]) == [6, 7, 8]
+  }),
+
+  ("fold should reduce a list", -> {
+     fold ((+), 1, [1, 2, 3, 4]) == 11
+  }),
+
+  ("fold1 should reduce a list using head as starting value", -> {
+     fold1 ((+), [1, 2, 3, 4]) == 10
+  }),
+
+  ("filter should filter elements from a list by a function", -> {
+     filter ((>2), [1, 2, 3, 4]) == [3, 4]
+  }),
+
+  ("take should return first n elements from a list", -> {
+     take (2, [1, 2, 3, 4]) == [1, 2]
+  }),
+
+  ("drop should remove first n elements from a list", -> {
+     drop (2, [1, 2, 3, 4]) == [3, 4]
+  }),
+
+  ("zipWith should combine nth elements in a list with a function", -> {
+     zipWith ((+), [1, 2, 3], [4, 5, 6]) == [5, 7, 9]
+  }),
+
+  ("zip should pair nth elements in a list", -> {
+     zip ([1, 2, 3], [4, 5, 6]) == [(1, 4), (2, 5), (3, 6)]
+  }),
+
+  ("and should conjoin all elements in a list", -> {
+     (and ([True, False, True]) == False)
+     && (and ([True, True]) == True)
+  }),
+
+  ("or should disjoin all elements in a list", -> {
+     (or ([True, False]) == True)
+     && (or ([True, True]) == True)
+     && (or ([False, False]) == False)
+  }),
+
+  ("all should conjoin all elements in a list using a function", -> {
+     (all ((>2), [1, 2, 3]) == False)
+     && (all ((>0), [1, 2, 3]) == True)
+  }),
+
+  ("any should disjoin all elements in a list using a function", -> {
+     (any ((>2), [1, 2, 3]) == True)
+     && (any ((>4), [1, 2, 3]) == False)
+     && (any ((>0), [1, 2, 3]) == True)
+  }),
+
+  ("flatten should concatenate elements in a list", -> {
+     flatten ([[1, 2], [3, 4]]) == [1, 2, 3, 4]
+  }),
+
+  ("flapMap should map then concatenate elements in a list", -> {
+     f = |x| -> { [length (x)] }
+     flatMap (f, [[1, 2], [3, 4, 5]]) == [2, 3]
+  }),
+
+  ("elem should return whether an element is a member of a list", -> {
+     ((1 `elem [1, 2, 3]) == True)
+     && ((0 `elem [1, 2, 3]) == False)
+  }),
+
+  ("reverse should reverse the order of elements in a list", -> {
+     reverse ([1, 2, 3]) == [3, 2, 1]
+  }),
+
+  ("union should should merge non-equal elements from two lists", -> {
+     (([1, 2] `union [3, 4]) == [1, 2, 3, 4])
+     && (([1, 2] `union [2, 3]) == [1, 2, 3])
+  }),
+
+  ("intersect should return the intersecting elements in a list", -> {
+     (([1, 2] `intersect [3, 4]) == [])
+     && (([1, 2, 3] `intersect [2, 3, 4]) == [2, 3])
+  }),
+
+  ("sortBy should sort a list by a function", -> {
+     sortBy ((<), [5, 3, 7, 0]) == [7, 5, 3, 0]
+  }),
+
+  ("sort should sort a list in ascending order", -> {
+     sort ([5, 3, 7, 0]) == [0, 3, 5, 7]
+  }),
+
+  ("rangeStep should produce a list with provided interval", -> {
+     rangeStep (1, 5, 2) == [1, 3, 5]
+  }),
+
+  ("range should produce a list in provided interval", -> {
+     range (1, 5) == [1, 2, 3, 4, 5]
+  }),
+]),
+
+cases ("Numeric", [
+  ("(**) should compute the power of two numbers", -> {
+     (2 ** 4) == 16
+  }),
+
+  ("powMod should compute the power of two numbers mod a third power", -> {
+     powMod (2, 4, 3) == 1
+  }),
+
+  ("sum should compute to the sum of elements in a list", -> {
+     sum ([1, 2, 3, 4]) == 10
+  }),
+
+  ("product should compute to the product of elements in a list", -> {
+     product ([1, 2, 3, 4]) == 24
+  }),
+
+  ("min should compute the minimum of two values", -> {
+     min (1, 2) == 1
+  }),
+
+  ("max should compute the maximum of two values", -> {
+     max (1, 2) == 2
+  }),
+
+  ("minimum should compute the minimum of all elements in a list", -> {
+     minimum ([4, 6, 2]) == 2
+  }),
+
+  ("maximum should compute the maximum of all elements in a list", -> {
+     maximum ([4, 6, 2]) == 6
+  }),
+
+  ("even should return True for even integers", -> {
+     (even (2) == True)
+     && (even (3) == False)
+  }),
+
+  ("odd should return True for odd integers", -> {
+     (odd (2) == False)
+     && (odd (3) == True)
+  }),
+
+  ("negate should return the negated value of an integer", -> {
+     negate (5) == (0-5)
+  }),
+
+  ("negatef should return the negated value of a float", -> {
+     negatef (5f) == (0f-5f)
+  }),
+
+  ("abs should return the absolute value of an integer", -> {
+     (abs(5) == 5)
+     && (abs(0-5) == 5)
+  }),
+]),
+
+cases ("Misc", [
+  ("until should apply a function to itself until a condition is met", -> {
+     until ((>100), (*2), 1) == 128
+  }),
+
+  ("while should apply a function to itself while a condition is met", -> {
+     while ((<100), (*2), 1) == 128
+  }),
+]),
+
 ])
-
-
-
-foundationTests = ("Foundation", [lists, pairs])

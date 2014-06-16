@@ -228,7 +228,7 @@ zipWith :: (a -> b -> c) -> [a] -> [b] -> [c]
 zipWith = |f, as, bs| -> {
   if empty (as) || empty (bs)
   then []
-  else f(head (as), head (bs)) : zipWith (tail (as), tail (bs))
+  else f(head (as), head (bs)) : zipWith (f, tail (as), tail (bs))
 }
 
 zip :: [a] -> [b] -> [(a, b)]
@@ -273,11 +273,13 @@ reverse = |xs| -> {
 
 -- union, intersect, takeWhile, dropWhile, find, delete, deleteBy
 union ::  [a] -> [a] -> [a]
-union = (flip . fold) (|acc, x| -> {
-  if x `elem acc
-    then acc
-    else x : acc
-})
+union = |xs| -> {
+  (flip . fold) (|acc, x| -> {
+    if x `elem acc
+      then acc
+      else x : acc
+  }, reverse (xs))
+}
 
 intersect ::  [a] -> [a] -> [a]
 intersect = |xs| -> {
@@ -286,7 +288,7 @@ intersect = |xs| -> {
       then x : acc
       else acc
   }
-  fold (f, [])
+  fold (f, []) . reverse
 }
 
 -- quicksort
@@ -338,14 +340,13 @@ range = |from, to| -> {
     else n * n ** (exp - 1)
 }
 
--- Mod-power
-pow :: Int -> Int -> Int -> Int
-pow = |b, e, m| -> {
+powMod :: Int -> Int -> Int -> Int
+powMod = |b, e, m| -> {
     if e == 0
        then 1
        else if e % 2 == 0
-         then ((pow(b, (e / 2), m))**2 % m)
-         else ((b * pow(b, (e - 1), m)) % m)
+         then ((powMod(b, (e / 2), m))**2 % m)
+         else ((b * powMod(b, (e - 1), m)) % m)
 }
 
 sum :: [a] -> a
@@ -399,6 +400,6 @@ until = |p, f, x| -> {
 }
 
 while :: (a -> Bool) -> (a -> a) -> a -> a
-while = |p, f, x| -> {
-  until (not . p, f, x)
+while = |p| -> {
+  until (not . p)
 }

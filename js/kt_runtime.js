@@ -17,7 +17,7 @@ var print = function (str) {
 };
 
 var show = function (expr) {
-    _print(expr);
+    return new String(_print(expr)).split('');
 };
 
 var put = function (s) { process.stdout.write(s); };
