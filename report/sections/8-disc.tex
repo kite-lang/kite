@@ -3,13 +3,9 @@
 %%% TeX-master: "../report"
 %%% End:
 
-
 TODO:
 
 Discuss the problems, challenges and solutions encountered. What did you learn? What gave you troubles? Interesting future extensions and improvements of the system can be discussed here as well.
-
-
-TODO
 
 \subsection{Challenges and solutions}
 JavaScript as a means of emitting code, as LLVM proved very troublesome.
@@ -20,7 +16,7 @@ LLVM could likely be achieved by...
   \item finding out which types are used when calling generic(?) functions. As LLVM is strongly typed, and only support `single type' functions, we would have to note this in the compiler.
 \end{enumerate}
 
-
+\subsubsection{Code generation}
 
 \subsection{Known limitations}
 \subsubsection{Data constructors and pattern matching}
@@ -103,26 +99,28 @@ A pattern is a tree with variable names as leafs. The non-variable parts of the 
 
 It can be seen how the variables in the pattern are bound to the corresponding nodes in the matched expression resulting in the bindings in figure \ref{subfig:pat-binding}. Implementation-wise the pattern and expression will be simultaneously traversed and every time a variable is visited in the pattern the current node of the expression is bound to that identifier. One can also use literal values and thus restrict a successful match to expressions that contain the same literal values in the same leafs.
 
-TODO: Limitation with Hindley-Milner (it does not allow subtypes... \#panic - groupleader)
 
-TODO: Limitation with CFG, and since we use Happy, we cannot do: TODO - example.. NVM maybe? Because what cannot be done with a CFG can probably just be added later on.
+\subsubsection{Order of execution}
+During type-checking and code generation we traverse the AST in the same order as it is defined in the source files. This is not the optimal way of emitting and analyzing code because declarations and bound identifiers cannot be accessed before the are declared. There are no limitations in terms of what can be expressed, but programs can be syntactically more readable and easier to code if the order of declaration is irrelevant.
 
-TODO: In Kite the order of declarations matter, optimally they should not.
+For instance when type-checking, instead of starting with the first declaration and analyzing them in order we could start in the entry block (typically the \code{main} function) and look up declarations as needed. If they have already been inferred we would use that type, and if not we would infer its type and save it in the symbol table exactly as done currently, thus making consequent lookups successful. If we cannot look the symbol up or find a declarations with the same, we have a reference error (as we do now if the lookup fails).
 
-TODO: Hvordan ville vi klare subtypes? Fx at int og floats begge er numeralz
+Note however that there is a substantial difference between top-level declarations and expressions in lambda blocks in this matter. Because the order of locally scoped bindings \emph{does} matter since they are essentially \code{let~\ldots~in} expressions, we cannot disregard their order, at the least it would make some code very unreadable.
 
-TODO: Pattern matching! We could have made this properly by doing as written in the book Probst handed us (matching in the shape of the AST)
-
+\subsubsection{Sharing properties}
+We cannot reasonably support subtyping, and it is arguably not a desirable feature, but we could provide other mechanism for defining shared properties of types. One such mechanism is the concept of \emph{type classes}, which is a way to define a class of functions which a type can implement, thus becoming an instance of that type class. Types can then use the type class to \emph{constrain} a type it requires. Type classes are similar to the interfaces of object-oriented languages. A major benefit in the case of Kite would be a \code{Number} type class that declares arithmetic operations, which would be used in cases where a function is indifferent as to whether a number is a \code{Float} or and \code{Int}.
 
 \subsection{Further development}
 
 TODO: Data structures.
 
 TODO: I/O?
+
 \subsubsection{Optimizations}
 \label{sec:disc-optimization}
 
 \paragraph{Tail call}
 As seen in our first benchmark \ref{sec:math-benchmark}, Kite is scaling badly with the function \code{map}, as the call stack grows linearly with the length of the lists. \code{map} uses a tail-recursive call, which allows for tail call elimination: As the application of the argument-function\footnote{By `argument-function' we refer to the function given as an argument to \code{map} along with a list} to each of the elements of the list is independent from the others, it is not strictly necessary to add a new stack frame to the call stack.
 
-\paragraph{Uncurrying of functions} Despite currying is a very powerful concept, it is not very efficient when emitted. It creates more function calls than strictly necessary. A potential optimization could be to uncurry functions which are called, but never partially applied. This eliminates some unnecessary function calls, as functions in JavaScript takes multiple parameters. This will also hold for other target output languages where functions take multiple parameters, such as LLVM.
+\paragraph{Uncurrying of functions}
+Despite currying is a very powerful concept, it is not very efficient when emitted. It creates more function calls than strictly necessary. A potential optimization could be to uncurry functions which are called, but never partially applied. This eliminates some unnecessary function calls, as functions in JavaScript takes multiple parameters. This will also hold for other target output languages where functions take multiple parameters, such as LLVM.
