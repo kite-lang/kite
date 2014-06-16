@@ -23,16 +23,15 @@ src/Kite/Parser.hs
 Parser.info
 
 # latex
-report/*.aux
-report/*.log
-report/*.out
-report/*.pdf
-report/*.toc
+report/**/*.aux
+report/**/*.log
+report/**/*.log
+report/**/*.out
+report/**/*.pdf
+report/**/*.toc
 report/auto
 
 # visualization
 /visualize/div_classes.pyc
 /visualize/ptree.txt
 /visualize/ptree.json
-/report/sections/10-appen.log
-/report/sections/7-eval.log

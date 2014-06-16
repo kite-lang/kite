@@ -50,7 +50,6 @@ As can be observed from the above, functional languages are closely related to l
 When working in an imperative language, mutation of variables is a core feature that is used in almost all parts of a program. In a functional language however, it is common that variables are not in fact variable in the sense of being mutable, but rather declarations of values. For instance, to calculate the sum of a list of numbers, consider the following pseudo-code:
 
 \begin{pseudo}
-
 // imperative style
 function sum(nums) do
   var s = 0
@@ -82,4 +81,6 @@ Going further, it can be analyzed in many different ways, for example to perform
 
 Finally, the AST can be used to emit code for the target language of the compiler, a process known as \textbf{code generation}. It is worth noting that many different code generators can be implemented for the same AST, thus allowing to target multiple architectures and machines using the same compiler.
 
-We are going to implement all of these modules, some more thouroughly than others, and in such a way that it can be easily extended and maintained.
+We are going to implement all of these modules, some more thouroughly
+than others, and in such a way that it can be easily extended and
+maintained.
