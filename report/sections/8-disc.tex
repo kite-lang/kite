@@ -121,6 +121,8 @@ TODO: Data structures.
 TODO: I/O?
 \subsubsection{Optimizations}
 \label{sec:disc-optimization}
-TODO: Make an iterative version of \code{map} and other tail recursive functions. This will very likely give good improvements in cases such as in our first benchmark \ref{sec:math-benchmark}.
 
-TODO: Uncurry functions which are called, but never partially applied. This eliminates some unnecessary function calls, as functions in JavaScript takes multiple parameters.
+\paragraph{Tail call}
+As seen in our first benchmark \ref{sec:math-benchmark}, Kite is scaling badly with the function \code{map}, as the call stack grows linearly with the length of the lists. \code{map} uses a tail-recursive call, which allows for tail call elimination: As the application of the argument-function\footnote{By `argument-function' we refer to the function given as an argument to \code{map} along with a list} to each of the elements of the list is independent from the others, it is not strictly necessary to add a new stack frame to the call stack.
+
+\paragraph{Uncurrying of functions} Despite currying is a very powerful concept, it is not very efficient when emitted. It creates more function calls than strictly necessary. A potential optimization could be to uncurry functions which are called, but never partially applied. This eliminates some unnecessary function calls, as functions in JavaScript takes multiple parameters. This will also hold for other target output languages where functions take multiple parameters, such as LLVM.

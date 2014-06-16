@@ -163,7 +163,9 @@ As our optimization pass removes unused function declarations from the parse tre
 
 A very simple program that concatenates the strings `Hello,' and ` World!' and prints them, is unoptimized emitted to 12.5kB of JavaScript, and optimized to 3.5kB. Thus optimization yields a size reduction of 72\%. This is the result of removing dead code. The reason for most of the code in such a small program being dead is the Foundation library. As string concatenation is the only operation performed, most of the functions in Foundation are redundant, and therefor removed.
 
-A slightly larger program that sums the even Fibonacci numbers less than 4 million (problem 2 of the online collection of mathematical problems Project Euler\cite{euler}) the compiler emits 12.9kB and 6.8kB of JavaScript without and with optimization, respectively. The program makes use of list comprehensions, which is just syntactic sugar for flatten and map, which then again uses a cascade of functions from the Foundation. Thus, it is expected that a lot of the code from the library is used. But a reduction of 47\% is still noteworthy, and imagining the use of functions from other Kite-libraries for more specific purposes, this optimization might be useful.
+
+A slightly larger program that sums the even Fibonacci numbers less than 4 million (problem 2 of the online collection of mathematical problems Project Euler\footnote{http://projecteuler.net/}) the compiler emits 12.9kB and 6.8kB of JavaScript without and with optimization, respectively. The program makes use of list comprehensions, which is just syntactic sugar for flatten and map, which then again uses a cascade of functions from the Foundation. Thus, it is expected that a lot of the code from the library is used. But a reduction of 47\% is still noteworthy, and imagining the use of functions from other Kite-libraries for more specific purposes, this optimization might be useful.
+
 
 \begin{table}[h]
   \centering
