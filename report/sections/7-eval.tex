@@ -130,16 +130,13 @@ For up-to-date status of the build, go to \url{https://travis-ci.org/altschuler/
 
 
 \subsection{Performance}
-
-We have made some benchmarking of Kite + Node.js, Python and Haskell. In the benchmarking the programs have run single-threaded.
+We have made some benchmarking of Kite, targeting JavaScript ran on Node.js, Python and Haskell. Throughout the benchmarking, the programs have been run single-threaded, without any special optimization.
 
 \subsubsection{Brute-force mathematics}
 \label{sec:math-benchmark}
-
-The first benchmarking is finding Pythagorean triples using list comprehensions, i.e.\ finding integer solutions to the equation $a^2 + b^2 = c^2$:
+The first benchmarking is finding Pythagorean triples using list comprehensions, e.i. finding integer solutions to the equation $a^2 + b^2 = c^2$:
 
 \begin{kite}
-  
   n = 200
 
   pythagoreans = [ (c,(b,a)) | c <- range(1,n), b <- range(1,c),
@@ -148,49 +145,48 @@ The first benchmarking is finding Pythagorean triples using list comprehensions,
 
 The variable \code{n} denotes the upper limit for the hypotenuse in the corresponding triangle, and thus defines how many elements should be evaluated. The number of elements grows with $n^2$, and since the operations in the guard and the output expression has O($1$), the time complexity of the program is O($n^2$).
 
-  \begin{table}[h]
-    \centering
-    \begin{tabular}{|l|l|l|l|l|}
-      \hline 
-      & runtime (n = 50) & runtime (n = 100) & runtime (n = 150) & runtime (n = 200) \\
+\begin{table}[h]
+  \centering
+  \begin{tabular}{|l|l|l|l|l|}
+    \hline
+                   & Runtime ($n = 50$) & Runtime ($n = 100$) & Runtime ($n = 150$) & Runtime ($n = 200$) \\
+    \hline
+    Kite + Node.js & 509ms              & 3.216ms             & 10.207ms            & 24.320ms            \\
+    Haksell        & 346ms              & 865ms               & 2.274ms             & 4.733ms             \\
+    Python         & 35ms               & 116ms               & 303ms               & 652ms               \\
+    \hline
+  \end{tabular}
+  \caption{Benchmarking with Pythagorean triples}
+\end{table}
 
-      \hline 
-      Kite + Node.js & 509ms            & 3,216ms           & 10,207ms          & 24,320ms          \\
-      Haksell        & 346ms            & 865ms             & 2,274ms           & 4,733ms           \\
-      Python         & 35ms             & 116ms             & 303ms             & 652ms             \\
-      \hline 
-    \end{tabular}
-  \end{table}
-
-It is clear that Kite + Node.js is overall slower and scales worse than the two other languages. The lack of good scaling is likely due to the fact that the recursive call stack of \code{flatMap} in list comprehensions becomes larger with larger lists. We will discuss this as a potential optimization in 
+It is clear that Kite + Node.js is overall slower and scales worse than the two other languages. The lack of good scaling is likely due to the fact that the recursive call stack of \code{flatMap} in list comprehensions becomes larger with larger lists. We will discuss this as a potential optimization in the discussion section~\ref{sec:disc-optimization}.
 
 Another point is that the two other languages are probably optimized with respect to such fundamental functions as the ones used in this benchmark.
 
 \subsubsection{Sorting lists}
 
-The other benchmark we have performed is sorting of lists of integers. We have hardcoded the same random list into the three different languages and timed the sorting:
+The other benchmark we have performed is sorting of lists of integers. We have hardcoded the same random list into the three different languages and timed the sorting of the list:
 
 \begin{kite}
-
 l = [294, 383, ..., 176, 336]
 s = sort(l)
 \end{kite}
 
-The variable \code{l} is the shuffled list, and \code{s} is the sorted one. Kite implements Quicksort, which on average has time complexity O($n log(n)$).
+The variable \code{l} is the shuffled list, and \code{s} is the sorted one. Kite implements the  Quicksort sorting algorithm, which on average has time complexity O($n \log(n)$).
 
-  \begin{table}[h]
-    \centering
-    \begin{tabular}{|l|l|l|l|}
-      \hline 
-      & runtime (\|l\| = 500) & runtime (\|l\| = 1000) & runtime (\|l\| = 2000) \\
-
-      \hline 
-      Kite + Node.js & 188ms            & 340ms           & 596ms                  \\
-      Haksell        & 297ms            & 346ms             & 451ms                \\
-      Python         & 29ms             & 32ms             & 34ms                  \\
-      \hline 
-    \end{tabular}
-  \end{table}
+\begin{table}[h]
+  \centering
+  \begin{tabular}{|l|l|l|l|}
+    \hline
+                   & Runtime ($|l| = 500$) & Runtime ($|l| = 1000$) & Runtime ($|l| = 2000$) \\
+    \hline
+    Kite + Node.js & 188ms                 & 340ms                  & 596ms                  \\
+    Haskell        & 297ms                 & 346ms                  & 451ms                  \\
+    Python         & 29ms                  & 32ms                   & 34ms                   \\
+    \hline
+  \end{tabular}
+  \caption{Benchmarking with Quicksort}
+\end{table}
 
 Here Kite + Node.js performs on par with Haskell, but scales worse. Python is incredibly fast at sorting lists of this size.
 
