@@ -4,6 +4,24 @@
 %%% End:
 
 
+TODO:
+
+Discuss the problems, challenges and solutions encountered. What did you learn? What gave you troubles? Interesting future extensions and improvements of the system can be discussed here as well.
+
+
+TODO
+
+\subsection{Challenges and solutions}
+JavaScript as a means of emitting code, as LLVM proved very troublesome. 
+
+LLVM could likely be achieved by...
+\begin{enumerate}
+  \item updating the parse tree by annotating types
+  \item finding out which types are used when calling generic(?) functions. As LLVM is strongly typed, and only support `single type' functions, we would have to note this in the compiler.
+\end{enumerate}
+
+
+
 \subsection{Known limitations}
 \subsubsection{Data constructors and pattern matching}
 A very powerful concept of languages like Haskell is Algebraic Data Types (ADT). ADTs provide the means for creating new data types that are composites of other types. They eliminate the need to ``hardcode'' types like \code{Bool} and \code{List}, because they can be defined in the language itself as an ADT. The \code{Bool} type is defined in Haskell as
@@ -92,3 +110,17 @@ TODO: Limitation with CFG, and since we use Happy, we cannot do: TODO - example.
 TODO: In Kite the order of declarations matter, optimally they should not.
 
 TODO: Hvordan ville vi klare subtypes? Fx at int og floats begge er numeralz
+
+TODO: Pattern matching! We could have made this properly by doing as written in the book Probst handed us (matching in the shape of the AST)
+
+
+\subsection{Further development}
+
+TODO: Data structures.
+
+TODO: I/O?
+\subsubsection{Optimizations}
+
+TODO: Make an iterative version of \code{map} and other tail recursive functions. This will very likely give good improvements in cases such as in our first benchmark \ref{sec:math-benchmark}.
+
+TODO: Uncurry functions which are called, but never partially applied. This eliminates some unnecessary function calls, as functions in JavaScript takes multiple parameters.

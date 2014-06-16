@@ -6,7 +6,7 @@ fibonacciHelp = |a, b, n| -> {
 
 main = -> {
 
-     fibs = sum $ [ x | x <- map(fibonacciHelp(0,1), range(1,100)) | x < 4000000, even(x) ]
+     fibs = sum $ [ x | x <- map(fibonacciHelp(0,1), range(1,100)) | x < (4*(10**6)), even(x) ]
 
      print(fibs)
 

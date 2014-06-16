@@ -23,12 +23,12 @@ src/Kite/Parser.hs
 Parser.info
 
 # latex
-report/**/*.aux
-report/**/*.log
-report/**/*.log
-report/**/*.out
-report/**/*.pdf
-report/**/*.toc
+*.toc
+*.aux
+*.log
+*.out
+*.pdf
+*.toc
 report/auto
 
 # visualization
