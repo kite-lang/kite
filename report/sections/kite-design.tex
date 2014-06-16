@@ -16,13 +16,13 @@ TODO: Parameterless functions, implicit return, blocks
 
 Basic declaration of the variables in Kite, types are inferred by the analyzer:
 \begin{kite}
-  
-  one = 1
-  two = 2.0
-  truth = True
-  list = [1, 2, 3, 4]
-  char = 'a' 
-  pair = (1, 'a')
+
+one = 1
+two = 2.0
+truth = True
+list = [1, 2, 3, 4]
+char = 'a'
+pair = (1, 'a')
 \end{kite}
 
 The basic types will be Int, Float, Bool, Lists, Chars and
@@ -46,8 +46,8 @@ which will be discussed later.
 Basic arithmetic operators in Kite and their us
 \begin{kite}
 
-  two = 1 + 1  ---->  2
-  mod = 10 % 2 ---> 0
+two = 1 + 1  ---->  2
+mod = 10 % 2 ---> 0
 \end{kite}
 
 \begin{table}[H]
@@ -68,9 +68,9 @@ Note: some operators will only work on certain types.
 
 Basic boolean operators:
 \begin{kite}
-  
-  foo = 1 < 2  ----> True
-  bar = 1 == 2 ----> False
+
+foo = 1 < 2  ----> True
+bar = 1 == 2 ----> False
 \end{kite}
 Basic boolean operators include 
 \begin{table}[H]
@@ -89,8 +89,8 @@ Basic boolean operators include
 
 A single basic bitwise operator:
 \begin{kite}
-  
-  foo = 10 ^ 8 ----> 2
+
+10 ^ 8 ----> 2
 \end{kite}
 Kite only includes xor bitwise operator as of now.
 
@@ -106,29 +106,29 @@ Since everything in Kite is an expression, functions is simply a
 variable bound to a given anonymous function. A function is declared
 as follows:
 \begin{kite}
-  
-  function :: ArgType -> ... -> ReturnType
-  function = |ArgName, ... | -> { ... }
+
+function :: ArgType -> ... -> ReturnType
+function = |ArgName, ... | -> { ... }
 \end{kite}
 Example of valid function declaration in Kite, taking one parameter of
 the type Int and returning an Int.
 \begin{kite}
-  
-  foo :: Int -> Int
-  foo = |a| -> {
-    a + 1
-  }
+
+foo :: Int -> Int
+foo = |a| -> {
+  a + 1
+}
 \end{kite}
 A runnable program must always include the `main' function, which will be called once when the emitted code is run by Node.js:
 \begin{kite}
   
-  main = -> { ... }
+main = -> { ... }
 \end{kite}
 
 In order to use the preprocessor to include another code file, use the \texttt{\#include} keyword:
 \begin{kite}
   
-  #include "foo.kite"
+#include "foo.kite"
 \end{kite}
 
 \subsubsection{Syntactic sugar}
@@ -142,14 +142,14 @@ Infix operators will allow infix use of certain functions in Kite. An
 example of infix operators is the basic + arithmetic operation:
 \begin{kite}
   
-  foo = 1 + 2
+foo = 1 + 2
 \end{kite}
 
 Where the desugared version of the same expression is given as:
 
 \begin{kite}
 
-  foo = ((+) (1)) (2)
+foo = ((+) (1)) (2)
 \end{kite}
 
 As Kite functions will only take one parameter, sugaring of multiple
@@ -158,21 +158,21 @@ will allow the usage of multiple parameter functions. Example of usage
 of multiple parameters:
 \begin{kite}
 
-  foo :: a -> a -> a
-  foo = |a, b| -> {
-    a + b
-  }
+foo :: a -> a -> a
+foo = |a, b| -> {
+  a + b
+}
 \end{kite}
 
 Which will be syntactic sugar for the following code:
 \begin{kite}
 
-  foo :: a -> a -> a
-  foo = |a| -> {
-    return |b| -> {
-      return ((+) (a)) (b)
-    }
+foo :: a -> a -> a
+foo = |a| -> {
+  return |b| -> {
+    return ((+) (a)) (b)
   }
+}
 \end{kite}
 
 \textbf{Parameterless functions} are also syntactic sugar. For instance the main function is often declared as follows:
@@ -200,14 +200,14 @@ which will allow for easier representations of character lists. An
 example of a string is as follows:
 \begin{kite}
   
-  str = "Hello"
+str = "Hello"
 \end{kite}
 
 Where the corresponding desugar (note the distinction between strings
 using double-quite (") and characters using single-quite (') will be:
 \begin{kite}
   
-  str = ['H', 'e', 'l', 'l', 'o']
+str = ['H', 'e', 'l', 'l', 'o']
 \end{kite}
 
 
@@ -216,18 +216,18 @@ using double-quite (") and characters using single-quite (') will be:
 lists. An example of a list comprehension is as follows:
 \begin{kite}
   
-  list = [ x*y | x <- range(3,5), y <- range(4,6) | (x+y) >= 10, y > 4]
+list = [ x*y | x <- range(3,5), y <- range(4,6) | (x+y) >= 10, y > 4]
 \end{kite}
 where the desugared version of the given example, will look as follows:
 \begin{kite}
 
-  list =
-  flatMap(|x| -> {
-    flatMap (|y| -> {
-      if (|x,y| -> {y > 4})(x,y) && (|x,y| -> {(x+y) >= 10})(x,y) 
-         then [(|x,y| -> {x*y})(x,y)] 
-         else []
-    } , range(4,6) )
+list =
+flatMap(|x| -> {
+  flatMap (|y| -> {
+    if (|x,y| -> {y > 4})(x,y) && (|x,y| -> {(x+y) >= 10})(x,y)
+       then [(|x,y| -> {x*y})(x,y)]
+       else []
+  } , range(4,6) )
 }, range(3,5) )
 \end{kite}
 Take note that list comprehensions uses functions defined in the
@@ -248,7 +248,7 @@ The \textbf{if-expression} is not to be confused with an if-statement, as our im
 
 \begin{kite}
   
-  if BoolExpression then Expression else Expression
+if BoolExpression then Expression else Expression
 \end{kite}
 
 
@@ -345,14 +345,13 @@ An example of partial application is the function `increment', which partially a
 
 increment :: Int -> Int
 increment = (1+)
-
 \end{kite}
 
 Increment can then be applied to an integer:
 
 \begin{kite}
   
-  two = increment(1) ----> 2
+two = increment(1) ----> 2
 \end{kite}
 
 
