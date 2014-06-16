@@ -16,9 +16,76 @@ LLVM could likely be achieved by...
   \item finding out which types are used when calling generic(?) functions. As LLVM is strongly typed, and only support `single type' functions, we would have to note this in the compiler.
 \end{enumerate}
 
-\subsubsection{Code generation}
 
 \subsection{Known limitations}
+
+\subsubsection{Code generation}
+We have implemented JavaScript as the single target for code generation, because our initial aim for using LLVM proved more difficult and time consuming than expected. We decided to focus more on language design and usability than lower-level optimization. We did however do considerable research into code generation using LLVM. Next we will present some potential solutions to the problems we faced with LLVM.
+
+It's important to distinguish between the LLVM language and the LLVM framework. The framework's purpose is to ease generation of the language, and to implement many optimizations to generated LLVM code. In the following we will mainly be discussing the LLVM language.
+
+\paragraph{Polymorphism}
+Since LLVM is a statically and strongly typed language it is strictly required to specify types for all values\footnote{There are exceptions to this, for instance using the \code{VariantValue} and \code{VariantMatcher} and their related classes, but we will not cover this.}. This would require us to annotate the AST with inferred types so we can emit correctly typed LLVM code. This introduces an interesting problem because of the nature of polymorphic types. Consider for instance the following Kite code
+
+\begin{kite}
+id :: a -> a
+id = |x| -> { x }
+
+print (id (42))
+print (id (``Hello''))
+\end{kite}
+
+\code{id} has type \code{a -> a} and is applied to both an \code{Int} value \emph{and} a \code{[Char]} value. We cannot emit a single definition of the function because we need to account for both applied types. One solution would be to extract all applications of the function and generate one for each of the types used.
+
+\paragraph{Partial application}
+Another problem with LLVM code generation has to do with curried functions and partial application. LLVM does not support partial application natively out-of-the-box. It wouldn't make a lot of sense for it to do so given its lower-level nature. We had some thoughts about this and came up with a solution in which arguments are saved in an LLVM \code{Vector} type and when the maximum number of arguments have been supplied it will call the final function. It is very verbose and is not optimized, but could still be used as inspiration for further development. The code is presented in figure \ref{fig:llvm-partial}. Briefly explained the code defines an \code{add} function that is split into two (would be done by the compiler). It then applies the function to the value \code{35}, saves a pointer to the resulting function and applies it to a value of \code{30}.
+
+\begin{figure}[p]
+\begin{lstlisting}[language=llvm]
+declare i32 @printf(i8* noalias nocapture, ...)
+
+define { i8, i8 (i8, i8) * } @add1(i8 %a) {
+  ; allocate the struct containing the supplied argument
+  ; and a function ptr to the actual function
+  %nextPtr = alloca { i8, i8 (i8, i8) * }
+  store { i8, i8 (i8, i8) * } { i8 undef, i8 (i8, i8) * @add2 }, { i8, i8 (i8, i8) * } * %nextPtr
+  %next0 = load { i8, i8 (i8, i8) * } * %nextPtr
+
+  ; insert the supplied arg into the struct
+  %next1 = insertvalue { i8, i8 (i8, i8) * } %next0, i8 %a, 0
+  ret { i8, i8 (i8, i8) * } %next1
+}
+
+define i8 @add2(i8 %a, i8 %b) {
+  %res = add i8 %a, %b
+  ret i8 %res
+}
+
+define i8 @main() {
+  ; call add(35) resulting in 'fn' of type {35, &add2}
+  %res1 = call { i8, i8 (i8, i8) * } @add1(i8 35)
+
+  ; get the arg of the first call, ie element 0 of the resulting struct
+  %arg = extractvalue { i8, i8 (i8, i8) * } %res1, 0
+  ; similarily get the function ptr
+  %fn = extractvalue { i8, i8 (i8, i8) * } %res1, 1
+
+  ; apply the argument to the function
+  %res = call i8 %fn(i8 %arg, i8 30)
+
+  ; print result
+  %ptr = alloca i8
+  store i8 %res, i8* %ptr
+  call i32 (i8*, ...)* @printf(i8* %ptr)
+
+  ret i8 0
+}
+\end{lstlisting}
+\caption{An attempt at partial application with LLVM}
+\label{fig:llvm-partial}
+\end{figure}
+
+
 \subsubsection{Data constructors and pattern matching}
 A very powerful concept of languages like Haskell is Algebraic Data Types (ADT). ADTs provide the means for creating new data types that are composites of other types. They eliminate the need to ``hardcode'' types like \code{Bool} and \code{List}, because they can be defined in the language itself as an ADT. The \code{Bool} type is defined in Haskell as
 
