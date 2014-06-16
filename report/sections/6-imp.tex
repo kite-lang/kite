@@ -1,15 +1,19 @@
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../report"
+%%% End:
 
 \subsection{Preprocessor}
+The preprocessor in Kite is almost identical to the \code{C} language preprocessor. We use a library called \code{cpphs}~\cite{wallace04}, which is a port of the \code{C} version, and provides an embeddable Haskell library. This is the reason for the \code{\#include "file.kite"} syntax. Preprocessing is the first step of the compilation, and generates a single source code file which is a recursive concatenation of all included source files referenced from the main file.
 
-The preprocessor in Kite is almost identical to the \code{C} language preprocessor. We use a library called \code{cpphs}\footnote{\url{http://projects.haskell.org/cpphs}} that mimics the \code{C} version, and provides an embeddable Haskell library. This is the reason for the \code{\#include "file.kite"} syntax. Preprocessing is the first step of the compilation, and generates a single source code file which is a recursive concatenation of all included source files referenced from the main file.
 
 \subsection{Lexer}
 \label{sec:impl-lexer}
-The lexer converts the raw input source to a list of tokens, a process known as tokenization. There are multiple types of tokens that represent different kinds of lexical elements. A \emph{lexeme} is the textual value that the lexer sees and maps to a token. Some tokens can have multiple possible lexemes, for instance in the case of identifiers and numeric constants, so in those cases the lexeme is saved together with the token for further use (by the parser).
+The lexer converts the raw input source to a list of tokens, a process known as tokenization. There are multiple types of tokens that represent different kinds of lexical elements. A \emph{lexeme} is the textual value that the lexer sees and maps to a token. Some tokens can have multiple possible lexemes, for instance in the case of identifiers and numeric constants. In those cases, the lexeme is saved together with the token for further evaluation (by the parser).
 
-Kite's lexer is implemented using the lexical generator Alex. Alex is a tool for generating lexical analyzers in Haskell, given a description of the tokens to be recognized in the form of regular expressions\cite[p. 4]{dornan01}. The description of the analyzer consists of \emph{macro definitions} and \emph{rules}. A macro definition is either a regular expression bound to an identifier describing a particular sequence of characters, denoted by a \code{\$} prefix, or it is a combination of the former prefixed by \code{@}. These macros are combined to make up the rules, which define the actual definitions for tokens. Macros and rules are separated by the symbol \code{:-} and the preceding \code{kite} is just for documentation\cite[p. 7]{dornan01}. Further the description file defines the Haskell data structures used to represent the tokens, enclosed in \code{\{ \}}.
+Kite's lexer is implemented using the lexical generator, Alex~\cite{dornan01}. Alex is a tool for generating lexical analyzers in Haskell, given a description of the tokens to be recognized in the form of regular expressions~\cite[p. 4]{dornan01}. The description of the analyzer consists of \emph{macro definitions} and \emph{rules}. A macro definition is either a regular expression bound to an identifier describing a particular sequence of characters, denoted by a \code{\$} prefix, or it is a combination of the former, prefixed by \code{@}. These macros are combined to make up the rules, which define the actual definitions for tokens. Macros and rules are separated by the symbol \code{:-} and the preceding \code{kite} is just for documentation\cite[p. 7]{dornan01}. Further the description file defines the Haskell data structures used to represent the tokens, enclosed in \code{\{ \}}.
 
-Figure~\ref{fig:lexer} shows an excerpt from the description file. The macro definitions describe common patterns such as a sequence of digits (\code{\$digit}), lowercase characters (\code{\$downcase}), alpha numeric sequences (\code{\$alphaNum}) etc. Also defined are reserved keywords (\code{\@keywords}) and the void type (\code{@void}). Another interesting macro is the \code{@comment} macro, which matches two dashes followed by anything (implicitly anything but a newline).
+Figure~\ref{fig:lexer} shows an excerpt from the description file. The macro definitions describes common patterns such as a sequence of digits (\code{\$digit}), lowercase characters (\code{\$downcase}), alpha numeric sequences (\code{\$alphaNum}) etc. Also defined are reserved keywords (\code{\@keywords}) and the void type (\code{@void}). Another interesting macro is the \code{@comment} macro, which matches two dashes followed by anything (implicitly anything but a newline).
 
 The macros are then used in the rules to define tokens. A rule consist of a combination of macros followed by a Haskell code block that produce the token data structure. The code block must be a function accepting a position data structure and the matched lexeme. The position node is used to keep track of tokens where found in the source file to be able to give useful error messages. The lexeme is sometimes coerced to another value matching the one required by the respective token structure. The \code{@void} rule defines the \code{Void} type which is the only token possible from that rule, and therefore it does not use the provided lexeme.
 
@@ -77,7 +81,7 @@ Kite uses 12 different tokens briefly described in table \ref{tbl:lexical_tokens
 \end{table}
 
 \subsection{Parser}
-The parser is implemented with the LALR-parser (\textbf{L}ook \textbf{A}head, \textbf{L}eft-to-Right, \textbf{R}ightmost derivation) generator Happy, which is a parser generator system for Haskell, similar to the tool yacc\footnote{Yacc: Yet Another Compiler-Compiler: \url{http://dinosaur.compilertools.net/yacc}} for C. It takes a file containing a specification of a grammar and produces a Haskell module containing a parser for the grammar\cite{marlow01}. The grammar file (\code{Parser.y}), is similar in format to the lexical analysis description file described in section \ref{sec:impl-lexer}. It uses Backus-Naur Form (BNF) notation to define a context-free grammar specifying the legal syntax of the Kite language. A BNF grammar consists of a set of derivation rules, also known as production rules, which describe all legal combinations of the tokens read by the lexer. A production rule has the following format
+The parser is implemented with the LALR-parser (\textbf{L}ook \textbf{A}head, \textbf{L}eft-to-Right, \textbf{R}ightmost derivation) generator Happy~\cite{marlow01}, which is a parser generator system for Haskell, similar to the tool yacc~\footnote{Yacc: Yet Another Compiler-Compiler: \url{http://dinosaur.compilertools.net/yacc}} for C. It takes a file containing a specification of a grammar and produces a Haskell module containing a parser for the grammar. The grammar file (\code{Parser.y}), is similar in format to the lexical analysis description file described in section~\ref{sec:impl-lexer}. It uses Backus-Naur Form (BNF) notation to define a context-free grammar specifying the legal syntax of the Kite language. A BNF grammar consists of a set of derivation rules, also known as production rules, which describe all legal combinations of the tokens read by the lexer. A production rule has the following format:
 
 \begin{lstlisting}
 Name :: { Type }
@@ -87,7 +91,7 @@ Name :: { Type }
       | Expression_n { Haskell code }
 \end{lstlisting}
 
-The \code{Type} specifies the type of Haskell data constructor that the rule will produce and is optional but useful for debugging purposes and readability. A rule can have multiple different legal expressions, separated by \code{|}, which are defined as a sequence of symbols. A symbol can be either a \emph{terminal} or another production rule. A terminal is an expression that cannot be further expanded, thus terminating the recursion of that branch. Consider for instance the production rule for the bind syntax (the bind node is named \code{PBind} in the Haskell code)
+The \code{Type} specifies the type of Haskell data constructor that the rule will produce and is optional but useful for debugging purposes and readability. A rule can have multiple different legal expressions, separated by \code{|}, which are defined as a sequence of symbols. A symbol can be either a \emph{terminal} or another production rule. A terminal is an expression that cannot be further expanded, thus terminating the recursion of that branch. For instance, consider the production rule for the bind syntax (the bind node is named \code{PBind} in the Haskell code).
 
 \begin{lstlisting}
 Bind :: { Expr }
@@ -97,7 +101,7 @@ Bind :: { Expr }
 
 The \code{Bind} rule produces a node of type \code{Expr}. In the first choice we see the \code{id} terminal that is equivalent to the \code{Identifier} token from the lexer. Other terminals are \code{'='}, \code{'\{'} and \code{'\}'}. The right-hand side of the rules are the code snippets that defines what Happy will generate when a rule is matched, where \code{\$n} means that the nth symbol of the BNF notated grammar, will be inserted. In the first rule this means that a \code{PBind} will be created with the \code{id} as the first argument and the \code{Expr} rules as the second.
 
-Production rules can be recursively defined, so that an expression can contain the rule itself. Consider for instance the grammar for defining lists
+Production rules can be recursively defined, so that an expression can contain the rule itself. Consider, for instance, the grammar for defining lists:
 
 \begin{lstlisting}
 Exprs :: { [Expr] }
@@ -111,20 +115,19 @@ List   :: { Expr }
 
 The \code{Exprs} rule defines a comma-separated list of \code{Expr} rules. The \code{\{- nothing -\}} defined the empty match, equivalent to the $\epsilon$ common mathematical notation.
 
-The first rule in the grammar defines the entry point of the parser and thus the resulting type that the generated parser will produce. In the case of Kite the entry rule is \code{Program} and produced the type \code{[Decl]}.
+The first rule in the grammar defines the entry point of the parser and thus the resulting type that the generated parser will produce. In the case of Kite, the entry rule is \code{Program} and produced the type \code{[Decl]}.
 
 \paragraph{Syntactic sugar}
-Some matches are first transformed into temporary syntactic sugaring structures before being inserted into the parse tree. This is described further in section \ref{sec:imp-sugar}.
+Some matches are first transformed into temporary syntactic sugaring structures, before being inserted into the parse tree. This is described further in section~\ref{sec:imp-sugar}.
 
-Happy generates more than 2,000 lines of quite unreadable Haskell code, which is used in the compilation of the compiler. This is not useful for debugging, but fortunately Happy can produce an information file by setting the \code{--info} flag when run, which will generate a \code{.info}-file. This file yields very useful information about shift-reduce and reduce-reduce conflicts, which has been quite helpful throughout the development.
+Happy generates more than 2,000 lines of quite unreadable Haskell code, which is used in the compilation of the compiler. This is not useful for debugging, but fortunately Happy can produce an information file by setting the \code{--info} flag when run, which will generates a \code{.info}-file. This file contains very useful information about shift-reduce and reduce-reduce conflicts, which has been quite helpful throughout the development.
 
 \paragraph{Shift-reduce parsing}
-Happy generates a shift-reduce parser. This means that when it reads a symbol it can either reduce the symbol thus ``ending'' a rule and producing a result, or it can shift the symbol and look for more symbols to match before reducing. This is the point of a Look-Ahead parser, since it can look at the next symbol to be consumed before deciding what to do. Happy generates LALR(1) which means that it looks 1 symbol ahead.
+Happy generates a shift-reduce parser. This means that, when it reads a symbol, it can either reduce the symbol, thus ``ending'' a rule and producing a result, or it can shift the symbol and look for more symbols to match before reducing. This is the point of a Look-Ahead parser, since it can look at the next symbol to be consumed before deciding what to do. Happy generates LALR(1), which means that it looks 1 symbol ahead.
 
-A common hurdle when implementing shift-reduce context-free grammars (and indeed parsers in general) is conflicts, or ambiguities, in the grammar. There are two types of conflict, namely \emph{shift/reduce} and \emph{reduce/reduce} conflicts. A reduce/reduce conflict occurs if there are two or more rules that apply to the same sequence of symbols\cite[sec 5.6]{bison13}.
+A common hurdle when implementing shift-reduce context-free grammars (and indeed parsers in general), is conflicts or ambiguities in the grammar. There are two types of conflict, namely \emph{shift/reduce} and \emph{reduce/reduce} conflicts. A reduce/reduce conflict occurs if there are two or more rules that apply to the same sequence of symbols~\cite[sec. 5.6]{bison13}.
 
-
-When the parser sees a symbol and can \emph{reduce} to two different rules, it is called a reduce-reduce conflict. This is usually a critical problem because the parser has no reasonable way of choosing which rule to reduce to. Happy simply reduces to the rule defined first. Below is the most simple example of a reduce/reduce conflict (in simplified BNF notation)
+When the parser sees a symbol and can \emph{reduce} to two different rules, it is called a reduce-reduce conflict. This is usually a critical problem because the parser has no reasonable way of choosing which rule to reduce to. Happy simply reduces to the rule defined first. Below is the simplest example of a reduce/reduce conflict (in simplified BNF notation).
 
 \begin{lstlisting}
 Foo : 'a'
@@ -133,7 +136,7 @@ Bar : 'a'
 
 When seeing a \code{'a'} the parser cannot decide whether to reduce to \code{Foo} or \code{Bar}.
 
-A shift-reduce conflict happens when the parser has the option to either reduce to a rule or shift the symbol and continue. This is much less critical because the obvious choice is always to shift. Consider the following example of a
+A shift-reduce conflict happens when the parser has the option to either reduce to a rule or shift the symbol and continue. This is much less critical because the obvious choice is always to shift. Consider the following example of $a$.
 
 \begin{lstlisting}
 Foo : 'a' 'b'
@@ -142,11 +145,12 @@ Bar : 'a'
 
 Here the parser, when seeing an \code{'a'} as the current symbol and \code{'b'} as the look-ahead symbol, it can either reduce the \code{Bar} rule or shift the \code{'a'} and continue parsing the \code{'b'}.
 
+
 \subsection{Syntactic sugar}
 \label{sec:imp-sugar}
-Because of the simplistic nature of the Kite AST it would be terse to write programs that directly translates to AST nodes. The \code{Desugar} module allows Kite programs to be written in a succinct manner and further enables a powerful feature known as \emph{list comprehensions}. It makes the language ``sweeter'' for human use; things can be expressed more clearly, more concisely, or in an alternative style that some may prefer.\cite{wiki-sugar14}. The process of converting sugared syntax to standard form is called \emph{desugaring} of code.
+Because of the simplistic nature of the Kite AST, it would be terse to write programs that directly translates to AST nodes. The \code{Desugar} module allows Kite programs to be written in a succinct manner and further enables a powerful feature known as \emph{list comprehensions}. It makes the language ``sweeter'' for human use; things can be expressed more clearly, more concisely, or in an alternative style that some may prefer~\cite{wiki-sugar14}. The process of converting sugared syntax to standard form is called \emph{desugaring} of code.
 
-We have decided to integrate desugaring directly in the parser because we avoid the need for an intermediate AST representation to be desugared after parsing. The \code{Desugar} module defines functions to desugar specific cases of sugar, that are used in the Haskell code snippets. For instance in the rule for function application, \code{Apply}:
+We have decided to integrate desugaring directly in the parser because this avoids the need for an intermediate AST representation to be desugared after parsing. The \code{Desugar} module defines functions to desugar specific cases of sugar, that are used in the Haskell code snippets. For instance in the rule for function application, \code{Apply}:
 
 \begin{lstlisting}
 Apply   :: { Expr }
@@ -155,13 +159,13 @@ Apply   :: { Expr }
         | ...
 \end{lstlisting}
 
-Here the function \code{mkCalls} is defined in the \code{Desugar} module and converts multiple arguments to a function to a series of applications. Next we give a more detailed description of all the syntactic sugar supported in Kite. Most of the desugaring is straight forward and the details of their use is described in section \ref{sec:kite-design-sugar}, but we will explain the most interesting parts next
+Here the function \code{mkCalls}, defined in the \code{Desugar} module, converts multiple arguments to a function, to a series of applications. Next we give a more detailed description of all the syntactic sugar supported in Kite. Most of the desugaring is straight forward and the details of their use is described in section~\ref{sec:kite-design-sugar}, but we will explain the most interesting parts next.
 
 \paragraph{Strings}
-As the representation of strings outputted from the lexer is a Haskell \code{String} type (which is a type synonym for \code{[Char]}), we simply map the \code{PChar} constructor over each letter and construct a \code{PList} containing the resulting list. This way a string end of having the type \code{PList PChar} in the AST.
+As the representation of strings outputted from the lexer is a Haskell \code{String} type (which is a type synonym for \code{[Char]}), we simply map the \code{PChar} constructor over each letter and construct a \code{PList} containing the resulting list. This way, a string ends with having the type \code{PList PChar} in the AST.
 
 \paragraph{Multiple arguments in function application}
-The \code{mkCalls} function converts a function call with multiple arguments to a sequence of applications. The Haskell code is the following
+The \code{mkCalls} function converts a function call with multiple arguments to a sequence of applications.
 
 \begin{haskell}
 
@@ -169,29 +173,28 @@ mkCalls f [] = PApply f PVoid
 mkCalls f (a:as) = foldl PApply (PApply f a) as
 \end{haskell}
 
-Where \code{(a:as)} is the destructured\footnote{Destructuring means breaking up a data structure into its parts by using pattern matching. Kite features a simple implementation of this in it's \code{match} expressions} list of arguments, and we reduce the list by folding with a \code{PApply} data constructor.
+Where \code{(a:as)} is the destructured~\footnote{Destructuring means breaking up a data structure into its parts by using pattern matching. Kite features a simple implementation of this in it's \code{match} expressions} list of arguments, we reduce the list by folding with a \code{PApply} data constructor.
 
 \paragraph{List comprehensions}
-As list comprehensions are composed of an output expression, draws and guards, the desugaring is implemented as follows (for an example of a list comprehension, and its desugared version, see section \ref{sec:ex-listcomp}):
+As list comprehensions are composed of an output expression, draws and guards, the desugaring is implemented as follows (for an example of a list comprehension, and its desugared version, see section~\ref{sec:ex-listcomp}):
 
 \begin{enumerate}
-
 \item The identifiers from the draws are extracted as these will be used as arguments to the various functions.
 
-\item A flatMap\footnote{\code{flatMap} takes as arguments a lambda-expression and a list, maps the function to the list, and \code{flatten}s the result} is generated for each of the draws, with the function taking as argument the identifier of the current draw and the list-expression as defined on the right-hand side of the \code{<-}, e.g. \code{[1, 2, 3]} in \code{x <- [1, 2, 3]}. The body of the lambda expression is either a nested flatMap or the final if-expression of generated from the guards:
+\item A \code{flatMap}~\footnote{\code{flatMap} takes as arguments a lambda-expression and a list, maps the function to the list, and \code{flatten}s the result} function is generated for each of the draws, taking the identifier of the current draw and the list-expression as defined on the right-hand side of the \code{<-} (e.g. \code{[1, 2, 3]} in \code{x <- [1, 2, 3]}) as arguments. The body of the lambda expression is either a nested \code{flatMap} or the final if-expression as generated from the guards:
 
-\item The guards are inserted as bodies into functions which take all the extracted identifiers as arguments. These lambda-expressions are then conjoined in the condition of the \code{if}-expression.
+\item The guards are inserted as individual functions which take all the extracted identifiers as arguments. These lambda-expressions are then conjoined in the condition of the \code{if}-expression.
 
-\item The \code{then}-branch of the \code{if}-expression is a function with the output expression as its body and the extracted identifiers as its arguments. The \code{else}-branch is simply an empty list. This implies that only the elements that pass the guards are outputted, as flatMap gets rid of empty elements.
-
+\item The \code{then}-branch of the \code{if}-expression is a function with the output expression as its body and the extracted identifiers as its arguments. The \code{else}-branch is simply an empty list. This implies that only the elements that pass the guards are outputted, as \code{flatMap} excludes the empty elements.
 \end{enumerate}
+
 
 \subsection{Analyzer}
 TODO: analyzer in general
 
-\subsubsection{Type inference}
 
-As mentioned earlier, Kite uses static type checking to verify that types align at compile-time. We have used the Hindley-Milner type inference algorithm first described by Damas and Milner \cite{milner82}. They described an algorithm, named ``Algorithm W'', that given an expression will infer the most general type of that expression. We introduce the $\vdash$ to mean a derivation of types from an expression. For instance $x = 1 \vdash x : Int$ is read as ``given the expression $x = 1$ we can derive that $x$ has type $Int$''. To give a sense of what the algorithm does we first present a few examples. Recall that $:$ is pronounced ``has type''
+\subsubsection{Type inference}
+As mentioned earlier, Kite uses static type checking to verify that types align at compile-time. We have used the Hindley-Milner type inference algorithm first described by Damas and Milner~\cite{milner82}. They described an algorithm, named ``Algorithm W'', that, given an expression, will infer the most general type of that expression. We introduce the $\vdash$ to mean a derivation of types from an expression. For instance $x = 1 \vdash x : Int$ is read as ``given the expression $x = 1$ we can derive that $x$ has type $Int$''. To give a sense of what the algorithm does we first present a few examples. Recall that '$:$' is pronounced ``has type''.
 
 Let the following be predefined
 \begin{align*}
@@ -207,8 +210,7 @@ The algorithm can now infer the types of the following expressions
   f(n + 1)              & \qcol a                & \qvd f: (Int \to a), n: Int \\
 \end{align*}
 
-Using the last example above the intuition behind the algorithm is as follows
-
+Using the last example above, the intuition behind the algorithm is as follows
 \begin{enumerate}
 \item $e = \fn{f, n}{\ldots} \vdash e: (a \to b \to c)$ \\
   $e$ is being assigned a lambda expression with two parameters but we do not know anything about their types
@@ -221,15 +223,16 @@ Using the last example above the intuition behind the algorithm is as follows
 \end{enumerate}
 
 \paragraph{Type unification}
-
-We define the $\tau$ function to ``type of'', such that for instance from the above $\tau(e) = (Int \to c) \to Int \to c$.
+We define the $\tau$ function to ``type of'', such that the above, for instance, becomes
+\[ \tau(e) = (Int \to c) \to Int \to c \]
 
 When the type of $n$ was inferred, we \emph{unified} the known type of $+:a \to a \to a$ with the expression $n + 1$. Note that $n + 1$ is equivalent to the prefix form $+(n, 1)$. From a base case (shown below) we know that $\tau(1) = Int = a$. This gives us
+\[ TODO \]
+This is called type unification and is at the core of the algorithm.
 
-. This is called type unification and is at the core of the algorithm.
+Formally, the unification algorithm takes two types and either fails or returns a \emph{substitution} that maps the most general type to the most specific of the two. The algorithm is here formulated in Haskell code and is equivalent to that of our actual implementation (though simplified and not directly compilable).
 
-Formally the unification algorithm takes two types and either fails or returns a \emph{substitution} that maps the most general type to the most specific of the two. The algorithm is here formulated in Haskell code and is equivalent to that of our actual implementation (though simplified and not compilable)
-
+TODO: snippet
 %\begin{haskell}
 %-- Note:
 %-- <+> is an infix function that composes (union) two substituions
@@ -277,38 +280,34 @@ Formally the unification algorithm takes two types and either fails or returns a
 %
 %\end{haskell}
 
-
 \paragraph{Limitations of Hindley-Milner}
-While the Hindley-Milner algorithm certainly is powerful and elegant, it has (in it's original form) some limitations that contrain the type system. Most notably we cannot support subtyping, meaning that we cannot define a type as being an extension of another. Subtyping in \code{Java} is declared using the \code{extends} keyword, thus making a \code{class} a subtype of another class (called the supertype).
+While the Hindley-Milner algorithm certainly is powerful and elegant, it has (in its original form) some limitations that constrain the type system. Most notably we cannot support subtyping, meaning that we cannot define a type as being an extension of another. Subtyping in \code{Java} is declared using the \code{extends} keyword, thus making a \code{class} a subtype of another class (called the supertype).
 
-Subtyping is not possible (or difficult at the least) due to the fact that the unification algorithm cannot tell the most general type of an expression if subtypes are allowed.
+Subtyping is not possible (or difficult at the least), due to the fact that the unification algorithm cannot tell the most general type of an expression if subtypes are allowed.
 
-Consider the function $foo : Person \to Int$. Now, if we have the type $Manager <: Person$ (meaning $Manager$ is a subtype of $Person$) and we want to infer %TODO
+Consider the function $foo : Person \to Int$. Now, if we have the type $Manager <: Person$ (meaning $Manager$ is a subtype of $Person$) and we want to infer TODO
 
-%TODO: lexer ~ regex ~ lexeme
-%TODO: lexical scoping
-%TODO: optimization inlining
+TODO: lexer ~ regex ~ lexeme
+TODO: lexical scoping
+TODO: optimization inlining
+
 
 \subsection{Optimizer}
+The Kite-compiler's optimizer is currently only a simple dead-code elimination algorithm. The algorithm is given a starting declaration (usually the \code{main} declaration) and recursively traverses the AST, beginning with the expressions defined in the starting node. When an identifier node is detected (except in a bind node) it's name is saved and the recursion continues. The part of the AST which has been traversed, is the derivation tree that will be executed when running the program, thus containing all referenced identifiers. The full list of declarations is now filtered by only persisting the ones that were detected during traversal, since we can be certain that they will never be referenced.
 
-The optimizer implemented in Kite is currently only a simple dead-code elimination algorithm. The algorithm is given a starting declaration (usually the \code{main} declaration) and recursively traverses the AST beginning with the expressions defined in the starting node. When an identifier node is detected (except in a bind node) it's name is saved and recursion continues. The part of the AST that has been traversed, is the derivation tree that will be executed when running the program, thus all referenced identifiers will have been detected. The full list of declarations is now filtered by only persisting the ones that were detected during traversal, since we can be certain that they will never be accessed.
+In its current state, the algorithm only eliminates unused top-level declarations, thus leaving unused locally scoped variables in the code. The algorithm can however be extended to eliminate local variables by transforming the AST during traversal. With a stack of used identifiers, we could, when entering a new local scope (a lambda or match case), push a new frame to the stack, add accessed variables found in the current scope, and when leaving the scope, filter out the variables that were not accessed.
 
-In it's current state the algorithm only eliminates unused top-level declarations, thus leaving unused locally scoped variables in the code. The algorithm can however be extended to eliminate local variables by transforming the AST during traversal. Using a stack of used identifiers we could, when entering a new local scope (a lambda or match case), push a new frame to the stack, add accessed variables found in the current scope to it, and when leaving the scope filter out the variables that were not accessed.
+TODO:
+ - mention `target'-specific optimization
+ - standard binary math functions get emitted nicer
 
-TODO - mention `target'-specific optimization - standard binary math functions get emitted nicer - TODO Groupleader AKA Simon
 
 \subsection{Code generation}
-
 The implementation of code generation is split into parts for LLVM and JavaScript.
 
 \textbf{LLVM as backend:} The generation can be done using LLVM
-bindings for Haskell. 
-
+bindings for Haskell.
 
 \textbf{JavaScript as backend:}
 
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: "../report"
-%%% End:
-
+TODO
