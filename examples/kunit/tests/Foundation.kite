@@ -63,7 +63,7 @@ cases ("Ordering", [
     1 < 2
   }),
 
-  ("< should compare using greater-than", -> {
+  ("> should compare using greater-than", -> {
     2 > 1
   }),
 
