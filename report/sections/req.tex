@@ -2,22 +2,24 @@
 %%% mode: latex
 %%% TeX-master: "../report"
 %%% End:
-In the requirements-section we will focus more on the language specific features of Kite. As most of the compiler specific requirements are discussed in the design-section, and are basic for most compilers, they will not be discussed here.
+I
+n the requirements-section we will focus more on the language specific features of Kite. As most of the compiler specific requirements are discussed in the design-section, and are basic for most compilers, they will not be discussed here.
 
 \subsection{Minimum requirements}
 As of our initial requirements for Kite, we have set a list of minimum requirements for our compiler.
 
-\textbf{Type system:} Standard types that should be included in Kite is as follows:
+\textbf{Built-in types:}
+Standard types that should be included in Kite is as follows:
 \begin{itemize}
-\item [--] Float
-\item [--] Integers
-\item [--] Characters
-\item [--] Boolean
-\item [--] Lists
-\item [--] Pairs
+\item Float
+\item Integers
+\item Characters
+\item Boolean
+\item Lists
+\item Pairs
 \end{itemize}
 
-\textbf{Static type check:}
+\textbf{Static type-check:}
 In our initial analysis, we want to implement a static type-checker. This will ensure type safety in a given program, i.e.\ a program passing the static type-check will be free of type errors. If a program is verified by the analyzer, the compiler will be able to trust the intermediate representation given from the type-checker. This will also result in any type error will be caught compile-time.
 
 \textbf{Code generation:}
