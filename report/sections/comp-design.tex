@@ -29,6 +29,7 @@ included are declared in the top of the file.
 The nature of the preprocessor is quite simple, as the only task it
 simple textual substitution.
 
+
 \subsection{Lexical analysis}
 The lexical analyzer, or just \emph{lexer}, is a central part of most
 compilers. It has the important task of processing some input and
@@ -49,17 +50,19 @@ In the cases know to us (Yacc, Happy, ANTLR), parser-generators make use of \emp
 
 The parser should rule out code containing syntactical errors, especially typos, which are likely to occur without a good IDE\footnote{IDE is short for Integrated Development Environment, which, among other features, often has good auto-completion, thus making typos much less likely.}.
 
+
 \subsection{Desugar}
 In order to make the language more convenient to write, we have made syntactic sugar and will introduce a desugaring module. This will take specific syntactic constructs and convert them into their more basic elements.
 
+
 \subsection{Analyzer}
-The analyzer will traverse the parse tree and perform \emph{typechecking} and look for calls to undefined functions. The analyser should spot almost all remaining incorrect code. Thus the output should be able to be executed without errors due to incorrect types, typos or the usage of undeclared variables.
+Tha analyzer is the first component of the compiler's back-end (or middle-end, to avoid confusion with code-generation). It will traverse the parse tree and perform \emph{typechecking} and look for calls to undefined functions. The analyser should spot almost all remaining incorrect code. Thus the output should be able to be executed without errors due to incorrect types, typos or the usage of undeclared variables.
 
 The analyzer cannot, however, determine whether a program will yield the expected results or even if it will ever terminate.
 
 
 \subsection{Optimizer}
-The optimizer module takes the AST and can perform optimizations on it. This is described in more detail in section \ref{sec:impl-optimizer}.
+The optimizer module takes the AST and transforms it in such a way that the program is faster or smaller, but the functionality is the same. This is described in more detail in section \ref{sec:impl-optimizer}.
 
 
 \subsection{Code generation}
