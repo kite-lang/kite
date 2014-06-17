@@ -1,9 +1,13 @@
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../report"
+%%% End:
+
 \subsection{Programming languages and compilers in general}
-
 Programming languages are the means for programmers to express what the machine should compute, or in other words: What a program should do.
-The two main divisions between programming languages are likely whether they are High- or Low-level and which `programming paradigm' they follow (in subsection \ref{sec:paradigms} these paradigms will be shortly described).
+The two main divisions between programming languages are likely whether they are High- or Low-level and which `programming paradigm' they follow. These paradigm will by described briefly in the following section (\ref{sec:paradigms}).
 
-The low-level languages are close to what the computer `natively' understand, which is machine code/instructions, but are harder for humans to read and write. Examples hereof are FOTRAN and COBOL. Usually high-level languages are used for faster development, better readability and maintenance, among other things. Thus for many purposes programmers prefer higher level languages. These languages have to be translated into something the machine can interpret, and this is done with a so-called compiler.
+The low-level languages are close to what the computer `natively' understand, which is machine code/instructions, but are harder for humans to read and write. Examples hereof are FORTRAN and COBOL. Usually, high-level languages are used for faster development, better readability and maintenance, among other things. Thus, for many purposes programmers prefer higher level languages. After being written, these languages have to be translated into something the machine can interpret, and this is done with a so-called compiler.
 
 A compiler is a program that translates source code in a specific language into another, usually lower level language. Thus a programming language is in fact implemented through a compiler.
 
@@ -17,15 +21,10 @@ Another imperative approach is \textbf{procedural} languages like \code{C}, whic
 
 A very different style is the highly declarative \textbf{logic} programming, in which execution order and control-flow does not exist, but programs consist of logic clauses that define relationships and implications.
 
-The final paradigm we will describe is \textbf{functional} programming. This is another declarative approach, which is characterized by functions and their composition as the fundamental means of expressing computations. Often programs are written in such a way that most functions are pure, meaning that they will \emph{always} return the same output given the same input.
+The final paradigm we will describe is \textbf{functional} programming. This is another declarative approach, which is characterized by functions and their composition as the fundamental means of expressing computations. Often, programs are written in such a way that most functions are pure, meaning that they will \emph{always} return the same output given the same input.
 
 \subsection{The problem}
-The goal of this project is to gain knowledge in a field which we have only little prior knowledge about, as we at the beginning of this project have not had any formal education within the subject. In short we strive to get a good understanding of the concepts of functional programming and compilation of programming languages in general. We will achieve this by implementing a compiler for a functional language named Kite.
+The goal of this project is to gain knowledge in a field which we have only little prior knowledge about, as we at the beginning of this project have not had any formal education within the subject. In short, we strive to get a good understanding of the concepts of functional programming and compilation of programming languages in general. We will achieve this by implementing a compiler for a functional language named Kite.
 
 \subsection{The structure of the report}
-The report is structured such that it somewhat follows the steps we have taken from idea to working product. We initially describe the problem and purpose of the project (chapter \ref{sec:probanal}), and then define what our requirements for completion are (chapter \ref{sec:requirements}). Next we will talk about the syntactic and semantic design of the Kite language (chapter \ref{sec:kite-design}) and how we architecturally designed the corresponding compiler (chapter \ref{sec:compiler-design}). Then follows an in-depth explanation of the implementation of each of the involved modules and their purpose (chapter \ref{sec:impl}). Finally we evaluate how the implementation turned out (chapter \ref{sec:evaluation}) and discuss what further development of Kite could lead to.
-
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-master: "../report"
-%%% End: 
+The report is structured such that it somewhat follows the steps we have taken from idea to working product. We will start by describing the problem and purpose of the project (chapter \ref{sec:probanal}), and then to define what our requirements for completion are (chapter \ref{sec:requirements}). Next we will talk about the syntactic and semantic design of the Kite language (chapter \ref{sec:kite-design}) and how we architecturally designed the corresponding compiler (chapter \ref{sec:compiler-design}). To sum up our work, we give an in-depth explanation of the implementation of each of the involved modules and their purpose (chapter \ref{sec:impl}). Finally, we evaluate how the implementation turned out (chapter \ref{sec:evaluation}) and discuss what further development of Kite could lead to.
