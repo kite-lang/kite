@@ -1,5 +1,3 @@
-
-
 To describe the overall design of the Kite compiler, we will start by
 breaking it down into general parts, where each part or module has a
 specific task. Below we have a waterfall model including the main
@@ -61,20 +59,11 @@ The analyzer cannot, however, determine whether a program will yield the expecte
 
 
 \subsection{Optimizer}
-The optimizer traverses the analysed parse tree and filters out unused functions. 
-TODO: In implementation, mention that it does this by starting in the declaration of main, and keeps the actually applied functions, thus filtering out the unused functions and thereby reducing the size of the emitted code. 
+The optimizer module takes the AST and can perform optimizations on it. This is described in more detail in section \ref{sec:impl-optimizer}.
 
 
 \subsection{Code generation}
-The code generator will take a representation of the
-parse tree, the output of the parser, and generate code
-accordingly. 
-
-
-TODO: Inital, not done.
-
-As for generation of code, Kite should be flexible and allow for
-multiple backends.
+The code generator will take the AST outputted from the parser, and emit code for a specified target language. Currently Kite only supports one code generation backend namely for JavaScript, but the module is structured in such a way that allows easy integration with new code generation modules.
 
 \textbf{LLVM as backend:} The LLVM compiler
 infrastructure\footnote{LLVM Project \url{http://llvm.org/}} will allow
@@ -83,7 +72,7 @@ will take a representation of the parse tree and emit a LLVM
 intermediate representation (IR) which can be used for code
 generation. Since LLVM is strong statically typed, a modified variant
 of Kites parse tree is needed. The LLVM infrastructure will also provide
-optimization passes for a given LLVM IR. 
+optimization passes for a given LLVM IR.
 
 \textbf{JavaScript as backend:} As an alternative, a JavaScript emitter
 can be implemented and used as backend. Since JavaScript is untyped,
@@ -96,7 +85,7 @@ Node.js makes use of the Google V8 JavaScript engine \footnote{Google
 native machine code. The result is faster and more optimized
 JavaScript execution.
 
-%%% Local Variables: 
+%%% Local Variables:
 %%% mode: latex
 %%% TeX-master: "../report"
-%%% End: 
+%%% End:
