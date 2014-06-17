@@ -164,7 +164,9 @@ Note however that there is a substantial difference between top-level declaratio
 We cannot reasonably support subtyping, and it is arguably not a desirable feature, but we could provide other mechanism for defining shared properties of types. One such mechanism is the concept of \emph{type classes}, which is a way to define a class of functions which a type can implement, thus becoming an instance of that type class. Types can then use the type class to \emph{constrain} a type it requires. Type classes are similar to the interfaces of object-oriented languages. A major benefit in the case of Kite would be a \code{Number} type class that declares arithmetic operations, which would be used in cases where a function is indifferent as to whether a number is a \code{Float} or and \code{Int}.
 
 \subsection{Further development}
-TODO: I/O?
+
+\subsubsection{I/O}
+Currently Kite's only way of getting user input into a program is by passing an argument when run, and the only way to communicate back to the user is by printing to the shell. For actual use Kite would need the possibility to read and write files and read peripheral device input during run-time.
 
 \subsubsection{Optimizations}
 \label{sec:disc-optimization}
