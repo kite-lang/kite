@@ -127,9 +127,9 @@ In order to use the preprocessor to include another code file, use the \code{\#i
 
 \subsubsection{Type declaration}
 
-For each declared function, it is possible to declare its type. For instance the function \code{length} has the following type: \[ length: [a] \to Int \]
+Top-level declaration can optionally have a corresponding type declared. This can greatly increase readability of declarations as the inferred type might not be immediately clear.
 
-The syntax of type declaration is in general as the example in \ref{sec:func-decl} and thus \code{length} should have a type declaration as follows:
+Annotations are declared using the \code{::} operator. For instance the function \code{length} can have its type explicitly annotated as follows:
 
 \begin{kite}
 length :: [a] -> Int
@@ -138,11 +138,9 @@ length = |xs| -> {
 }
 \end{kite}
 
-The type-checker checks whether the declared type matches the type inferred from the actual function, and yields a TypeError if it is declared wrongly.
+The type-checker will validate that an annotated type is at least as general as the inferred type. This means that a type annotation of \code{a} will match anything, and \code{:: a -> a} will match {:: Int -> Int} but not \code{:: Int -> Bool}
 
-TODO: Er det lame at have nedenstående med?
-
-It is important to note that type declarations, should be made top level, as is the case with all declarations.
+Types can be grouped to denote a higher-order function, for instance the type of map \code{(a -> b) -> [a] -> [b]} means that \code{map} accepts a \emph{function} as its first parameter, a list as its second and it produces a list.
 
 \subsubsection{Syntactic sugar}
 \label{sec:kite-design-sugar}
