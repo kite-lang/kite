@@ -87,7 +87,8 @@ emit (PReturn expr) =
 
 -- optimize standard infix js
 emit (PApply (PApply (PIdentifier op) lhs) rhs)
-  | op `elem` ["+", "-", "*", "/", "^"] = printf "(%s %s %s)" (emit lhs) op (emit rhs)
+  | op `elem` ["+", "-", "*", "/", "^", "<", "<=", ">", ">="] = printf "(%s %s %s)" (emit lhs) op (emit rhs)
+  | op `elem` ["**"] = printf "(Math.pow(%s,%s))" (emit lhs) (emit rhs)
 
 emit (PApply expr arg) =
   printf "%s(%s)" (emit expr) (emit arg)

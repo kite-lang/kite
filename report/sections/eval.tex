@@ -65,7 +65,7 @@ In the following section we will describe the various tests we have implemented 
 
 We have made use of both \textbf{unit}- and \textbf{validation}-tests. Unit-testing for ensuring that each component, i.e.\ module, of the compiler, e.g.\ the lexer, parser etc., are \emph{indidually} functioning as expected. The validation-tests have been focused on that the interface between all the various components are functioning as expected.
 
-\subsubsection{Unit-tests}  TODO: implementer tests af type-declarations?
+\subsubsection{Unit-tests}
 Unit testing has been used on each of the modules of the compiler. For instance, we have tested the parser module in cases where the output of the lexer should yield a parse error and in cases where it should not.
 
 \begin{lstlisting}[caption=\code{Kite.Test.TypeCheck.hs} snippet]
@@ -103,7 +103,7 @@ We have made some benchmarking of Kite, targeting JavaScript ran on Node.js, Pyt
 
 \subsubsection{Brute-force mathematics}
 \label{sec:math-benchmark}
-The first benchmarking is finding Pythagorean triples using list comprehensions, e.i. finding integer solutions to the equation $a^2 + b^2 = c^2$:
+The first benchmark\footnote{/benchmarking/pythagoras.kite, /benchmarking/pythagoras.hs, /benchmarking/pythagoras.py} is finding Pythagorean triples using list comprehensions, e.i. finding integer solutions to the equation $a^2 + b^2 = c^2$:
 
 \begin{kite}
   n = 200
@@ -134,7 +134,7 @@ Another point is that the two other languages are probably optimized with respec
 
 \subsubsection{Sorting lists}
 
-The other benchmark we have performed is sorting of lists of integers. We have hardcoded the same random list into the three different languages and timed the sorting of the list:
+The other benchmark\footnote{/benchmarking/sort.kite, /benchmarking/sort.hs, /benchmarking/sort.py} we performed is sorting of lists of integers. We have hardcoded the same random list into the three different languages and timed the sorting of the list:
 
 \begin{kite}
 l = [294, 383, ..., 176, 336]
@@ -163,6 +163,10 @@ In general, the code Kite emits is very inefficient and we will discuss later in
 
 
 \subsection{Optimization}
+
+We have implemented two optimizations. A target-independent size reduction of the emitted code and a target-specific optimization with respect to running time.
+
+\subsubsection{Size reduction}
 As our optimization pass removes unused function declarations from the parse tree, it is possible to achieve a substantial reduction of the emitted code.
 
 A very simple program that concatenates the strings `Hello,' and ` World!' and prints them, is unoptimized emitted to 12.5kB of JavaScript, and optimized to 3.5kB. Thus optimization yields a size reduction of 72\%. This is the result of removing dead code. The reason for most of the code in such a small program being dead is the Foundation library. As string concatenation is the only operation performed, most of the functions in Foundation are redundant, and therefor removed.
@@ -171,7 +175,7 @@ A very simple program that concatenates the strings `Hello,' and ` World!' and p
 A slightly larger program that sums the even Fibonacci numbers less than 4 million (problem 2 of the online collection of mathematical problems Project Euler\footnote{http://projecteuler.net/}) the compiler emits 12.9kB and 6.8kB of JavaScript without and with optimization, respectively. The program makes use of list comprehensions, which is just syntactic sugar for flatten and map, which then again uses a cascade of functions from the Foundation. Thus, it is expected that a lot of the code from the library is used. But a reduction of 47\% is still noteworthy, and imagining the use of functions from other Kite-libraries for more specific purposes, this optimization might be useful.
 
 
-\begin{table}[h]
+\begin{table}[H]
   \centering
   \begin{tabulary}{0.9\textwidth}{|L| L |L| C | L | }
     \hline
@@ -189,4 +193,31 @@ A slightly larger program that sums the even Fibonacci numbers less than 4 milli
   \caption{Above is a summation of the different Kite-programs we have made and optimized.}
 \end{table}
 
-TODO: Write about target-specific optimization (emitting +, -, *, / instead of nested function calls).
+
+\subsubsection{Target-specific optimizations}
+
+This optimization uses the built-in boolean and mathematical functions of JavaScript, as they are assumed to be faster and we eliminate some of the overhead of partial application.
+
+Below are the results of running the Pythagoras-benchmark with and without our optimizations:
+
+\begin{table}[h]
+  \centering
+  \begin{tabular}{|l|c|c|c|c|}
+    \hline
+                   & $n = 50$ & $n = 100$ & $n = 150$ & $n = 200$ \\
+    \hline
+    Runtime with optimizations & 427ms & 2.400ms  & 7.593ms & 17.494ms            \\
+    Runtime without optimizations & 608ms & 3.417ms & 11.212ms  & 25.225ms             \\
+    Improvement & 29.8\% & 29.8\% & 32.3\%  & 30.6\%             \\
+    \hline
+  \end{tabular}
+  \caption{Benchmarking of Pythagorean triples with and without optimizations}
+\end{table}
+
+The optimization achieved an overall improvement of 30\%, and we suspect that this is due to the reduction of function calls the optimization yields.
+
+We also ran the Sort-benchmark, but did not see any improvements. We believe that this is due to the large call stack generated by the many recursive calls in our implementation of \code{sort}, which completely shadows the few calls removed by using JavaScripts comparison directly instead of partially applying the comparison twice.
+
+
+\subsection{Code generation}
+TODO: skriv om jabbathehutscript
