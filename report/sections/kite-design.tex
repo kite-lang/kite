@@ -85,6 +85,7 @@ Kite only includes the XOR bitwise operator, as of now.
 
 
 \subsubsection{Function declaration}
+\label{sec:func-decl}
 Every function in Kite is declared as an anonymous function:
 
 \begin{kite}
@@ -123,6 +124,25 @@ In order to use the preprocessor to include another code file, use the \code{\#i
 \begin{kite}
 #include "foo.kite"
 \end{kite}
+
+\subsubsection{Type declaration}
+
+For each declared function, it is possible to declare its type. For instance the function \code{length} has the following type: \[ length: [a] \to Int \]
+
+The syntax of type declaration is in general as the example in \ref{sec:func-decl} and thus \code{length} should have a type declaration as follows:
+
+\begin{kite}
+length :: [a] -> Int
+length = |xs| -> {
+  ...
+}
+\end{kite}
+
+The type-checker checks whether the declared type matches the type inferred from the actual function, and yields a TypeError if it is declared wrongly.
+
+TODO: Er det lame at have nedenstående med?
+
+It is important to note that type declarations, should be made top level, as is the case with all declarations.
 
 \subsubsection{Syntactic sugar}
 \label{sec:kite-design-sugar}
