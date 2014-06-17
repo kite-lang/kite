@@ -2,21 +2,19 @@
 %%% mode: latex
 %%% TeX-master: "../report"
 %%% End:
-I
-n the requirements-section we will focus more on the language specific features of Kite. As most of the compiler specific requirements are discussed in the design-section, and are basic for most compilers, they will not be discussed here.
+In the requirements-section we will focus more on the language specific features of Kite. As most of the compiler specific requirements are discussed in the design-section, and are basic for most compilers, they will not be discussed here.
 
 \subsection{Minimum requirements}
 As of our initial requirements for Kite, we have set a list of minimum requirements for our compiler.
 
-\textbf{Built-in types:}
-Standard types that should be included in Kite is as follows:
+\textbf{Built-in types:} Standard types that should be included in Kite is as follows:
 \begin{itemize}
-\item Float
-\item Integers
-\item Characters
-\item Boolean
-\item Lists
-\item Pairs
+\item \code{Float}: Floating-point numeric values
+\item \code{Int}: Integer numeric values
+\item \code{Char}: Single character
+\item \code{Bool}: Boolean value, \code{True} or \code{False}
+\item \code{List}: List of another type (composite type)
+\item \code{Pair}: A pair of two types (composite type)
 \end{itemize}
 
 \textbf{Static type-check:}
