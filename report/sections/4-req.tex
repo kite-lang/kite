@@ -18,13 +18,13 @@ As of our initial requirements for Kite, we have set a list of minimum requireme
 \end{itemize}
 
 \textbf{Static type check:}
-In our initial analysis, we want to implement a static type-checker. This will ensure type safety in a given program, e.i. a program passing the static type-check will be free of type errors. If a program is verified by the analyzer, the compiler will be able to trust the intermediate representation given from the type-checker. This will also result in any type error will be caught compile-time.
+In our initial analysis, we want to implement a static type-checker. This will ensure type safety in a given program, i.e.\ a program passing the static type-check will be free of type errors. If a program is verified by the analyzer, the compiler will be able to trust the intermediate representation given from the type-checker. This will also result in any type error will be caught compile-time.
 
 \textbf{Code generation:}
 For a machine to be able to understand the high-level language, the process of code generation is needed. Kite's code generator must be able to take some representation of the given source code, and convert it such that the machine will be able to execute the resulting output.
 
 \textbf{Recursion:}
-As recursion is one of the main properties of a functional language, it will have to be central aspect of Kite. In general, recursion is the method of dividing a problem into sub-problems. This is top-down approach to problem-solving and is commonly referred to as the technique ``divide and conquer''. A more specific example of recursion is a function calling it-self until one or more given base-cases are met. One of the most used examples of recursion is the computation of Fibonacci numbers. As a Fibonacci number is defined as the sum of the two previous numbers, it easily implemented with recursion:
+As recursion is one of the main properties of a functional language, it will have to be a central aspect of Kite. In general, recursion is the method of dividing a problem into sub-problems. This is top-down approach to problem-solving and is commonly referred to as the technique ``divide and conquer''. A more specific example of recursion is a function calling it-self until one or more given base-cases are met. One of the most used examples of recursion is the computation of Fibonacci numbers. As a Fibonacci number is defined as the sum of the two previous numbers, it easily implemented with recursion (albeit this particular implementation is very inefficient):
 
 \begin{pseudo}
 // fibonacci
@@ -47,8 +47,10 @@ A Read-Eval-Print-Loop, or an \emph{interactive top-level}, will allow a user to
 \textbf{Higher-order functions:}
 The language should provide the possibility to create function that take functions as parameters, and returns functions.
 
-\textbf{Mutability:}
-In a pure functional language there will be immutability. There will therefor have to be implemented some extra feature to provide mutability of variables.
+\textbf{Immutability:}
+In a pure functional language there will be immutability.
+TODO
+
 
 \textbf{Currying:}
 As we want all functions only to take one parameter, we want to include currying.

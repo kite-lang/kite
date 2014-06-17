@@ -32,7 +32,7 @@ Ints'') is denoted \code{[Int]} and a list of a type variables $a$ is
 
 The pair type is also abbreviated using $(\ ,\ )$, for instance the type \code{Pair(Int, Bool)} is written \code{(Int, Bool)}
 
-Strings is represented as syntactic sugar for lists of characters. For
+Strings are represented as syntactic sugar for lists of characters. For
 instance, \code{['f', 'o', 'o']} has the sugared version \code{"foo"}. This will be discussed later.
 
 Basic arithmetic operators:
@@ -97,10 +97,10 @@ Every function in Kite is declared as an anonymous function:
 
 A function is defined as a list of arguments and a block. A block is
 defined as a list of expressions, where it is implicit that the last
-expression is returned TODO: reference til implementation?. Each block
+expression is returned. Each block
 has its own immediate scope.
 
-Since everything in Kite is an expression, functions is simply a variable bound to a given anonymous function. A function is declared as follows:
+Since everything in Kite is an expression, functions are simply a variable bound to a given anonymous function. A function is declared as follows:
 
 \begin{kite}
 functionName :: ArgType -> ... -> ReturnType
@@ -216,7 +216,7 @@ Note that list comprehensions uses functions defined in
 \nameref{foundation}), which will be discussed later.
 
 \textbf{Infix functions} Kite allows for use of infix functions. Infix
-functions is syntactic sugar for prefix function calls, with some
+functions are syntactic sugar for prefix function calls, with some
 given parameters. Using \code{`} (backtick) will imply the use of
 infix function calls
 
@@ -366,8 +366,7 @@ it is partially applied with an integer, the type of \code{increment}
 becomes \code{Int -> Int}
 
 \subsubsection{Error handling}
-Kite supports exceptions using the keyword \code{panic}. \code{panic}
-will stop Kite execution.
+Kite supports exceptions using the keyword \code{panic}. Using \code{panic} will stop the execution.
 
 An example of the \code{panic} function in use:
 \begin{kite}
@@ -379,9 +378,7 @@ An example of the \code{panic} function in use:
     }
   }
 \end{kite}
-Where if a user tries to take the head of an empty list, Kite
-execution will stop and the error message will be shown.
-TODO: Lidt random...
+If a user tries to take the head of an empty list, the execution of Kite will stop and the error message will be shown.
 
 
 \subsection{Foundation}
