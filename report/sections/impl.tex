@@ -1,8 +1,3 @@
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: "../report"
-%%% End:
-
 \subsection{Preprocessor}
 The preprocessor in Kite is almost identical to the \code{C} language preprocessor. We use a library called \code{cpphs}~\cite{wallace04}, which is a port of the \code{C} version, and provides an embeddable Haskell library. This is the reason for the \code{\#include "file.kite"} syntax. Preprocessing is the first step of the compilation, and generates a single source code file which is a recursive concatenation of all included source files referenced from the main file.
 
@@ -299,14 +294,58 @@ In its current state, the algorithm only eliminates unused top-level declaration
 Optimizations can be done either on the intermediate AST as above or after and during emitted target code. Kite does some simple optimizations for the JavaScript target by expanding calls to common binary arithmetic operations (such as \code{+} and \code{*}). Consider the expression \code{a = 1 + 1}. Without optimizatio the emitted code looks like \code{var a = KT\_PLUS(1)(1)} which  requires two function calls to be evaluated. The optimized version is simply \code{var a = 1 + 1}.
 
 In cases such as the above we could in fact optimize further by directly  calculating the resulting value as it's a constant expression.
-
-
 \subsection{Code generation}
-The implementation of code generation is split into parts for LLVM and JavaScript.
+The implementation of code generation focuses on JavaScript (JS), as the
+initial aim of LLVM code generation was not met. More on this will be
+discussed in \nameref{sec:discussion}. 
 
-\textbf{LLVM as backend:} The generation can be done using LLVM
-bindings for Haskell.
+The codegen module will run recursively through the AST, received from the
+parser, and emit JS code for each AST node. 
 
-\textbf{JavaScript as backend:}
+Examples of emitted code from a given AST node:
+The \code{PLambda} node, which is a function declaration, will be
+emitted to the following JS:
+\begin{haskell}
+  emit (PLambda param body) = printf "(function(%s) {%s})" param (emit body)
+\end{haskell}
+Where the emitter takes a \code{PLambda} with given parameters and
+body. The codegen module will then emit a JS function with the given
+parameters and go through the body. 
 
-TODO
+The \code{PBlock} node, which is usually the body of a \code{PLambda},
+is emitted as follows:
+\begin{haskell}
+  emit (PBlock exprs) =
+  emitAll ";" exprs
+\end{haskell}
+The \code{PBlock} takes a list of expressions, and emits the
+expressions with a \code{;} separating them.
+
+The \code{PBind} node, which binds an ID to a given expression, is emitted
+as follows:
+\begin{haskell}
+  emit (PBind ide expr) =
+  printf "var %s = %s; %s" (safeId ide) (emit expr) (safeId ide)
+\end{haskell}
+Where an ID is set as a JS variable \code{var} and assigned to an expression.
+
+The JS codegen module will also embed \code{kt\_runtime.js} (see
+\ref{kt-runtime}), which is Kites JS runtime. The runtime includes
+various JS functions, which can be used directly in Kite.  As an example, basic I/O
+is included in \code{kt\_runtime.js}. Basic I/O includes print and
+command-line arguments:
+\begin{lstlisting}[language=Javascript]
+  var print = function (str) {
+     console.log(_print(str));
+ };
+
+  var KT_arguments = function (none) {
+    return process.argv;
+  };
+\end{lstlisting}
+JS emitted from Kite-code will allow for function calls to \code{kt\_runtime.js}.
+%%% Local Variables: 
+%%% mode: latex
+%%% TeX-master: "../report"
+%%% End: 
+
