@@ -1,0 +1,75 @@
+kite examples/kunit/Runner.kite | node
+--- Foundation ---
+Testing: Functional
+  OK    id should return the identity value for simple structures
+  OK    id should return the identity value for complex structures
+  OK    ($) should act as application
+  OK    (.) should compose functions
+  OK    (.) should compose multiple functions
+  OK    flip should flip function parameters
+Testing: Boolean
+  OK    not should invert boolean values
+  OK    (&&) should conjoin booleans
+  OK    (||) should disjoin booleans
+Testing: Equality
+  OK    (/=) should be truthy for non-equal values
+Testing: Ordering
+  OK    (<) should compare using less-than
+  OK    (>) should compare using greater-than
+  OK    (>=) should compare using greater-than-or-equal
+Testing: Pairs
+  OK    fst should return first part of pair
+  OK    snd should return first part of pair
+  OK    asPair should return a pair of values
+  OK    (<>) should be alias of asPair
+Testing: Lists
+  OK    (#) should return nth element in list
+  OK    length should return the number of elements in a list
+  OK    empty should compare a list to the empty list
+  OK    head should return first element
+  OK    tail should return all but first element
+  OK    tail should return empty list on singleton list
+  OK    init should return all but the last element in a list
+  OK    last should return the last element in a list
+  OK    (++) should concatenate two lists
+  OK    map should map a function over all elements in a list
+  OK    fold should reduce a list
+  OK    fold1 should reduce a list using head as starting value
+  OK    filter should filter elements from a list by a function
+  OK    take should return first n elements from a list
+  OK    drop should remove first n elements from a list
+  OK    zipWith should combine nth elements in a list with a function
+  OK    zip should pair nth elements in a list
+  OK    and should conjoin all elements in a list
+  OK    or should disjoin all elements in a list
+  OK    all should conjoin all elements in a list using a function
+  OK    any should disjoin all elements in a list using a function
+  OK    flatten should concatenate elements in a list
+  OK    flapMap should map then concatenate elements in a list
+  OK    elem should return whether an element is a member of a list
+  OK    reverse should reverse the order of elements in a list
+  OK    union should should merge non-equal elements from two lists
+  OK    intersect should return the intersecting elements in a list
+  OK    sortBy should sort a list by a function
+  OK    sort should sort a list in ascending order
+  OK    rangeStep should produce a list with provided interval
+  OK    range should produce a list in provided interval
+Testing: Numeric
+  OK    (**) should compute the power of two numbers
+  OK    powMod should compute the power of two numbers mod a third power
+  OK    sum should compute to the sum of elements in a list
+  OK    product should compute to the product of elements in a list
+  OK    min should compute the minimum of two values
+  OK    max should compute the maximum of two values
+  OK    minimum should compute the minimum of all elements in a list
+  OK    maximum should compute the maximum of all elements in a list
+  OK    even should return True for even integers
+  OK    odd should return True for odd integers
+  OK    negate should return the negated value of an integer
+  OK    negatef should return the negated value of a float
+  OK    abs should return the absolute value of an integer
+Testing: Misc
+  OK    until should apply a function to itself until a condition is met
+  OK    while should apply a function to itself while a condition is met
+ 
+63 of 63 tests passed

@@ -34,14 +34,14 @@ cases ("Boolean", [
     not (True) == False && not (False) == True
   }),
 
-  ("&& should conjoin booleans", -> {
+  ("(&&) should conjoin booleans", -> {
     (True && False) == False
     && (False && True) == False
     && (False && False) == False
     && (True && True) == True
   }),
 
-  ("|| should disjoin booleans", -> {
+  ("(||) should disjoin booleans", -> {
     (True || False) == True
     && (False || True) == True
     && (False || False) == False
@@ -50,7 +50,7 @@ cases ("Boolean", [
 ]),
 
 cases ("Equality", [
-  ("/= should be truthy for non-equal values", -> {
+  ("(/=) should be truthy for non-equal values", -> {
     (1 /= 2)
     && ("foo" /= "bar")
     && ([1, 2] /= [1, 2, 3])
@@ -59,15 +59,15 @@ cases ("Equality", [
 ]),
 
 cases ("Ordering", [
-  ("< should compare using less-than", -> {
+  ("(<) should compare using less-than", -> {
     1 < 2
   }),
 
-  ("> should compare using greater-than", -> {
+  ("(>) should compare using greater-than", -> {
     2 > 1
   }),
 
-  (">= should compare using greater-than-or-equal", -> {
+  ("(>=) should compare using greater-than-or-equal", -> {
     (2 >= 1)
     && (2 >= 2)
   }),
