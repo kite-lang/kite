@@ -4,10 +4,6 @@ We have been inspired by many other languages when designing and implementing Ki
 \subsection{Syntax and semantics}
 In this section we will describe how to use the different features of Kite and how they work, i.e. the syntax and semantics.
 
-TODO: Implicit return, blocks - Meget kort beskrevet under
-functions. Mere?
-
-
 \subsubsection{Basic types and declarations}
 Basic declaration of the variables in Kite, types are inferred by the analyzer:
 
@@ -46,13 +42,13 @@ rest = 10 % 2 ---> 0
   \begin{tabular}{|l|l|}
     \hline
     Operation      & Meaning              \\ \hline
-    $x + y$        & Additition           \\ \hline
-    $x - y$        & Subtraction          \\ \hline
-    $x * y$        & Multiplication       \\ \hline
-    $x / y$        & Division             \\ \hline
-    $x**y$         & Exponentiation       \\ \hline
-    $x \% m$       & Remainder of x / y   \\ \hline
-    $powmod(x, y, m)$ & Modulo exponentation \\ \hline
+    $\code{x + y}$        & Additition           \\ \hline
+    $\code{x - y}$        & Subtraction          \\ \hline
+    $\code{x * y}$        & Multiplication       \\ \hline
+    $\code{x / y}$        & Division             \\ \hline
+    $\code{x**y}$         & Exponentiation       \\ \hline
+    $\code{x \% m}$       & Remainder of x / y   \\ \hline
+    $\code{powmod(x, y, m)}$ & Modulo exponentation \\ \hline
   \end{tabular}
   \label{tbl:kite-design-arith-op}
   \caption{Basic arithmetic operators in Kite}
@@ -70,12 +66,12 @@ bar = 1 == 2 ----> False
   \begin{tabular}{|l|l|}
     \hline
     Operation     & Meaning                 \\ \hline
-    $==$          & Equal                   \\ \hline
-    $\backslash=$ & Not equal               \\ \hline
-    $<=$          & Less than or equal than \\ \hline
-    $>=$          & Greater than or equal   \\ \hline
-    $<$           & Less than               \\ \hline
-    $>$           & Greater than            \\ \hline
+    $\code{==}$          & Equal                   \\ \hline
+    $\code{/=}$ & Not equal               \\ \hline
+    $\code{<=}$          & Less than or equal than \\ \hline
+    $\code{>=}$          & Greater than or equal   \\ \hline
+    $\code{<}$           & Less than               \\ \hline
+    $\code{>}$           & Greater than            \\ \hline
   \end{tabular}
   \label{tbl:kite-disign-bool-op}
   \caption{Basic boolean operators in Kite}
@@ -92,22 +88,23 @@ Kite only includes the XOR bitwise operator, as of now.
 Every function in Kite is declared as an anonymous function:
 
 \begin{kite}
-|argOne, argTwo, ...| -> { ... }
+|param_1, ..., param_n| -> {
+  expr_1;
+  ...
+  expr_n
+}
 \end{kite}
 
-A function is defined as a list of arguments and a block. A block is
-defined as a list of expressions, where it is implicit that the last
-expression is returned. Each block
-has its own immediate scope.
+A function (lambda expression) is defined as a list of arguments and a block. A block is defined as a list of expressions optionally separated by \code{;}, where it is implicit that the last expression is returned as the result of the functions. A block introduces a new lexical scope, capturing its parent scope.
 
-Since everything in Kite is an expression, functions are simply a variable bound to a given anonymous function. A function is declared as follows:
+There are no named functions in Kite, but lambda expressions can be bound to identifers. A function is declared as follows:
 
 \begin{kite}
 functionName :: ArgType -> ... -> ReturnType
 functionName = |argOne, ...| -> { ... }
 \end{kite}
 
-Example of a valid function declaration in Kite, taking one parameter of the type Int and returning an Int:
+Example of a valid function declaration in Kite, taking one parameter of the type \code{Int} and returning an \code{Int}:
 
 \begin{kite}
 foo :: Int -> Int
@@ -116,10 +113,7 @@ foo = |a| -> {
 }
 \end{kite}
 
-A runnable program must always include the `main' function, which will
-be called once when the emitted code is run (by
-Node.js~\footnote{http://nodejs.org/} if target code generation
-backend is JavaScript):
+A runnable program must always include the \code{main} function of type \code{Void -> a}, which will be used as the entry point for execution:
 
 \begin{kite}
 main = -> { ... }
@@ -284,7 +278,7 @@ fibo = |a, b, n| -> {
 }
 \end{kite}
 
-An example of pattern matching on lists is our implementation of the function \code{reverse}~\ref{foundation}, which matches `xs' with an expression, empty list, and the head and tail of `xs':
+An example of pattern matching on lists is our implementation of the function \code{reverse}~\ref{foundation}, which matches \code{xs} with an expression, empty list, and the head and tail of \code{xs}:
 
 \begin{kite}
 reverse = |xs| -> {
@@ -360,7 +354,7 @@ Increment can then be applied to an integer:
 two = increment(1) ----> 2
 \end{kite}
 
-It should be noted that the addition operator, `+', has type \code{a
+It should be noted that the addition operator, \code{+}, has type \code{a
   -> a -> a}. Thus, partial application yields \code{a -> a} and since
 it is partially applied with an integer, the type of \code{increment}
 becomes \code{Int -> Int}
@@ -382,7 +376,7 @@ If a user tries to take the head of an empty list, the execution of Kite will st
 
 
 \subsection{Foundation}
-As mentioned earlier in the \nameref{sec:requirements}, the `Foundation' of Kite is a standard library implemented in Kite consisting of often used functions. Kite's Foundation is inspired by Haskell's `Prelude', and includes many functions found in
+As mentioned earlier in the \nameref{sec:requirements}, the \code{Foundation} of Kite is a standard library implemented in Kite consisting of often used functions. Kite's Foundation is inspired by Haskell's \code{Prelude}, and includes many functions found in
 Prelude. 
 
 Below are two examples from Foundation.
