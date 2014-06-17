@@ -297,7 +297,7 @@ The Kite-compiler's optimizer is currently only a simple dead-code elimination a
 In its current state, the algorithm only eliminates unused top-level declarations, thus leaving unused locally scoped variables in the code. The algorithm can however be extended to eliminate local variables by transforming the AST during traversal. With a stack of used identifiers, we could, when entering a new local scope (a lambda or match case), push a new frame to the stack, add accessed variables found in the current scope, and when leaving the scope, filter out the variables that were not accessed.
 
 \subsubsection{Target specific optimization}
-Optimizations can be done either on the intermediate AST as above or after and during emitted target code. Kite does some simple optimizations for the JavaScript target by expanding calls to common binary arithmetic operations (such as \code{+} and \code{*}). Consider the expression \code{a = 1 + 1}. Without optimizatio the emitted code looks like \code{var a = KT_PLUS(1)(1)} which  requires two function calls to be evaluated. The optimized version is simply \code{var a = 1 + 1}. 
+Optimizations can be done either on the intermediate AST as above or after and during emitted target code. Kite does some simple optimizations for the JavaScript target by expanding calls to common binary arithmetic operations (such as \code{+} and \code{*}). Consider the expression \code{a = 1 + 1}. Without optimizatio the emitted code looks like \code{var a = KT\_PLUS(1)(1)} which  requires two function calls to be evaluated. The optimized version is simply \code{var a = 1 + 1}. 
 
 In cases such as the above we could in fact optimize further by directly  calculating the resulting value as it's a constant expression.
 
