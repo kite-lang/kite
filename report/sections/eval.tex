@@ -84,7 +84,11 @@ Above we have two test cases of the type checker module. In the first we check t
 
 As for validation-tests, we have written a test program in Kite itself that tests whether the functions implemented in \nameref{foundation} yields the expected results. In this manner we can test whether the entire flow of the compiler is working as expected.
 
-This can be run command-line with: \code{\$ kite --target=javascript examples/kunit/Runner.kite | node}
+This can be run on the command-line with:
+
+\code{\$ kite --target=javascript examples/kunit/Runner.kite | node}
+
+Output of the tests are presented in appendix \ref{sec:foundation-tests}.
 
 \subsubsection{Continuous integration}
 Throughout the development of the Kite-compiler we have used continuous integration (CI) to incrementally check that new changed as not broken anything in the compiler. We have done this by triggering a make of the code-base, when changes are pushed to the master branch of the source-code repository. For this we have used a free service called Travis~\footnote{\url{https://travis-ci.org/}}.
