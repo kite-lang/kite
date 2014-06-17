@@ -232,52 +232,51 @@ This is called type unification and is at the core of the algorithm.
 Formally, the unification algorithm takes two types and either fails or returns a \emph{substitution} that maps the most general type to the most specific of the two. The algorithm is here formulated in Haskell code and is equivalent to that of our actual implementation (though simplified and not directly compilable).
 
 TODO: snippet
-%\begin{haskell}
-%-- Note:
-%-- <+> is an infix function that composes (union) two substituions
-%-- nullSubst is an empty substituion
-%
-%unify :: Type -> Type -> String -> TC Substitution
-%
-%-- primitive base cases
-%-- empty substitutions
-%unify IntegerType IntegerType = return nullSubst
-%unify FloatType FloatType     = return nullSubst
-%unify CharType CharType       = return nullSubst
-%unify BoolType BoolType       = return nullSubst
-%unify VoidType VoidType       = return nullSubst
-%
-%-- type var with any type
-%-- binds the type var name to the other type
-%unify ta (PTypeVar name) = varBind name ta
-%unify (PTypeVar name) tb = varBind name ta
-%
-%-- list
-%unify (PListType ta) (PListType tb) = unify ta tb
-%
-%-- pair
-%unify (PPairType ta tb) (PPairType ta' tb') = do
+% \begin{haskell}
+% -- Note:
+% -- <+> is an infix function that composes (union) two substitutions
+% -- nullSubst is an empty substitution
+
+% unify :: Type -> Type -> String -> TC Substitution
+
+% -- primitive base cases
+% -- empty substitutions
+% unify IntegerType IntegerType = return nullSubst
+% unify FloatType FloatType     = return nullSubst
+% unify CharType CharType       = return nullSubst
+% unify BoolType BoolType       = return nullSubst
+% unify VoidType VoidType       = return nullSubst
+
+% -- type var with any type
+% -- binds the type var name to the other type
+% unify ta (PTypeVar name) = varBind name ta
+% unify (PTypeVar name) tb = varBind name ta
+
+% -- list
+% unify (PListType ta) (PListType tb) = unify ta tb
+
+% -- pair
+% unify (PPairType ta tb) (PPairType ta' tb') = do
 %  sa = unify ta ta'
 %  sb = unify tb tb'
 %  return (sa <+> sb)
-%
-%-- lambda
-%unify (PLambdaType paramA returnA) (PLambdaType paramB returnB) =
+
+% -- lambda
+% unify (PLambdaType paramA returnA) (PLambdaType paramB returnB) =
 %  sParam <- unify paramB paramA
 %  sReturn <- unify (apply sParam ra) (apply sParam rb)
 %  return (sParam <+> s2)
-%
-%-- if nothing matched it's an error
-%unify ta tb err = throwTE (printf err (show ta) (show tb))
-%
-%-- perform occurs check
-%-- creates a substituion
-%varBind :: Name -> Type -> TC Substitution
-%varBind ide t | t == PTypeVar ide = return nullSubst
+
+% -- if nothing matched it's an error
+% unify ta tb err = throwTE (printf err (show ta) (show tb))
+
+% -- perform occurs check
+% -- creates a substituion
+% varBind :: Name -> Type -> TC Substitution
+% varBind ide t | t == PTypeVar ide = return nullSubst
 %              | ide `Set.member` ftv t = throwTE $ "Occurs in type: " ++ ide ++ " vs. " ++ show t
 %              | otherwise = return $ Map.singleton ide t
-%
-%\end{haskell}
+% \end{haskell}
 
 \paragraph{Limitations of Hindley-Milner}
 While the Hindley-Milner algorithm certainly is powerful and elegant, it has (in its original form) some limitations that constrain the type system. Most notably we cannot support subtyping, meaning that we cannot define a type as being an extension of another. Subtyping in \code{Java} is declared using the \code{extends} keyword, thus making a \code{class} a subtype of another class (called the supertype).
