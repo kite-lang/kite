@@ -1,8 +1,6 @@
 module Kite.Optimizer where
 
-import Debug.Trace
 import Data.List
-import Data.Maybe
 
 import Control.Monad.State
 import Control.Monad.Error

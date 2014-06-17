@@ -20,7 +20,8 @@ data KiteOpts = KiteOpts {
   target :: CodegenTarget,
   desugar :: Bool,
   noEmit :: Bool,
-  doOptimize :: Bool,
+  noOpti :: Bool,
+  output :: String,
   noTypeCheck :: Bool
   } deriving (Show, Data, Typeable)
 
@@ -33,8 +34,9 @@ kiteOpts = KiteOpts {
   debug        = False &= name "d" &= help "Output debug information",
   noFoundation = False &= help "Exclude the Foundation standard library",
   noEmit       = False &= help "Prevent emitting compiled code",
-  doOptimize   = False &= name "o" &= help "Enable optimization",
+  noOpti       = False &= help "Disable optimizations",
   noTypeCheck  = False &= help "Prevent type checking",
+  output       = ""    &= name "o" &= help "Output file name",
   desugar      = False &= help "Emit desugared source",
   target       = JavaScript &= typ "TARGET" &= help "Compilation target"
  }

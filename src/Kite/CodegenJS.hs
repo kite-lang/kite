@@ -36,8 +36,8 @@ opNames = [('+', "KT_PLUS"),
            ('^', "KT_XOR"),
            ('#', "KT_POUND")]
 
-codegen :: [Decl] -> IO Source
-codegen decls = do
+codegen :: Bool -> [Decl] -> IO Source
+codegen eval decls = do
   let unlined = filter (not . (=='\n')) (Ch.unpack runtime)
       emitted = map (\decl ->
                       case decl of
@@ -45,7 +45,8 @@ codegen decls = do
                         _ -> fail "Unexpected type decl in CodegenJS"
                     ) decls
       linedDecls = intercalate "\n" emitted
-  return (unlined ++ linedDecls ++ ";main();")
+      bin = if eval then "" else "#!/bin/node\n"
+  return (bin ++ unlined ++ linedDecls ++ ";main();")
 
 -- convert a string to a valid js identifier
 safeId str =

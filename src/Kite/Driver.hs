@@ -11,6 +11,7 @@ module Kite.Driver (
 
 import Prelude hiding (lex)
 
+import System.Posix.Files
 import Data.List
 import Control.Monad
 import Text.Show.Pretty
@@ -40,21 +41,36 @@ runKite KiteOpts {..} = do
 
   let tokens = lex p'
   let decls = parse tokens
-  let optimized = if doOptimize
-                  then optimize decls
-                  else decls
+  let optimized = if noOpti
+                  then decls
+                  else optimize decls
 
   when lexOutput (prettyPrint tokens)
   when desugar (putStrLn (prettyDecls decls))
   when parOutput (prettyPrint decls)
 
-  if noTypeCheck
-    then unless noEmit $ GenJS.codegen optimized >>= putStrLn
-    else do let analysis = typeCheck debug optimized
-            case analysis of
-              Right _ -> case target of
-                JavaScript -> unless noEmit $ GenJS.codegen optimized >>= putStrLn
-                LLVM -> putStrLn "Such LLVM"
-              Left (err, stack) -> putStrLn (show err ++ "\nStacktrace:\n" ++ ppShow stack)
+  typeCheckPassed <-
+    if noTypeCheck
+    then return True
+    else case typeCheck debug optimized of
+      Right _ -> return True
+      Left (err, stack) -> do
+        let stackTrace = ppShow $ take 10 stack
+        putStrLn (show err ++ "\nStacktrace:\n" ++ stackTrace)
+        return False
+
+  out <- case target of
+        JavaScript -> GenJS.codegen eval optimized
+        LLVM -> return "Such LLVM"
+
+  let outPath = if null output
+                then "main"
+                else output
+
+  if eval
+    then putStrLn out
+    else do
+    writeFile outPath out
+    setFileMode outPath (unionFileModes stdFileMode ownerExecuteMode)
 
   where prettyPrint = putStrLn . ppShow
