@@ -11,6 +11,7 @@ The low-level languages are close to what the computer `natively' understand, wh
 
 A compiler is a program that translates source code in a specific language into another, usually lower level language. Thus, a programming language is in fact implemented through a compiler.
 
+
 \subsection{Programming paradigms}
 \label{sec:paradigms}
 Through the history of computer science, many different approaches to the design and implementation of programming languages have been taken. Most languages can be categorized as being either in the imperative or declarative style. Code written in imperative style is more explicit in \emph{how} a problem is solved, where declarative languages tend to describe \emph{what} is to be computed. There exists multiple language paradigms that fall under one or both of these categories.
@@ -21,10 +22,14 @@ Another imperative approach is \textbf{procedural} languages like \code{C}, whic
 
 A very different style is the highly declarative \textbf{logic} programming, in which execution order and control-flow does not exist, but programs consist of logic clauses that define relationships and implications.
 
-The final paradigm we will describe is \textbf{functional} programming. This is another declarative approach, which is characterized by functions and their composition as the fundamental means of expressing computations. Often, programs are written in such a way that most functions are pure, meaning that they will \emph{always} return the same output given the same input.
+The final paradigm we will describe is \textbf{functional} programming. This is another declarative approach, which is characterized by functions and their composition as the fundamental means of expressing computations. Often, programs are written in such a way that most functions are pure, meaning that they will \emph{always} return the same output given the same input. This is a direct result of not having side-effects in the language. Side-effects is where a function doesn't only return a value, but also alters some state, effecting the output. As this is looked at as one of functional programming's greatest features, it is also one of its greatest limitation, for the reason that it is hard to write a useful program without some sort of IO, e.g.\ write to a file.
+
+Another great advantage of functional programming is that, because of the transparent nature of its structure, it is arguably easier to implement functionality so it can be executed concurrently by a processor. This has major performance advantages, as the technological development of processors has been focused on adding cores rather than increasing the clock speed of the individual cores. In fact, the clock speed of processors already stagnated around the year 2002~\footnote{\url{http://www.extremetech.com/computing/116561-the-death-of-cpu-scaling-from-one-core-to-many-and-why-were-still-stuck}}.
+
 
 \subsection{The problem}
 The goal of this project is to gain knowledge in a field which we have only little prior knowledge about, as we at the beginning of this project have not had any formal education within the subject. In short, we strive to get a good understanding of the concepts of functional programming and compilation of programming languages in general. We will achieve this by implementing a compiler for a functional language named Kite.
+
 
 \subsection{The structure of the report}
 The report is structured such that it somewhat follows the steps we have taken from idea to working product. We will start by describing the problem and purpose of the project (chapter \ref{sec:probanal}), and then to define what our requirements for completion are (chapter \ref{sec:requirements}). Next we will talk about the syntactic and semantic design of the Kite language (chapter \ref{sec:kite-design}) and how we architecturally designed the corresponding compiler (chapter \ref{sec:compiler-design}). To sum up our work, we give an in-depth explanation of the implementation of each of the involved modules and their purpose (chapter \ref{sec:impl}). Finally, we evaluate how the implementation turned out (chapter \ref{sec:evaluation}) and discuss what further development of Kite could lead to.
