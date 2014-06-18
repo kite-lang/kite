@@ -76,12 +76,18 @@ emit (PIf cond conseq alt) =
 
 emit (PLambda param body) = printf "(function(%s) {%s})" param (emit body)
 
+-- emit (PBind ide expr) =
+--   printf "var %s = %s; %s" (safeId ide) (emit expr) (safeId ide)
 emit (PBind ide expr) =
-  printf "var %s = %s; %s" (safeId ide) (emit expr) (safeId ide)
+  printf "var %s = %s;" (safeId ide) (emit expr)
+
 
 emit (PBlock exprs) =
   emitAll ";" exprs
 
+emit (PReturn (PBind _ expr)) =
+  "return " ++ emit expr
+  
 emit (PReturn expr) =
   "return " ++ emit expr
 
