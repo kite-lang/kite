@@ -180,7 +180,7 @@ As list comprehensions are composed of an output expression, draws and guards, t
 \begin{enumerate}
 \item The identifiers from the draws are extracted as these will be used as arguments to the various functions.
 
-\item A \code{flatMap}~\footnote{\code{flatMap} takes as arguments a lambda-expression and a list, maps the function to the list, and \code{flatten}s the result} function is generated for each of the draws, taking the identifier of the current draw and the list-expression as defined on the right-hand side of the \code{<-} (e.g. \code{[1, 2, 3]} in \code{x <- [1, 2, 3]}) as arguments. The body of the lambda expression is either a nested \code{flatMap} or the final if-expression as generated from the guards:
+\item A \code{flatMap}~\footnote{\code{flatMap} takes as arguments a lambda-expression and a list, maps the function over the list, and \code{flatten}s the result} function is generated for each of the draws, taking the identifier of the current draw and the list-expression as defined on the right-hand side of the \code{<-} (e.g. \code{[1, 2, 3]} in \code{x <- [1, 2, 3]}) as arguments. The body of the lambda expression is either a nested \code{flatMap} or the final if-expression as generated from the guards:
 
 \item The guards are inserted as individual functions which take all the extracted identifiers as arguments. These lambda-expressions are then conjoined in the condition of the \code{if}-expression.
 
@@ -191,102 +191,118 @@ As list comprehensions are composed of an output expression, draws and guards, t
 \subsection{Analyzer}
 After the front-end of the compiler is finished parsing the program, the analyzer will traverse the AST, gathering information and verifying its validity in various ways. Below we will describe the different types of analysis that our compiler implements.
 
-\subsubsection{Type inference}
-As mentioned earlier, Kite uses static type checking to verify that types align at compile-time. We have used the Hindley-Milner type inference algorithm first described by Damas and Milner~\cite{milner82}. They described an algorithm, named ``Algorithm W'', that, given an expression, will infer the most general type of that expression. We introduce the $\vdash$ to mean a derivation of types from an expression. For instance $x = 1 \vdash x : Int$ is read as ``given the expression $x = 1$ we can derive that $x$ has type $Int$''. To give a sense of what the algorithm does we first present a few examples. Recall that '$:$' is pronounced ``has type''.
+\subsubsection{Type checking}
+Kite uses static type checking to verify that types align at compile-time. There are numerous techniques for validating that types align and the program will not crash due to type errors. If a language forces annotations of all identifers, such as function parameters and bound variables, it is almost trivial to verify if types align since all information needed is provided by the programmer and the compiler will only have to match annotated types with literal values. Languages like \code{ML} and \code{Haskell} does not require any types to be speficied by the programmer, but it will still be able to statically check that types match. It does this by \emph{inferring} types of expressions, that is, the type of an expression can be determined simply by examining it recursively. Consider the identity function 
 
-Let the following be predefined
+\begin{kite}
+id = |x| -> { x }
+\end{kite}
+
+What is the type of \code{id}? We cannot assign any concrete types like \code{Int} and \code{Bool} because the function does provide us with any type information at all. All we know is that \code{x} will have a type, let's call it $\alpha$, and that \code{x} is exactly what is returned, so the return type of \code{id} \emph{must} be $\alpha$ as well. The answer is thus that \code{id} has the type $\alpha \to \alpha$, where $\alpha$ is \emph{type variable}, meaning it can be substituted for \emph{any} other type, regardless whether it is another type variable or a concrete type.
+
+This is fundamentally what \emph{type inference} does, though it becomes more difficult to grasp when formalised and performed on complex types. In the following we will explain how type checking works in Kite.
+
+First we present some notation. We will use greek letters to indicate type variables, and latin letters to indicate identifiers. We define $:$ to mean ``has type'', such that for the above example we would write $id: \alpha \to \alpha$. When deriving types for subexpression we use $\vdash$ to mean ``implies that''. For instance $x = 1 \vdash x : Int$ is read as ``given the expression $x = 1$ we can derive that $x$ has type $Int$''. The $\to$ defines domain and codomain of a function and is a right-associative operator. Recall that all functions in Kite (and in the following) take one single argument and returns one single value. For an implementation we use the $\mapsto$ operator, and to define a lambda we use $\lambda$. We use the shorthand notation for the list type, namely $[\alpha]$ meaning ``list of $\alpha$''. The pair type is notated $(\alpha, \beta)$ meaning a pair containing to values of type $\alpha$ and $\beta$.
+
+We have implemented type inference with the Damas-Hindley-Milner algorithm. They presented an algorithm, named ``Algorithm W''\cite[sec. 6]{milner82} that, given an expression will infer the \emph{principal} of that expression. A principal type is the most general type of an expression. Consider again the \code{id} function; $id:Int \to Int$ is valid but is not as general as $id: \alpha \to \alpha$ because it will not allow application to e.g. \code{Bool} and \code{Char} values.
+
+To give a sense of what the algorithm will infer we present a few examples. Let the following be predefined
 \begin{align*}
-  +      & : a \to a \to a   \quad\text{(infix)}\\
-  head   & : [a] \to a   \\
-  fst    & : (a, b) \to a
+  add    & : \alpha \to \alpha \to \alpha\\
+  head   & : [\alpha] \to \alpha   \\
+  fst    & : (\alpha, \beta) \to \alpha
 \end{align*}
 
 The algorithm can now infer the types of the following expressions
 \begin{align*}
-  \fn{xs}{head(xs) + 1} & \qcol [Int] \to Int    & \qvd xs : [Int]             \\
-  \fn{p}{fst(p) + 1}    & \qcol (Int, a) \to Int & \qvd p : (Int, a)           \\
-  f(n + 1)              & \qcol a                & \qvd f: (Int \to a), n: Int \\
+  \fn{xs}{head(xs) + 1} & \qcol [Int] \to Int         & \qvd xs : [Int]                  \\
+  \fn{p}{fst(p) + 1}    & \qcol (Int, \alpha) \to Int & \qvd p : (Int, \alpha)           \\
+  f(add(n, 1))          & \qcol \alpha                & \qvd f: (Int \to \alpha), n: Int \\
 \end{align*}
 
 Using the last example above, the intuition behind the algorithm is as follows
 \begin{enumerate}
-\item $e = \fn{f, n}{\ldots} \vdash e: (a \to b \to c)$ \\
+\item $e = \fn{f, n}{\ldots} \vdash e: (\alpha \to \beta \to \gamma)$ \\
   $e$ is being assigned a lambda expression with two parameters but we do not know anything about their types
-\item $e = \fn{f, n}{f(\ldots)} \vdash f: d \to c$ \\
+\item $e = \fn{f, n}{f(\ldots)} \vdash f: \delta \to \gamma$ \\
   $f$ is being applied to a single (yet unknown) value, thus we can infer that it is a function
-\item $e = \fn{f, n}{f(n + 1)} \vdash n : Int$ \\
-  We see that $f$ is applied to $n+1$ and since $1: Int$ and $+:a \to a \to a$ then $a = Int$ and thus $n:Int$ (this is called type unification, explained below).
-\item $e = \fn{f, n}{f(n + 1)} \vdash e : (Int \to c) \to Int \to c$ \\
+\item $e = \fn{f, n}{f(add(n, 1))} \vdash n : Int$ \\
+  We see that $f$ is applied to $add(n, 1)$ and since $1: Int$ and $add:\alpha \to \alpha \to a$ then $\alpha = Int$ and thus $n:Int$ (this is called type unification, explained below).
+\item $e = \fn{f, n}{f(add(n, 1))} \vdash e : (Int \to \gamma) \to Int \to \gamma$ \\
   There are no more expressions to infer so we end up with the final, most general type for $e$
 \end{enumerate}
 
+\paragraph{Substitutions}
+A \emph{substituion} is a set $\sigma$ of mappings from type variables to terms. A term is either a composite type, a type variable or a concrete type. The notation $\{ x_1 \mapsto \tau_1, \ldots, x_n \mapsto \tau_n \}$ denotes a substitution mapping $x_n$ to $\tau_n$. A substitution can be \emph{applied} to a term thus replacing all occurrences of variables with the corresponding type in the substitution. A term is called an \emph{instance} of a substitution after it has been applied\cite[sec. 1]{wiki-unif14}. Application is written postfix, so for instance $(\alpha \to \beta) \{\alpha \mapsto Int\} = Int \to \beta$.
+
+Two substitutions $\sigma$ and $\sigma'$ can be composed to make a unified substitution $\sigma''$ such that $\forall x \in (\sigma \cup \sigma') | x \in \sigma''$, or in other words $\sigma'' = \sigma \cup \sigma'$
+
 \paragraph{Type unification}
-We define the $\tau$ function to ``type of'', such that the above, for instance, becomes
-\[ \tau(e) = (Int \to c) \to Int \to c \]
+Given two type terms $t$ and $u$, the unification algorithm will either produce a substitution that \emph{unifies} the two types, i.e. some $\sigma$ such that $t\sigma = u$ or it will fail, indicating that no such substitution exists. If unification returns a substitution it will be the \emph{most general unifier} meaning the substitution that will provide the most general type when applied to a term.
 
-When the type of $n$ was inferred, we \emph{unified} the known type of $+:a \to a \to a$ with the expression $n + 1$. Note that $n + 1$ is equivalent to the prefix form $+(n, 1)$. From a base case (shown below) we know that $\tau(1) = Int = a$. This gives us
-\[ TODO \]
-This is called type unification and is at the core of the algorithm.
+In practice the unification algorithm recursively unifies composite types. The actual Haskell implementation is very close to the following:
 
-Formally, the unification algorithm takes two types and either fails or returns a \emph{substitution} that maps the most general type to the most specific of the two. The algorithm is here formulated in Haskell code and is equivalent to that of our actual implementation (though simplified and not directly compilable).
+\begin{align*}
+unify(t, u) = \begin{cases}
+  \{\}                                    & \mbox{if } t == u                                    \\
+  \{ t \mapsto u \}                       & \mbox{if } t \mbox{ is variable}                     \\
+  \{ u \mapsto t \}                       & \mbox{if } u \mbox{ is variable}                     \\
+  unify(t', u')                           & \mbox{if } t = [t'] \mbox{ and } u = [u']            \\
+  unify(ta, ua) \cup unify(tb, ub)        & \mbox{if } t = (ta, tb) \mbox{ and } u = (ua, ub)    \\
+  unify(tp, tr) \cup unify(up, ur)        & \mbox{if } t = tp \to tr \mbox{ and } u = up \to ur \\
+  \text{failure: types are not unifiable} & \mbox{otherwise}
+\end{cases}
+\end{align*}
 
-TODO: snippet
-% \begin{haskell}
-% -- Note:
-% -- <+> is an infix function that composes (union) two substitutions
-% -- nullSubst is an empty substitution
+This definition of $unify$ will find the most general unifier for any two terms or fail. Note that a type variable can map to another type variable. Following are a few examples of the output of $unify$
 
-% unify :: Type -> Type -> String -> TC Substitution
+\begin{align*}
+unify(\alpha, \beta)                          & = \{ \alpha \mapsto \beta \}                             \\
+unify([\alpha], [Int])                        & = \{ \alpha \mapsto Int \}                               \\
+unify(Int, Int)                               & = \{  \}                                                 \\
+unify(Int \to \alpha, \beta \to Int \to Bool) & = \{ \beta \mapsto Int, \alpha \mapsto (Int \to Bool) \} \\
+                                                                                                         \\
+unify(Int, Bool)                              & = \text{failure}                                         \\
+unify(Int, [Int])                             & = \text{failure}                                         \\
+unify(\alpha \to Int, Bool \to Char)          & = \text{failure}                                         \\
+\end{align*}
 
-% -- primitive base cases
-% -- empty substitutions
-% unify IntegerType IntegerType = return nullSubst
-% unify FloatType FloatType     = return nullSubst
-% unify CharType CharType       = return nullSubst
-% unify BoolType BoolType       = return nullSubst
-% unify VoidType VoidType       = return nullSubst
+\paragraph{Putting it together}
+We have now presented a type unification algorithm and defined substitutions. We still need a system that combines these concepts and brings us a complete type-checking system.
 
-% -- type var with any type
-% -- binds the type var name to the other type
-% unify ta (PTypeVar name) = varBind name ta
-% unify (PTypeVar name) tb = varBind name ta
+The type-checking module \code{Kite.TypeCheck} implements an \code{infer} function that takes an expressions and either returns its principal type or throws an error. The \code{infer} function evaluates in the \code{TC} monad\footnote{Monads are a functional way of, among other things, simulating state and managing errors and side effecting computations while remaining pure. We will omit details about this concept in the report.} that provides an environment for persisting inferred types and keeping track of other stateful properties such as the number of type variables created.
 
-% -- list
-% unify (PListType ta) (PListType tb) = unify ta tb
+The type-checker is passed a list of top-level declarations and type annotations. It infers each declaration's type and validates whether it unifies with the annotated type if one has been provided. If it successfully finds a principle type it is saved in the top of the \emph{symbol stack}. The symbol stack is a stack of maps that provide mappings from identifiers to types. When inferring the type of a lambda expression, a new \emph{stack frame} is pushed to the stack, thus beginning a new lexical scope. When all expressions in the lambda have been processed the frame is popped from the stack, thus leaving the scope as it was.
 
-% -- pair
-% unify (PPairType ta tb) (PPairType ta' tb') = do
-%  sa = unify ta ta'
-%  sb = unify tb tb'
-%  return (sa <+> sb)
+Each time a new identifier is introduced the algorithm generates a \emph{fresh} type variable for it, meaning a type variable with an identifier that has not been used before. It does this by continuously keeping track of of how many type variables have been introduces and postfixing the identifier with this value.
 
-% -- lambda
-% unify (PLambdaType paramA returnA) (PLambdaType paramB returnB) =
-%  sParam <- unify paramB paramA
-%  sReturn <- unify (apply sParam ra) (apply sParam rb)
-%  return (sParam <+> s2)
+\code{infer} recursively traverses the AST node for which it is inferring a type while passing around a map of inferred locally scoped type variables. There is a case for each type of AST node, but we will not cover each of them in-depth, but explain the case for \code{Apply}.
+\begin{figure}
+\begin{lstlisting}[mathescape=true]
+infer env (Apply expr arg) = do
+  $\sigma_{arg}$, $\tau_{arg}$ = infer env arg
+  $\sigma_{fn}$, $\tau_{fn}$ = infer env expr
 
-% -- if nothing matched it's an error
-% unify ta tb err = throwTE (printf err (show ta) (show tb))
+  $\tau_{fresh}$ = freshTypeVar()
 
-% -- perform occurs check
-% -- creates a substituion
-% varBind :: Name -> Type -> TC Substitution
-% varBind ide t | t == PTypeVar ide = return nullSubst
-%              | ide `Set.member` ftv t = throwTE $ "Occurs in type: " ++ ide ++ " vs. " ++ show t
-%              | otherwise = return $ Map.singleton ide t
-% \end{haskell}
+  $\sigma$ = unify ($\tau_{fn}\sigma_{arg}$) (LambdaType $\tau_{arg}$ $\tau_{fresh}$)
+
+  return ($\sigma \cup \sigma_{arg} \cup \sigma_{fn}$, $\tau_{fresh}\sigma$)
+\end{lstlisting}
+\caption{Pseudo code of the \code{infer} function applied to an \code{Apply} node}
+\label{fig:infer-apply}
+\end{figure}
+
+Figure \ref{fig:infer-apply} shows how the algorithm first infers the type of the function to be applied (line 2) and the argument it will be applied to (line 3). It then generates a fresh type variable (line 5), and unifies the inferred type of the function with a newly constructed lambda expression that has the fresh type as return type (line 7). Unless the recursive calls to \code{infer} or unification fails it returns (line 9) the composed substitutions and the type of the lambda which is an instance of the substitutions from the unification.
+
+This is fundamentally how the type-checker works, but there are a few noteworthy things to add. When we are retrieving a previously inferred type of a lambda expression we will \emph{freshen} its type, meaning that we replace all type variables in its type with fresh ones. If we do not do this, two applications of the same function can result in the same type variable being inferred thus restricting the two inferred types to being the same type.
+
+Finally we use implicit recursive definitions when binding an identifier to a lambda expressions. This allows recursively defined functions but prevents bindings like \code{foo = 1 + foo}.
 
 \paragraph{Limitations of Hindley-Milner}
 While the Hindley-Milner algorithm certainly is powerful and elegant, it has (in its original form) some limitations that constrain the type system. Most notably we cannot support subtyping, meaning that we cannot define a type as being an extension of another. Subtyping in \code{Java} is declared using the \code{extends} keyword, thus making a \code{class} a subtype of another class (called the supertype).
 
-Subtyping is not possible (or difficult at the least), due to the fact that the unification algorithm cannot tell the most general type of an expression if subtypes are allowed.
-
-Consider the function $foo : Person \to Int$. Now, if we have the type $Manager <: Person$ (meaning $Manager$ is a subtype of $Person$) and we want to infer TODO
-
-TODO: lexical scoping
-TODO: optimization inlining
-
+Subtyping is not possible (or difficult at the least), due to the fact that the unification algorithm cannot compute the principal type of an expression if subtypes are allowed.
 
 \subsection{Optimizer}
 \label{sec:impl-optimizer}
