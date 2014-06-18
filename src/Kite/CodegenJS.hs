@@ -45,7 +45,7 @@ codegen eval decls = do
                         _ -> fail "Unexpected type decl in CodegenJS"
                     ) decls
       linedDecls = intercalate "\n" emitted
-      bin = if eval then "" else "#!/bin/node\n"
+      bin = if eval then "" else "#!/usr/bin/node\n"
   return (bin ++ unlined ++ linedDecls ++ ";main();")
 
 -- convert a string to a valid js identifier

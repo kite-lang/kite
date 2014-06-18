@@ -91,7 +91,7 @@ This defines \code{List} as either \code{Nil} (commonly known as the empty list)
 
 Because Kite has no notion of ADTs and lists are implemented as arrays of values like other imperative language, pattern matching is difficult because we cannot destruct a list to its elements in a tree structure. With ADTs it is simpler because data structures are inherently trees and can be traversed to match a pattern to an expression and provide bindings from the pattern variables corresponding to the matched expression.
 
-A pattern is a tree with variable names as leafs. The non-variable parts of the pattern must agree with the expression tree in terms of the labelling of nodes, the number of children and the ordering of the subtrees\cite[p. 514]{wilhelm95} for a match to be successful. This can be visualized as in figure~\ref{fig:pattern-match}.
+A pattern is a tree with variable names as leaves. The non-variable parts of the pattern must agree with the expression tree in terms of the labelling of nodes, the number of children and the ordering of the subtrees\cite[p. 514]{wilhelm95} for a match to be successful. This can be visualized as in figure~\ref{fig:pattern-match}.
 
 \begin{figure}[H]
   \centering
@@ -150,7 +150,7 @@ A pattern is a tree with variable names as leafs. The non-variable parts of the 
   \label{fig:pattern-match}
 \end{figure}
 
-It can be seen how the variables in the pattern are bound to the corresponding nodes in the matched expression resulting in the bindings in figure \ref{subfig:pat-binding}. Implementation-wise the pattern and expression will be simultaneously traversed and every time a variable is visited in the pattern the current node of the expression is bound to that identifier. One can also use literal values and thus restrict a successful match to expressions that contain the same literal values in the same leafs.
+It can be seen how the variables in the pattern are bound to the corresponding nodes in the matched expression resulting in the bindings in figure \ref{subfig:pat-binding}. Implementation-wise the pattern and expression will be simultaneously traversed and every time a variable is visited in the pattern the current node of the expression is bound to that identifier. One can also use literal values and thus restrict a successful match to expressions that contain the same literal values in the same leaves.
 
 
 \subsubsection{Order of execution}
