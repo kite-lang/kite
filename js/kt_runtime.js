@@ -78,7 +78,6 @@ var KT_EQKT_EQ = function  (l) { return function (r) {
 
 var KT_COLON = function (x) {
     return function (xs) {
-        /* TODO: this isn't a deep clone */
         var clone = xs.slice(0);
         clone.unshift(x);
         return clone;
