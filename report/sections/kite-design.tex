@@ -3,11 +3,11 @@
 %%% TeX-master: "../report"
 %%% End:
 
-We have been inspired by many other languages when designing and implementing Kite, most notably the GHC Haskell Compiler~\footnote{The Glasgow Haskell Compiler \url{http://www.haskell.org/ghc}}.
+We have been inspired by many other languages when designing and implementing Kite, most notably the Glasgow Haskell Compiler (GHC)\footnote{\url{http://www.haskell.org/ghc}}.
 
 
 \subsection{Syntax and semantics}
-In this section we will describe how to use the different features of Kite and how they work, i.e. the syntax and semantics.
+In this section we will describe how to use the different features of Kite and how they work, i.e.\ the syntax and semantics of the language.
 
 \subsubsection{Basic types and declarations}
 Basic declaration of the variables in Kite, types are inferred by the analyzer:
@@ -21,56 +21,44 @@ char = 'a'
 pair = (1, 'a')
 \end{kite}
 
-The basic types will be Int, Float, Bool, Lists, Chars and pairs.
+Functional languages often make extensive use of lists, which is indeed also the case for Kite. A list is an ordered array of items that can be transformed in many different ways. We use a common short-hand method for describing a list of things, using square brackets \code{[\ ]}. For instance, a \code{List(Int)} (pronounced ``List of Ints'') is denoted \code{[Int]} and a list of a type variables $a$ is \code{[a]}. Lists can be nested, allowing \code{List(List(Int))} denoted \code{[[Int]]}.
 
-Functional languages often make extensive use of lists, which is
-indeed also the case for Kite. A list is an ordered array of items
-that can be transformed in many different ways. We use a common
-short-hand method for describing a list of things, using square
-brackets \code{[\ ]}. For instance, a \code{List(Int)} (pronounced ``List of
-Ints'') is denoted \code{[Int]} and a list of a type variables $a$ is
-\code{[a]}. Lists can be nested, allowing \code{List(List(Int))} denoted \code{[[Int]]}.
-
-The pair type is also abbreviated using $(\ ,\ )$, for instance the type \code{Pair(Int, Bool)} is written \code{(Int, Bool)}
+The pair type is also abbreviated using \code{( , )}, for instance the type \code{Pair(Int, Bool)} is written \code{(Int, Bool)}
 
 Strings are represented as syntactic sugar for lists of characters. For
 instance, \code{['f', 'o', 'o']} has the sugared version \code{"foo"}. This will be discussed later.
 
 Basic arithmetic operators:
 \begin{kite}
-two = 1 + 1  ---->  2
-rest = 10 % 2 ---> 0
+1 + 1  ----> 2
+10 % 2 ----> 0
 \end{kite}
 
 \begin{table}[H]
   \centering
-  \begin{tabular}{|l|l|}
-    \hline
-    Operation      & Meaning              \\ \hline
-    $\code{x + y}$        & Additition           \\ \hline
-    $\code{x - y}$        & Subtraction          \\ \hline
-    $\code{x * y}$        & Multiplication       \\ \hline
-    $\code{x / y}$        & Division             \\ \hline
-    $\code{x**y}$         & Exponentiation       \\ \hline
-    $\code{x \% m}$       & Remainder of x / y   \\ \hline
-    $\code{powMod(x, y, m)}$ & Modulo exponentation \\ \hline
+  \begin{tabular}{ll}
+    \textbf{Operation} & \textbf{Meaning}   \\ \hline
+    $\code{x + y}$     & Addition         \\ \hline
+    $\code{x - y}$     & Subtraction        \\ \hline
+    $\code{x * y}$     & Multiplication     \\ \hline
+    $\code{x / y}$     & Division           \\ \hline
+    $\code{x**y}$      & Exponentiation     \\ \hline
+    $\code{x \% m}$    & Remainder of x / y \\ \hline
   \end{tabular}
   \caption{Basic arithmetic operators in Kite}
 \label{tbl:kite-design-arith-op}
 \end{table}
-Note: some operators will only work on certain types.
 
 Basic boolean operators:
 \begin{kite}
-foo = 1 < 2  ----> True
-bar = 1 == 2 ----> False
+1 < 2  ----> True
+1 == 2 ----> False
 \end{kite}
 
 \begin{table}[H]
   \centering
-  \begin{tabular}{|l|l|}
-    \hline
-    Operation   & Meaning                 \\ \hline
+  \begin{tabular}{ll}
+    \textbf{Operation} & \textbf{Meaning} \\ \hline
     $\code{==}$ & Equal                   \\ \hline
     $\code{/=}$ & Not equal               \\ \hline
     $\code{<=}$ & Less than or equal than \\ \hline
@@ -82,22 +70,16 @@ bar = 1 == 2 ----> False
 \label{tbl:kite-disign-bool-op}
 \end{table}
 
-A single basic bitwise operator:
-\begin{kite}
-10 ^ 8 ----> 2
-\end{kite}
-Kite only includes the XOR bitwise operator, as of now.
-
 
 \subsubsection{Function declaration}
 \label{sec:func-decl}
 Every function in Kite is declared as an anonymous function:
 
 \begin{kite}
-|param_1, ..., param_n| -> {
-  expr_1;
+|param1, ..., paramN| -> {
+  expr1
   ...
-  expr_n
+  exprN
 }
 \end{kite}
 
@@ -106,8 +88,8 @@ A function (lambda expression) is defined as a list of arguments and a block. A 
 There are no named functions in Kite, but lambda expressions can be bound to identifers. A function is declared as follows:
 
 \begin{kite}
-functionName :: ArgType -> ... -> ReturnType
-functionName = |argOne, ...| -> { ... }
+name :: ArgType -> ... -> ReturnType
+name = |arg1, ...| -> { ... }
 \end{kite}
 
 Example of a valid function declaration in Kite, taking one parameter of the type \code{Int} and returning an \code{Int}:
@@ -122,7 +104,7 @@ foo = |a| -> {
 A runnable program must always include the \code{main} function of type \code{Void -> a}, which will be used as the entry point for execution:
 
 \begin{kite}
-main = -> { ... }
+main = |Void| -> { ... }
 \end{kite}
 
 In order to use the preprocessor to include another code file, use the \code{\#include} keyword:
@@ -134,7 +116,7 @@ In order to use the preprocessor to include another code file, use the \code{\#i
 
 Top-level declaration can optionally have a corresponding type declared. This can greatly increase readability of declarations as the inferred type might not be immediately clear.
 
-Annotations are declared using the \code{::} operator. For instance the function \code{length} can have its type explicitly annotated as follows:
+Annotations are declared using the '\code{::}' operator. For instance the function \code{length} can have its type explicitly annotated as follows:
 
 \begin{kite}
 length :: [a] -> Int
@@ -143,7 +125,7 @@ length = |xs| -> {
 }
 \end{kite}
 
-The type-checker will validate that an annotated type is at least as general as the inferred type. This means that a type annotation of \code{a} will match anything, and \code{:: a -> a} will match {:: Int -> Int} but not \code{:: Int -> Bool}
+The type-checker will validate that an annotated type is at least as general as the inferred type. This means that a type annotation of \code{a} will match anything, and \code{a -> a} will match \code{Int -> Int} but not \code{Int -> Bool}
 
 Types can be grouped to denote a higher-order function, for instance the type of map \code{(a -> b) -> [a] -> [b]} means that \code{map} accepts a \emph{function} as its first parameter, a list as its second and it produces a list.
 

@@ -164,7 +164,7 @@ In general, the code Kite emits is very inefficient and we will discuss later in
 
 \subsection{Optimization}
 
-We have implemented two optimizations. A target-independent size reduction of the emitted code and a target-specific optimization with respect to running time.
+We have implemented two optimizations. A target independent size reduction of the emitted code and a target specific optimization with respect to running time.
 
 \subsubsection{Size reduction}
 As our optimization pass removes unused function declarations from the parse tree, it is possible to achieve a substantial reduction of the emitted code.
@@ -194,7 +194,7 @@ A slightly larger program that sums the even Fibonacci numbers less than 4 milli
 \end{table}
 
 
-\subsubsection{Target-specific optimizations}
+\subsubsection{Target specific optimizations}
 
 This optimization uses the built-in boolean and mathematical functions of JavaScript, as they are assumed to be faster and we eliminate some of the overhead of partial application.
 

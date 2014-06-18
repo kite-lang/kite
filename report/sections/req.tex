@@ -3,15 +3,15 @@
 %%% TeX-master: "../report"
 %%% End:
 
-In the requirements-section we will focus more on the language specific features of Kite. As most of the compiler specific requirements are discussed in the design-section, and are basic for most compilers, they will not be discussed here.
+In this section we will focus more on the language specific features of Kite. As most of the compiler specific requirements are discussed in the design section, they will not be mentioned here.
 
 \subsection{Minimum requirements}
-As of our initial requirements for Kite, we have set a list of minimum requirements for our compiler.
+Following is a list of features that we regard as the minimum requirements for successful completion of the project.
 
-\textbf{Built-in types:} Standard types that should be included in Kite is as follows:
+\textbf{Built-in types:} Standard types that should be included
 \begin{itemize}
-\item \code{Float}: Floating-point numeric values
 \item \code{Int}: Integer numeric values
+\item \code{Float}: Floating-point numeric values
 \item \code{Char}: Single character
 \item \code{Bool}: Boolean value, \code{True} or \code{False}
 \item \code{List}: List of another type (composite type)
@@ -19,13 +19,13 @@ As of our initial requirements for Kite, we have set a list of minimum requireme
 \end{itemize}
 
 \textbf{Static type-check:}
-In our initial analysis, we want to implement a static type-checker. This will ensure type safety in a given program, i.e.\ a program passing the static type-check will be free of type errors. If a program is verified by the analyzer, the compiler will be able to trust the intermediate representation given from the type-checker. This will also result in any type error will be caught compile-time.
+In our initial analysis, we want to implement a static type-checker. This will guarantee type safety in a given program, i.e.\ a program passing the static type-check will be free of type errors. If a program is verified by the analyzer, the code generator will be able to trust the correctness of the AST given from the type-checker.
 
 \textbf{Code generation:}
-For a machine to be able to understand the high-level language, the process of code generation is needed. Kite's code generator must be able to take some representation of the given source code, and convert it such that the machine will be able to execute the resulting output.
+For a machine to be able to understand high-level languages, the process of code generation is needed. Kite's code generator must be able to take some representation of the given source code, and convert it such that the machine will be able to execute the resulting output.
 
 \textbf{Recursion:}
-As recursion is one of the main properties of a functional language, it will have to be a central aspect of Kite. In general, recursion is the method of dividing a problem into sub-problems. This is top-down approach to problem-solving and is commonly referred to as the technique ``divide and conquer''. A more specific example of recursion is a function calling it-self until one or more given base-cases are met. One of the most used examples of recursion is the computation of Fibonacci numbers. As a Fibonacci number is defined as the sum of the two previous numbers, it easily implemented with recursion (albeit this particular implementation is very inefficient):
+As recursion is an essential property of functional languages, it will have to be a central aspect of Kite. In general, recursion is the method of dividing a problem into sub-problems. This is top-down approach to problem-solving and is commonly referred to as the technique ``divide and conquer''. A more specific example of recursion is a function calling it self until one or more given base cases are met. A text-book example of recursion is the computation of Fibonacci numbers. As a Fibonacci number is defined as the sum of the two previous numbers, it is easily implemented with recursion (albeit this particular implementation is very inefficient):
 
 \begin{pseudo}
 // fibonacci
@@ -40,10 +40,10 @@ end
 \subsection{Optional features}
 
 \textbf{Standard library:}
-Inspired by Haskell's prelude~\footnote{\url{http://hackage.haskell.org/package/base-4.7.0.0/docs/Prelude.html}}, we want to implement a standard function library, imported by default into all Kite modules. This standard module should include useful functions for common operations as arithmetic operations, string manipulations and list manipulation.
+We want to implement a standard function library written in Kite, imported by default into all Kite modules. This standard module should include useful functions for common operations as arithmetic operations, string manipulations and list manipulation.
 
 \textbf{REPL:}
-A Read-Eval-Print-Loop, or an \emph{interactive top-level}, will allow a user to have a simple interactive program to give simple input, e.g.\ a single expression, evaluate it and get the return value, without creating an file and compiling it.
+A Read-Eval-Print-Loop, or an \emph{interactive top-level}, will allow a user to have a simple interactive program to give simple input, e.g.\ a single expression, evaluate it and get the return value, without creating a file and compiling it.
 
 \textbf{Higher-order functions:}
 The language should provide the possibility to create function that take functions as parameters, and returns functions.
@@ -52,31 +52,31 @@ The language should provide the possibility to create function that take functio
 Immutability prevents an object (or bound expression) from being modified after its definition. Immutable data makes a program easier to reason about because you can always trust that a variable has the same value as when defined. Immutable data is also inherently thread-safe~\cite[sec. 3.4]{goetz06} since threads cannot be modifiyng data at the same time (they cannot mutate the data at all).
 
 \textbf{Currying:}
-Currying is the process of converting a function with multiple parameters to a function return a new function for each of its parameters. Kite will feature automatic currying of defined functions.
+Currying is the process of converting a function with multiple parameters to a function returning a new function for each of its parameters. Kite will feature automatic currying of defined functions.
 
 \textbf{Partial application:}
-As a result of currying, we want to make use of partial application, i.e. construct the foundation of function in such a way that a function takes a fixed number of arguments, returning a new function of smaller arity~\footnote{Arity means the number of arguments or operands the function or operation accepts} or the final result.
+As a result of currying, we want to make use of partial application, i.e.\ construct the foundation of functions in such a way that a function takes a fixed number of arguments, returning a new function of smaller arity\footnote{Arity means the number of arguments the function accepts} or the final result.
 
 \textbf{Closures:}
 The principle of closures is that when a function is referenced, it is referenced together with a \emph{referencing environment}. This environment includes a table of all non-local variables of that function. This allows a function access to non-local  variables also when invoked outside its immediate lexical scope.
 
 \textbf{Lazy evaluation:}
-The language should include lazy evaluation, which will allow evaluation of expressions to be delayed until it's needed. This technique can greatly decrease the run-time of certain code patterns.
+Lazy evaluation will allow evaluation of expressions to be delayed until it is needed. This technique can greatly decrease the run-time of certain code patterns.
 
 \textbf{Type inference:}
-This is an extension of the type-checker. Type inference will let the analyzer automatically deduct types of expressions, thus removed the need to declaring the types of the parameters and return types of a function.
+This is an extension of the type-checker. Type inference will let the analyzer automatically deduct types of expressions, thus removing the need to declaring the types of the parameters and return types of a function.
 
 \textbf{I/O:}
-Input/Output is needed for user interaction between the user and computer. To make the language more usable, a minimum of I/O must be present. Optional features would be read/write from file etc.
+Input/Output is needed for interaction between the user and computer. To make the language more usable, a minimum of I/O must be present. Optional features would be read/write from file etc.
 
 \textbf{Syntactic sugar:}
-To make some expressions and code pattern more readable, we want to implement a sugaring module. With this module, features as list comprehension can be added (see below).
+To make some expressions and code patterns more readable, we want to implement a sugaring module. With this module, features as list comprehension can be added (see below).
 
 \textbf{List comprehensions:}
-List comprehensions is syntactic sugar for creating new lists from already existing lists, which is an extension of syntactic sugaring. List comprehensions will output new lists, as a result of some operation performed on each element of another list (or lists). It should also be possible to create a sub-sequence of the elements of another list, by implying that each element in the created list should satisfy a number of conditions.
+List comprehensions are syntactic sugar for creating new lists from already existing lists, which is an extension of syntactic sugaring. List comprehensions will output new lists, as a result of some operation performed on each element of another list (or lists). It should also be possible to create a sub-sequence of the elements of another list, by implying that each element in the created list should satisfy a number of conditions.
 
-\textbf{Preprocessing:}
-To make it possible to include another file into a given program, we want to make use of a preprocessor. The preprocessor should be C-like where '\#include' is used to specify which external files to be included. A simple preprocessor will suffice, like the C-preprocessor.
+\textbf{File inclusion:}
+Make it possible to include source code from other files.
 
 \textbf{Pattern matching:}
 Make it possible for a function to do tree matching when being applied to a structure. This gives the possibility for conditional evaluation, depending on the pattern of the given structure or language construct. Pattern matching can be implemented with various levels of complexity and features. For the Kite compiler, simple destructuring of built-in data types will suffice.
