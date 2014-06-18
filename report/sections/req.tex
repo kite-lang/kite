@@ -48,7 +48,7 @@ A Read-Eval-Print-Loop, or an \emph{interactive top-level}, will allow a user to
 The language should provide the possibility to create function that take functions as parameters, and returns functions.
 
 \textbf{Immutability:}
-Immutability prevents an object (or bound expression) from being modified after its definition. Immutable data makes a program easier to reason about because you can always trust that a variable has the same value as when defined. Immutable data is also inherently thread-safe\cite[sec. 3.4]{goetz et al.} since threads cannot be modifiyng data at the same time (they cannot mutate the data at all).
+Immutability prevents an object (or bound expression) from being modified after its definition. Immutable data makes a program easier to reason about because you can always trust that a variable has the same value as when defined. Immutable data is also inherently thread-safe~\cite[sec. 3.4]{goetz06} since threads cannot be modifiyng data at the same time (they cannot mutate the data at all).
 
 \textbf{Currying:}
 Currying is the process of converting a function with multiple parameters to a function return a new function for each of its parameters. Kite will feature automatic currying of defined functions.

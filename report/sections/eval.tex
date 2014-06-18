@@ -20,9 +20,9 @@ One major pitfall is creating circular dependencies. If two files includes each 
 
 Another hurdle is including the same file twice. Take for example the following set of files and inclusions:
 
-\begin{kite}[caption=\code{grandfather.kite}]
+\begin{lstlisting}[caption=\code{grandfather.kite}]
   foo = -> { bar }
-\end{kite}
+\end{lstlisting}
 
 \begin{lstlisting}[caption=\code{father.kite}]
   #include 'grandfather.kite'

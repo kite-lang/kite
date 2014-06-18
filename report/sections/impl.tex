@@ -51,11 +51,11 @@ data Token = TIdentifier AlexPosn String
            deriving (Eq,Show)
 }
 \end{lstlisting}
-\label{fig:lexer}
 \caption{Excerpt from the lexer description file}
+\label{fig:lexer}
 \end{figure}
 
-Kite uses 12 different tokens briefly described in table \ref{tbl:lexical_tokens}.
+Kite uses 12 different tokens briefly described in table~\ref{tbl:lexical_tokens}.
 \begin{table}[H]
   \centering
   \begin{tabular}{lll}
@@ -75,8 +75,8 @@ Kite uses 12 different tokens briefly described in table \ref{tbl:lexical_tokens
     Operator   & List of symbol characters & \code{=, /, <=, !!} \\ \hline
     EOF        & The end of file marker & n/a as it's non-visual
   \end{tabular}
-  \label{tbl:lexical_tokens}
   \caption{Tokens recognized by the lexical analyzer}
+\label{tbl:lexical_tokens}
 \end{table}
 
 
