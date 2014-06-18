@@ -27,6 +27,11 @@ cases ("Functional", [
     flipped = flip (asPair)
     flipped ('1', '2') == ('2', '1')
   }),
+
+  ("function should return expression", -> {
+    f = -> { a = True; }
+    f () == True
+  }),
 ]),
 
 cases ("Boolean", [
