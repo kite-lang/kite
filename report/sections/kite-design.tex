@@ -1,3 +1,8 @@
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../report"
+%%% End:
+
 We have been inspired by many other languages when designing and implementing Kite, most notably the GHC Haskell Compiler~\footnote{The Glasgow Haskell Compiler \url{http://www.haskell.org/ghc}}.
 
 
@@ -50,8 +55,8 @@ rest = 10 % 2 ---> 0
     $\code{x \% m}$       & Remainder of x / y   \\ \hline
     $\code{powMod(x, y, m)}$ & Modulo exponentation \\ \hline
   \end{tabular}
-  \label{tbl:kite-design-arith-op}
   \caption{Basic arithmetic operators in Kite}
+\label{tbl:kite-design-arith-op}
 \end{table}
 Note: some operators will only work on certain types.
 
@@ -65,16 +70,16 @@ bar = 1 == 2 ----> False
   \centering
   \begin{tabular}{|l|l|}
     \hline
-    Operation     & Meaning                 \\ \hline
-    $\code{==}$          & Equal                   \\ \hline
+    Operation   & Meaning                 \\ \hline
+    $\code{==}$ & Equal                   \\ \hline
     $\code{/=}$ & Not equal               \\ \hline
-    $\code{<=}$          & Less than or equal than \\ \hline
-    $\code{>=}$          & Greater than or equal   \\ \hline
-    $\code{<}$           & Less than               \\ \hline
-    $\code{>}$           & Greater than            \\ \hline
+    $\code{<=}$ & Less than or equal than \\ \hline
+    $\code{>=}$ & Greater than or equal   \\ \hline
+    $\code{<}$  & Less than               \\ \hline
+    $\code{>}$  & Greater than            \\ \hline
   \end{tabular}
-  \label{tbl:kite-disign-bool-op}
   \caption{Basic boolean operators in Kite}
+\label{tbl:kite-disign-bool-op}
 \end{table}
 
 A single basic bitwise operator:
@@ -224,24 +229,19 @@ flatMap(|x| -> {
 }, range(3,5) )
 \end{kite}
 
-Note that list comprehensions uses functions defined in
-\nameref{foundation}), which will be discussed later.
+Note that list comprehensions uses functions defined in \nameref{foundation}), which will be discussed later.
 
-\textbf{Infix functions} Kite allows for use of infix functions. Infix
-functions are syntactic sugar for prefix function calls, with some
-given parameters. Using \code{`} (backtick) will imply the use of
-infix function calls
+\textbf{Infix functions} Kite allows for use of infix functions. Infix functions are syntactic sugar for prefix function calls, with some given parameters. Using \code{`} (backtick) will imply the use of infix function calls
 
-A common example of infix function calls, is the \code{elem}
--function, which is defined as follows (from \nameref{foundation}):
+A common example of infix function calls, is the \code{elem}-function, which is defined as follows (from \nameref{foundation}):
 \begin{kite}
   elem :: a -> [a] -> Bool
   elem = |el| -> {
     any ((el==))
   }
 \end{kite}
-The following Kite example will be an example of usage of
-\code{elem}. \code{elem} is here used as an infix function call.
+
+The following Kite example will be an example of usage of \code{elem}. \code{elem} is here used as an infix function call.
 \begin{kite}
   foo =  -> {
     list = [1, 2, 3]
@@ -259,8 +259,7 @@ The resulting desugared version of same example will look as follows:
 \end{kite}
 
 \subsubsection{Recursion}
-Kite supports recursion, which allows functions to call itself in
-programs. Basic recursion will have the following syntax:
+Kite supports recursion, which allows functions to call itself in programs. Basic recursion will have the following syntax:
 \begin{kite}
   foo :: Int -> Int
   foo = |a| -> {
@@ -268,8 +267,8 @@ programs. Basic recursion will have the following syntax:
     else a + foo(a - 1)
   }
 \end{kite}
-Kite also supports recursion in pattern matching, which will be
-discussed later in \nameref{subsubsec:conditionals}.
+
+Kite also supports recursion in pattern matching, which will be discussed later in \nameref{subsubsec:conditionals}.
 
 \subsubsection{Conditionals}
 \label{subsubsec:conditionals}
@@ -283,8 +282,7 @@ if booleanExpression then consequenceExpression else alternativeExpression
 
 A more advanced form of conditional is \textbf{pattern matching}. It works by matching an expression to a list of cases, which can be either a normal expression or it can be a destructuring of a list or a pair.
 
-Below we show the matching of \code{n} on 0, which is an expression,
-and \code{otherwise}, which is written \code{"\_"}:
+Below we show the matching of \code{n} on 0, which is an expression, and \code{otherwise}, which is written \code{"\_"}:
 
 \begin{kite}
 fibo :: a -> b -> Int -> a
@@ -356,7 +354,7 @@ uncurry = |f| -> {
 }
 \end{kite}
 
-We have chosen to include these two functions from \nameref{foundation}) in this section as they reflect an essential part of Kite and functional programming languages in general.
+We have chosen to include these two functions from~\nameref{foundation}) in this section as they reflect an essential part of Kite and functional programming languages in general.
 
 \subsubsection{Partial application}
 An example of partial application is the function \code{increment}, which partially applies addition:
@@ -395,9 +393,10 @@ If a user tries to take the head of an empty list, the execution of Kite will st
 
 \subsection{Foundation}
 As mentioned earlier in the \nameref{sec:requirements}, the \code{Foundation} of Kite is a standard library implemented in Kite consisting of often used functions. Kite's Foundation is inspired by Haskell's \code{Prelude}, and includes many functions found in
-Prelude. 
+Prelude.
 
 Below are two examples from Foundation.
+
 \subsubsection{List concatenation}
 List concatenation does as the name suggests, namely concatenating two lists into a single list:
 
@@ -437,10 +436,4 @@ teens = range(13,19)
 sweetSixteen = teens # 3 ----> 16
 \end{kite}
 
-For a full documentation of Foundation, please see
-\nameref{foundation}.
-
-%%% Local Variables: 
-%%% mode: latex
-%%% TeX-master: "../report"
-%%% End: 
+For a full documentation of Foundation, please see~\nameref{foundation}.

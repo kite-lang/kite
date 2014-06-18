@@ -2,6 +2,7 @@
 %%% mode: latex
 %%% TeX-master: "../report"
 %%% End:
+
 In the requirements-section we will focus more on the language specific features of Kite. As most of the compiler specific requirements are discussed in the design-section, and are basic for most compilers, they will not be discussed here.
 
 \subsection{Minimum requirements}
@@ -42,7 +43,7 @@ end
 Inspired by Haskell's prelude~\footnote{\url{http://hackage.haskell.org/package/base-4.7.0.0/docs/Prelude.html}}, we want to implement a standard function library, imported by default into all Kite modules. This standard module should include useful functions for common operations as arithmetic operations, string manipulations and list manipulation.
 
 \textbf{REPL:}
-A Read-Eval-Print-Loop, or an \emph{interactive top-level}, will allow a user to have a simple interactive program to give simple input, e.g. a single expression, evaluate it and get the return value, without creating an file and compiling it.
+A Read-Eval-Print-Loop, or an \emph{interactive top-level}, will allow a user to have a simple interactive program to give simple input, e.g.\ a single expression, evaluate it and get the return value, without creating an file and compiling it.
 
 \textbf{Higher-order functions:}
 The language should provide the possibility to create function that take functions as parameters, and returns functions.

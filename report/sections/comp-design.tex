@@ -1,50 +1,45 @@
+%%% Local Variables:
+%%% mode: latex
+%%% TeX-master: "../report"
+%%% End:
+
 To describe the overall design of the Kite compiler, we will start by
 breaking it down into general parts, where each part or module has a
 specific task. Below we have a waterfall model including the main
 parts of the compiler:
 
 \begin{figure}[H]
-  \label{fig:flow}
-  \center
+  \centering
   \includegraphics[scale=0.45]{images/flow.png}
   \caption{General flow of the Kite compiler}
+\label{fig:flow}
 \end{figure}
 
 At first it can seem a little daunting, but when we get into the
 purpose of each step, there will be a more obvious flow.
 
+
 \subsection{Preprocessor}
-The first thing the compiler does is preprocess the input, e.i. the
-source code files, that it has been given. This is quite simply the
-task of including all necessary files into one file. The files to be
-included are declared in the top of the file.
+The first thing the compiler does is preprocess the input, e.i.\ the source code files, that it has been given. This is quite simply the task of including all necessary files into one file. The files to be included are declared in the top of the file.
 
 \begin{figure}[H]
-  \label{fig:preprocessor}
-  \center
+  \centering
   \includegraphics[scale=0.45]{images/preprocessor.png}
   \caption{Input and output of the Preprocessor}
+\label{fig:preprocessor}
 \end{figure}
 
-The nature of the preprocessor is quite simple, as the only task it
-simple textual substitution.
+The nature of the preprocessor is quite simple, as the only task it simple textual substitution.
 
 
 \subsection{Lexical analysis}
-The lexical analyzer, or just \emph{lexer}, is a central part of most
-compilers. It has the important task of processing some input and
-converting it to known, referencable tokens. This process is commonly
-known as \emph{tokenization}.
+The lexical analyzer, or just \emph{lexer}, is a central part of most compilers. It has the important task of processing some input and converting it to known, referencable tokens. This process is commonly known as \emph{tokenization}.
 
 Most lexers are quite simple, as they simply make tokens by matching the input with regular languages and classify the substrings according to these. Thus lexers do not perform any complex tasks - this is reserved for the parser and analyzer, which we will describe in the following.
 
 
 \subsection{Parser}
-The parser takes the list of tokens from the lexer and based on a
-language grammar, it builds a corresponding data structure, namely the
-parse tree. In the process it checks that that the input is
-syntactically correct. Therefore, this process is also called syntactic
-analysis.
+The parser takes the list of tokens from the lexer and based on a language grammar, it builds a corresponding data structure, namely the parse tree. In the process it checks that that the input is syntactically correct. Therefore, this process is also called syntactic analysis.
 
 In the cases know to us (Yacc, Happy, ANTLR), parser-generators make use of \emph{Context-Free Grammars} (CFG), and thus we have to define our desired syntax as a CFG.
 
@@ -62,33 +57,14 @@ The analyzer cannot, however, determine whether a program will yield the expecte
 
 
 \subsection{Optimizer}
-The optimizer module takes the AST and transforms it in such a way that the program is faster or smaller, but the functionality is the same. This is described in more detail in section \ref{sec:impl-optimizer}.
+The optimizer module takes the AST and transforms it in such a way that the program is faster or smaller, but the functionality is the same. This is described in more detail in section~\nameref{sec:impl-optimizer}.
 
 
 \subsection{Code generation}
 The code generator will take the AST outputted from the parser, and emit code for a specified target language. Currently Kite only supports one code generation backend namely for JavaScript, but the module is structured in such a way that allows easy integration with new code generation modules.
 
-\textbf{LLVM as backend:} The LLVM compiler
-infrastructure\footnote{LLVM Project \url{http://llvm.org/}} will allow
-for low level binary machine code generation. The LLVM infrastructure
-will take a representation of the parse tree and emit a LLVM
-intermediate representation (IR) which can be used for code
-generation. Since LLVM is strong statically typed, a modified variant
-of Kites parse tree is needed. The LLVM infrastructure will also provide
-optimization passes for a given LLVM IR.
+\textbf{LLVM as backend:}
+The LLVM compiler infrastructure~\footnote{LLVM Project \url{http://llvm.org/}} will allow for low level binary machine code generation. The LLVM infrastructure will take a representation of the parse tree and emit a LLVM intermediate representation (IR) which can be used for code generation. Since LLVM is strong statically typed, a modified variant of Kites parse tree is needed. The LLVM infrastructure will also provide optimization passes for a given LLVM IR.
 
-\textbf{JavaScript as backend:} As an alternative, a JavaScript emitter
-can be implemented and used as backend. Since JavaScript is untyped,
-Kite can rely on the typechecker and emit JavaScript. The emitted
-JavaScript should not contain type errors, as the analyzer will
-catch type errors. The emitted JavaScript will run on the
-Node.js platform\footnote{ The Node.js platform \url{nodejs.org}}.
-Node.js makes use of the Google V8 JavaScript engine \footnote{Google
-  V8 engine \url{http://code.google.com/p/v8/}} which compiles JavaScript to
-native machine code. The result is faster and more optimized
-JavaScript execution.
-
-%%% Local Variables:
-%%% mode: latex
-%%% TeX-master: "../report"
-%%% End:
+\textbf{JavaScript as backend:}
+As an alternative, a JavaScript emitter can be implemented and used as backend. Since JavaScript is untyped, Kite can rely on the typechecker and emit JavaScript. The emitted JavaScript should not contain type errors, as the analyzer will catch type errors. The emitted JavaScript will run on the Node.js platform~\footnote{ The Node.js platform \url{nodejs.org}}. Node.js makes use of the Google V8 JavaScript engine~\footnote{Google   V8 engine \url{http://code.google.com/p/v8/}} which compiles JavaScript to native machine code. The result is faster and more optimized JavaScript execution.

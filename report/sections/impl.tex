@@ -11,7 +11,7 @@ The preprocessor in Kite is almost identical to the \code{C} language preprocess
 \label{sec:impl-lexer}
 The lexer converts the raw input source to a list of tokens, a process known as tokenization. There are multiple types of tokens that represent different kinds of lexical elements. A \emph{lexeme} is the textual value that the lexer sees and maps to a token. Some tokens can have multiple possible lexemes, for instance in the case of identifiers and numeric constants. In those cases, the lexeme is saved together with the token for further evaluation (by the parser).
 
-Kite's lexer is implemented using the lexical generator, Alex~\cite{dornan01}. Alex is a tool for generating lexical analyzers in Haskell, given a description of the tokens to be recognized in the form of regular expressions~\cite[p. 4]{dornan01}. The description of the analyzer consists of \emph{macro definitions} and \emph{rules}. A macro definition is either a regular expression bound to an identifier describing a particular sequence of characters, denoted by a \code{\$} prefix, or it is a combination of the former, prefixed by \code{@}. These macros are combined to make up the rules, which define the actual definitions for tokens. Macros and rules are separated by the symbol \code{:-} and the preceding \code{kite} is just for documentation\cite[p. 7]{dornan01}. Further the description file defines the Haskell data structures used to represent the tokens, enclosed in \code{\{ \}}.
+Kite's lexer is implemented using the lexical generator, Alex~\cite{dornan01}. Alex is a tool for generating lexical analyzers in Haskell, given a description of the tokens to be recognized in the form of regular expressions~\cite[p. 4]{dornan01}. The description of the analyzer consists of \emph{macro definitions} and \emph{rules}. A macro definition is either a regular expression bound to an identifier describing a particular sequence of characters, denoted by a \code{\$} prefix, or it is a combination of the former, prefixed by \code{@}. These macros are combined to make up the rules, which define the actual definitions for tokens. Macros and rules are separated by the symbol \code{:-} and the preceding \code{kite} is just for documentation~\cite[p. 7]{dornan01}. Further the description file defines the Haskell data structures used to represent the tokens, enclosed in \code{\{ \}}.
 
 Figure~\ref{fig:lexer} shows an excerpt from the description file. The macro definitions describes common patterns such as a sequence of digits (\code{\$digit}), lowercase characters (\code{\$downcase}), alpha numeric sequences (\code{\$alphaNum}) etc. Also defined are reserved keywords (\code{\@keywords}) and the void type (\code{@void}). Another interesting macro is the \code{@comment} macro, which matches two dashes followed by anything (implicitly anything but a newline).
 
@@ -168,7 +168,6 @@ As the representation of strings outputted from the lexer is a Haskell \code{Str
 The \code{mkCalls} function converts a function call with multiple arguments to a sequence of applications.
 
 \begin{haskell}
-
 mkCalls f [] = PApply f PVoid
 mkCalls f (a:as) = foldl PApply (PApply f a) as
 \end{haskell}
@@ -298,13 +297,11 @@ In its current state, the algorithm only eliminates unused top-level declaration
 \subsubsection{Target specific optimization}
 Optimizations can be done either on the intermediate AST as above or after and during emitted target code. Kite does some simple optimizations for the JavaScript target by expanding calls to common binary arithmetic operations (such as \code{+} and \code{*}). Consider the expression \code{a = 1 + 1}. Without optimizatio the emitted code looks like \code{var a = KT\_PLUS(1)(1)} which  requires two function calls to be evaluated. The optimized version is simply \code{var a = 1 + 1}.
 
-In cases such as the above we could in fact optimize further by
-directly  calculating the resulting value as it's a constant
-expression.
+In cases such as the above we could in fact optimize further by directly  calculating the resulting value as it's a constant expression.
 
 
 \subsection{Code generation}
-The implementation of code generation (codegen) focuses on the programming language, JavaScript (JS), as the initial aim of LLVM code generation was not met. More on this will be discussed in \nameref{sec:discussion}.
+The implementation of code generation (codegen) focuses on the programming language, JavaScript (JS), as the initial aim of LLVM code generation was not met. More on this will be discussed in~\nameref{sec:discussion}.
 
 The code generation module will run recursively through the AST and emit JS code for each AST node.
 
