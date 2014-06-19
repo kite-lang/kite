@@ -34,7 +34,9 @@ parse      = kiteparser
 analyze    = typeCheck
 foundation = $(embedFile "lib/Foundation.kite")
 
--- | Handle for compiler given KiteOpts
+-- | The main function to run the Kite compiler. It will check which
+-- flags are set and act accordingly. After successful compilation an
+-- executable file is written to the file system.
 runKite KiteOpts {..} = do
   p <- if eval then preprocess input else preprocessFile input
   let p' = if noFoundation
