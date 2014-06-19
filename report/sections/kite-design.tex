@@ -71,7 +71,7 @@ Basic boolean operators:
 \end{table}
 
 
-\subsubsection{Function declaration}
+\subsubsection{Function declaration} TODO: infix function decl.
 \label{sec:func-decl}
 Every function in Kite is declared as an anonymous function:
 
@@ -129,6 +129,11 @@ The type-checker will validate that an annotated type is at least as general as 
 
 Types can be grouped to denote a higher-order function, for instance the type of map \code{(a -> b) -> [a] -> [b]} means that \code{map} accepts a \emph{function} as its first parameter, a list as its second and it produces a list.
 
+
+\subsection{Function application}
+TODO: partial app
+
+
 \subsubsection{Syntactic sugar}
 \label{sec:kite-design-sugar}
 By using a sugaring module, Kite will be able to express certain functions more clearly and readable to the user. Syntactic sugar includes infix operators, multiple parameters on function calls, list of characters as strings and list comprehensions. Infix operators will allow infix use of binary functions (taking two parameters) in Kite. An example of infix operators is the basic $+$ arithmetic operation:
@@ -143,7 +148,7 @@ Where the desugared version of the same expression is given as:
 foo = ((+) (1)) (2)
 \end{kite}
 
-As Kite functions will only take one parameter, sugaring of multiple parameter functions (or currying, see currying~\ref{subsubsec:currying}) will allow the usage of multiple parameter functions. Example of usage of multiple parameters:
+As Kite functions will only take one parameter, sugaring can simulate the use of multiple parameters in functions. Example hereof:
 
 \begin{kite}
 foo :: a -> a -> a
@@ -179,20 +184,22 @@ main = |Void| -> {
 }
 \end{kite}
 
-As mentioned earlier, \textbf{Strings} are syntactic sugar for list of characters, \code{List(Char)}, which will allow for easier representations of character lists. An example of a strings:
+As mentioned earlier, \textbf{Strings} are syntactic sugar for list of characters, \code{[Char]}, which will allow for easier representations of character lists. An example of a string:
 
 \begin{kite}
 str = "Hello"
 \end{kite}
 
-Where the corresponding desugar (note the distinction between strings using double-quotes ("...") and characters using single-quotes ('...') will be:
-
+Where the corresponding desugar will be:
 \begin{kite}
 str = ['H', 'e', 'l', 'l', 'o']
 \end{kite}
+Note the distinction between strings using double-quotes ("...") and characters using single-quotes ('...').
 
 \label{sec:ex-listcomp}
 \textbf{List comprehensions} are syntactic sugar for manipulating lists. An example of a list comprehension is:
+
+TODO: Mentiod output expr, draws 'n' grdz
 
 \begin{kite}
 list = [ x*y | x <- range(3,5), y <- range(4,6) | (x+y) >= 10, y > 4]
@@ -211,72 +218,67 @@ flatMap(|x| -> {
 }, range(3,5) )
 \end{kite}
 
-Note that list comprehensions uses functions defined in \nameref{foundation}), which will be discussed later.
+Note that list comprehensions uses functions defined in section~\ref{foundation}, which will be discussed later.
 
-\textbf{Infix functions} Kite allows for use of infix functions. Infix functions are syntactic sugar for prefix function calls, with some given parameters. Using \code{`} (backtick) will imply the use of infix function calls
+\textbf{Infix functions} Kite allows for use of infix functions. Infix functions are syntactic sugar for prefix function calls, with some given parameters. Using '\code{\`}' (backtick) will imply the use of infix function calls
 
 A common example of infix function calls, is the \code{elem}-function, which is defined as follows (from \nameref{foundation}):
 \begin{kite}
-  elem :: a -> [a] -> Bool
-  elem = |el| -> {
-    any ((el==))
-  }
+elem :: a -> [a] -> Bool
+elem = |el| -> {
+  any ((el==))
+}
 \end{kite}
 
 The following Kite example will be an example of usage of \code{elem}. \code{elem} is here used as an infix function call.
 \begin{kite}
-  foo =  -> {
-    list = [1, 2, 3]
-    1 `elem list
-  }
+list = [1, 2, 3]
+1 `elem list ----> True
 \end{kite}
 The resulting desugared version of same example will look as follows:
 
 \begin{kite}
-  foo = |Void| -> {
-    list = [1,2,3];
-    a = ((elem) (1)) (list);
-    return a
-  }
+list = [1,2,3];
+((elem) (1)) (list); ----> True
 \end{kite}
 
 \subsubsection{Recursion}
-Kite supports recursion, which allows functions to call itself in programs. Basic recursion will have the following syntax:
+Kite supports recursion, which allows functions to call themselves in programs. Basic recursion will have the following syntax:
 \begin{kite}
-  foo :: Int -> Int
-  foo = |a| -> {
-    if a == 1 then 1
-    else a + foo(a - 1)
-  }
+foo :: Int -> Int
+foo = |a| -> {
+  if a == 1 then 1
+  else a + foo(a - 1)
+}
 \end{kite}
 
-Kite also supports recursion in pattern matching, which will be discussed later in \nameref{subsubsec:conditionals}.
+Kite also supports recursion in pattern matching, which will be discussed next.
 
 \subsubsection{Conditionals}
 \label{subsubsec:conditionals}
-Kite features two conditional expressions, the if-expression and pattern matching.
+Kite features two conditional expressions; the if-expression and pattern matching.
 
 The \textbf{if-expression} is not to be confused with an if-statement, as our implementation is not a control flow statement. It will always return an expression, and the return-types of the consequent and alternative must be the same.
 
 \begin{kite}
-if booleanExpression then consequenceExpression else alternativeExpression
+if booleanExpr then consequenceExpr else alternativeExpr
 \end{kite}
 
-A more advanced form of conditional is \textbf{pattern matching}. It works by matching an expression to a list of cases, which can be either a normal expression or it can be a destructuring of a list or a pair.
+A more advanced form of conditional is \textbf{pattern matching}. It works by matching an expression to a list of cases, which can be either a normal expression or it can be a destructuring\footnote{Destructuring means breaking up a data structure into its parts by using pattern matching. Kite features a simple implementation of this in its \code{match} expressions} of a list or a pair.
 
 Below we show the matching of \code{n} on 0, which is an expression, and \code{otherwise}, which is written \code{"\_"}:
 
 \begin{kite}
 fibo :: a -> b -> Int -> a
 fibo = |a, b, n| -> {
-    match n {
+  match n {
     0 -> a,
     _ -> fibo(b, (a + b), (n - 1))
-    }
+  }
 }
 \end{kite}
 
-An example of pattern matching on lists is our implementation of the function \code{reverse}~\ref{foundation}, which matches \code{xs} with an expression, empty list, and the head and tail of \code{xs}:
+An example of pattern matching on lists is our implementation of the function \code{reverse} (\ref{foundation}), which matches \code{xs} with an expression, empty list, and the head and tail of \code{xs}:
 
 \begin{kite}
 reverse = |xs| -> {
@@ -287,7 +289,7 @@ reverse = |xs| -> {
 }
 \end{kite}
 
-The final case is matching on pairs. The example below shows the implementation of \code{fst} (first) in \nameref{foundation}):
+The final case is matching on pairs. The example below shows the implementation of \code{fst} (first) in Foundation (\ref{foundation}):
 \begin{kite}
 fst :: (a, b) -> a
 fst = |p| -> {
@@ -298,7 +300,7 @@ fst = |p| -> {
 \end{kite}
 
 \subsubsection{Higher-order functions}
-Kite features higher-order functions (HoF), and the \code{map} function is an example hereof. It takes a function as argument and applies it to every element of a list, and returns the modified list:
+Kite features higher-order functions (HoF), and the \code{map} function is an example hereof. It takes a function as argument and applies it to every element of a list, and returns the resulting list:
 
 \begin{kite}
 map :: (a -> b) -> [a] -> [b]
@@ -312,7 +314,7 @@ map = |f, ls| -> {
 
 \subsubsection{Currying}
 \label{subsubsec:currying}
-Beside every function in Kite being curried~\footnote{Which should be fairly easy to see when looking at the type-declarations of the functions}, we have also implemented a \code{curry} (and \code{uncurry}) function, which given a function with a single pair as the argument, returns the same function taking two arguments corresponding to the values of the pair:
+Beside every function in Kite being curried (which should be clear from the type-declarations), we have also implemented a \code{curry} (and \code{uncurry}) function, which given a function with a single pair as the argument, returns the same function taking two arguments corresponding to the values of the pair:
 
 \begin{kite}
 curry :: ((a, b) -> c) -> (a -> b -> c)
@@ -323,7 +325,7 @@ curry = |f| -> {
 }
 \end{kite}
 
-Uncurry, naturally, does the opposite, meaning it takes a function taking two parameters and returns the same taking a single pair as an argument.
+Uncurry, naturally does the opposite, meaning it takes a function taking two parameters and returns the same taking a single pair as an argument.
 
 \begin{kite}
 uncurry :: (a -> b -> c) -> ((a, b) -> c)
@@ -336,7 +338,7 @@ uncurry = |f| -> {
 }
 \end{kite}
 
-We have chosen to include these two functions from~\nameref{foundation}) in this section as they reflect an essential part of Kite and functional programming languages in general.
+We have chosen to include these two functions from~\nameref{foundation} in this section as they reflect an essential part of Kite and functional programming languages in general.
 
 \subsubsection{Partial application}
 An example of partial application is the function \code{increment}, which partially applies addition:
@@ -349,7 +351,7 @@ increment = (1+)
 Increment can then be applied to an integer:
 
 \begin{kite}
-two = increment(1) ----> 2
+increment(1) ----> 2
 \end{kite}
 
 It should be noted that the addition operator, \code{+}, has type \code{a
@@ -358,23 +360,23 @@ it is partially applied with an integer, the type of \code{increment}
 becomes \code{Int -> Int}
 
 \subsubsection{Error handling}
-Kite supports exceptions using the keyword \code{panic}. Using \code{panic} will stop the execution.
+Kite supports termination of execution using the function \code{panic}. Using \code{panic} will stop the execution. It has the type signature \code{String -> a}, thus being allowed anywhere.
 
 An example of the \code{panic} function in use:
 \begin{kite}
-  head :: [a] -> a
-  head = |xs| -> {
-    match xs {
-      [] -> panic ("can't take head of empty list"),
-      x,xs -> x
-    }
+head :: [a] -> a
+head = |xs| -> {
+  match xs {
+    [] -> panic ("can't take head of empty list"),
+    x,xs -> x
   }
+}
 \end{kite}
-If a user tries to take the head of an empty list, the execution of Kite will stop and the error message will be shown.
+If a user tries to take the head of an empty list, the execution of Kite will stop and the error message will be outputted.
 
 
 \subsection{Foundation}
-As mentioned earlier in the \nameref{sec:requirements}, the \code{Foundation} of Kite is a standard library implemented in Kite consisting of often used functions. Kite's Foundation is inspired by Haskell's \code{Prelude}, and includes many functions found in
+As mentioned earlier in section~\ref{sec:requirements}, the \code{Foundation} of Kite is a standard library implemented in Kite consisting of often used functions. Kite's Foundation is inspired by Haskell's \code{Prelude}, and includes many functions found in
 Prelude.
 
 Below are two examples from Foundation.
@@ -399,7 +401,7 @@ For example, as strings are simply lists of characters, \code{++} can be used as
 \end{kite}
 
 \subsubsection{List indexing}
-Lists in Kite are zero-indexed, meaning that the first element of a list it at 'index' zero. Indexing a list retrieves the $n$-th element (starting from 0) of a list:
+Lists in Kite are zero-indexed, meaning that the first element of a list is at 'index' zero. Indexing a list retrieves the $n$-th element of a list:
 
 \begin{kite}
 {#} :: [a] -> Int -> a
@@ -418,4 +420,4 @@ teens = range(13,19)
 sweetSixteen = teens # 3 ----> 16
 \end{kite}
 
-For a full documentation of Foundation, please see~\nameref{foundation}.
+For a full documentation of Foundation, please see section~\ref{foundation}.

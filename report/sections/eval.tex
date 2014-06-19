@@ -5,77 +5,77 @@
 
 \subsection{Development}
 \subsubsection{Source code management}
-Through out this project we have used git~\footnote{\url{http://git-scm.com/}} to manage the source code of the Kite-compiler and its dependencies. The repository is hosted at GitHub~\footnote{\url{https://github.com/}} and can be found publicly at \url{https://github.com/altschuler/kite}.
+Throughout this project we have used git\footnote{\url{http://git-scm.com/}} to manage the source code of the Kite-compiler and its dependencies. The repository is hosted at GitHub\footnote{\url{https://github.com/}} and can be found publicly at \url{https://github.com/altschuler/kite}.
 
 \subsubsection{IDE}
-For development of kite code, we have made a kite-mode to integrate in Emacs~\footnote{\url{http://www.gnu.org/software/emacs/}}. This provides syntax-highlighting and various shortcuts for compilation and execution of JavaScript with Node.js.
+For development of Kite code, we have made a major mode, called \code{kite-mode}, to integrate in Emacs\footnote{\url{http://www.gnu.org/software/emacs/}}. This provides syntax-highlighting and various shortcuts for compilation and execution of JavaScript with Node.js.
 
-The source of kite-mode is located in the \code{utils} directory of the repository. See~\ref{kite-mode}, for the source.
+The source of \code{kite-mode} is located in the \code{utils} directory of the repository. See~\ref{kite-mode}, for the source.
 
 
 \subsection{Preprocessor}
-As we use \code{cpphs}\cite{wallace04} for preprocessing, which is a port of the C-preprocessor in Haskell, one will have to take certain considerations when including files.
+As we use \code{cpphs}~\cite{wallace04} for preprocessing, which is a port of the C-preprocessor in Haskell, one will have to take certain considerations when including files.
 
 One major pitfall is creating circular dependencies. If two files includes each other, using the \code{\#include file.kite} syntax, this will cause an infinite loop of the files including each-other, resulting in a stack-overflow. Circular dependencies are not detected which can cause confusing errors, without any detailed feedback.
 
 Another hurdle is including the same file twice. Take for example the following set of files and inclusions:
 
 \begin{lstlisting}[caption=\code{grandfather.kite}]
-  foo = -> { bar }
+foo = -> { bar }
 \end{lstlisting}
 
 \begin{lstlisting}[caption=\code{father.kite}]
-  #include 'grandfather.kite'
-  ...
+#include 'grandfather.kite'
+...
 \end{lstlisting}
 
 \begin{lstlisting}[caption=\code{child.kite}]
-  #include 'grandfather.kite'
-  #include 'father.kite'
-  ...
+#include 'grandfather.kite'
+#include 'father.kite'
+...
 \end{lstlisting}
 
-This will cause a compile-time error, as the \code{foo} function is declared twice, which is not allowed.
+This will cause a compile-time error, as the function \code{foo} is declared twice, which is not allowed.
 
-Both of these pitfalls can be avoided using include guards~\footnote{\url{http://en.wikipedia.org/wiki/Include_guard}}, ensuring that a file is only included if a specific flag is not defined, meaning the file has not yet been included.
+Both of these pitfalls can be avoided using include guards\footnote{\url{http://en.wikipedia.org/wiki/Include_guard}}, ensuring that a file is only included if a specific flag is not defined, meaning the file has not yet been included.
 
 \begin{lstlisting}[caption=\code{grandfather.kite}]
-  #ifndef GRANDFATHER_H
-  #define GRANDFATHER_H
+#ifndef GRANDFATHER_H
+#define GRANDFATHER_H
 
-  foo = -> { bar }
+foo = -> { bar }
 
-  #endif
+#endif
 \end{lstlisting}
 
 \begin{lstlisting}[caption=\code{father.kite}]
-  #include 'grandfather.kite'
-  ...
+#include 'grandfather.kite'
+...
 \end{lstlisting}
 
 \begin{lstlisting}[caption=\code{child.kite}]
-  #include 'grandfather.kite'
-  #include 'father.kite'
-  ...
+#include 'grandfather.kite'
+#include 'father.kite'
+...
 \end{lstlisting}
 
 
 \subsection{Tests}
 In the following section we will describe the various tests we have implemented in order to validate the correctness of the compiler, both throughout the development and of the final system.
 
-We have made use of both \textbf{unit}- and \textbf{validation}-tests. Unit-testing for ensuring that each component, i.e.\ module, of the compiler, e.g.\ the lexer, parser etc., are \emph{indidually} functioning as expected. The validation-tests have been focused on that the interface between all the various components are functioning as expected.
+We have made use of both \textbf{unit}- and \textbf{validation}-tests. Unit-testing for ensuring that each component, i.e.\ module, of the compiler, e.g.\ the lexer, parser etc., are \emph{individually} functioning as expected. The validation-tests have been focused on that the interface between all the various components are functioning as expected.
 
 \subsubsection{Unit-tests}
 Unit testing has been used on each of the modules of the compiler. For instance, we have tested the parser module in cases where the output of the lexer should yield a parse error and in cases where it should not.
 
 \begin{lstlisting}[caption=\code{Kite.Test.TypeCheck.hs} snippet]
-  ...
-      , testE "List assignment same type"
-      Nothing "list = [1, 2, 3]"
+...
+    , testE "List assignment same type"
+    Nothing "list = [1, 2, 3]"
 
-    , testE "List assignment illegal values"
-      (Just TypeE) "list = [1, True, \"Three\"]"
-  ...
+  , testE "List assignment illegal values"
+    (Just TypeE) "list = [1, True, \"Three\"]"
+...
 \end{lstlisting}
 
 Above we have two test cases of the type checker module. In the first we check that a legal list assignment should \emph{not} yield an error, while the second, where a list is declared with distinct types, should yield a type error of type \code{TypeE}.
@@ -86,33 +86,33 @@ As for validation-tests, we have written a test program in Kite itself that test
 
 This can be run on the command-line with:
 
-\code{\$ kite --target=javascript examples/kunit/Runner.kite | node}
+\code{\$ kite examples/kunit/Runner.kite \&\& ./main}
 
-Output of the tests are presented in appendix \ref{sec:foundation-tests}.
+Output of the tests are presented in appendix~\ref{sec:foundation-tests}.
 
 \subsubsection{Continuous integration}
-Throughout the development of the Kite-compiler we have used continuous integration (CI) to incrementally check that new changed as not broken anything in the compiler. We have done this by triggering a make of the code-base, when changes are pushed to the master branch of the source-code repository. For this we have used a free service called Travis~\footnote{\url{https://travis-ci.org/}}.
+Throughout the development of the Kite-compiler we have used continuous integration (CI) to incrementally check that new changed has not broken anything in the compiler. We have done this by triggering a build of the code-base, when changes are pushed to the master branch of the source-code repository. For this we have used a free service called Travis\footnote{\url{https://travis-ci.org/}}.
 
 The advantages of using CI is that any changes that breaks the build will immediately be detected, and that the party to blame will be notified so he/she can fix it before it disrupts further development.
 
-For up-to-date status of the build, go to \url{https://travis-ci.org/altschuler/kite}.
+For an up-to-date status of the build, go to \url{https://travis-ci.org/altschuler/kite}.
 
 
 \subsection{Performance}
-We have made some benchmarking of Kite, targeting JavaScript ran on Node.js, Python and Haskell. Throughout the benchmarking, the programs have been run single-threaded, without any special optimization.
+We have made some benchmarking of Kite, targeting JavaScript run on Node.js, Python and Haskell. Throughout the benchmarking, the programs have been run single-threaded, without any special optimization.
 
 \subsubsection{Brute-force mathematics}
 \label{sec:math-benchmark}
-The first benchmark\footnote{/benchmarking/pythagoras.kite, /benchmarking/pythagoras.hs, /benchmarking/pythagoras.py} is finding Pythagorean triples using list comprehensions, e.i. finding integer solutions to the equation $a^2 + b^2 = c^2$:
+The first benchmark\footnote{/benchmarking/pythagoras.kite, /benchmarking/pythagoras.hs, /benchmarking/pythagoras.py} is finding Pythagorean triples using list comprehensions, i.e.\ finding integer solutions to the equation $a^2 + b^2 = c^2$:
 
 \begin{kite}
-  n = 200
+n = 200
 
-  pythagoreans = [ (c,(b,a)) | c <- range(1,n), b <- range(1,c),
-        a <- range(1,b) | ((a**2) + (b**2)) == (c**2)]
+pythagoreans = [ (c,(b,a)) | c <- range(1,n), b <- range(1,c),
+      a <- range(1,b) | ((a**2) + (b**2)) == (c**2)]
 \end{kite}
 
-The variable \code{n} denotes the upper limit for the hypotenuse in the corresponding triangle, and thus defines how many elements should be evaluated. The number of elements grows with $n^2$, and since the operations in the guard and the output expression has O($1$), the time complexity of the program is O($n^2$).
+The variable \code{n} denotes the upper limit of the hypotenuse in the corresponding triangle, and thus defines how many elements should be evaluated. The number of elements grows with $n^2$, and since the operations in the guard and the output expression is computed in constant time, the time complexity of the program is O($n^2$).
 
 \begin{table}[h]
   \centering
@@ -120,21 +120,22 @@ The variable \code{n} denotes the upper limit for the hypotenuse in the correspo
     \hline
                    & Runtime ($n = 50$) & Runtime ($n = 100$) & Runtime ($n = 150$) & Runtime ($n = 200$) \\
     \hline
-    Kite + Node.js & 509ms              & 3.216ms             & 10.207ms            & 24.320ms            \\
+    Kite + Node.js & 608ms              & 3.417ms             & 11.212ms            & 25.225ms            \\
     Haksell        & 346ms              & 865ms               & 2.274ms             & 4.733ms             \\
     Python         & 35ms               & 116ms               & 303ms               & 652ms               \\
     \hline
   \end{tabular}
   \caption{Benchmarking with Pythagorean triples}
+\label{tbl:bench-pythagoras}
 \end{table}
 
-It is clear that Kite + Node.js is overall slower and scales worse than the two other languages. The lack of good scaling is likely due to the fact that the recursive call stack of \code{flatMap} in list comprehensions becomes larger with larger lists. We will discuss this as a potential optimization in the discussion section~\ref{sec:disc-optimization}.
+As seen in table~\ref{tbl:bench-pythagoras} and~\ref{tbl:bench-sort}, it is clear that Kite + Node.js is overall slower and scales worse than the two other languages. The lack of good scaling is likely due to the fact that the recursive call stack of \code{flatMap} in list comprehensions become larger with larger lists. We will discuss this as a potential optimization in the discussion section~\ref{sec:disc-optimization}.
 
 Another point is that the two other languages are probably optimized with respect to such fundamental functions as the ones used in this benchmark.
 
 \subsubsection{Sorting lists}
 
-The other benchmark\footnote{/benchmarking/sort.kite, /benchmarking/sort.hs, /benchmarking/sort.py} we performed is sorting of lists of integers. We have hardcoded the same random list into the three different languages and timed the sorting of the list:
+The other benchmark\footnote{/benchmarking/sort.kite, /benchmarking/sort.hs, /benchmarking/sort.py} we performed was sorting of lists of integers. We have hardcoded the same random list into the three different languages and timed the sorting of the list:
 
 \begin{kite}
 l = [294, 383, ..., 176, 336]
@@ -155,51 +156,44 @@ The variable \code{l} is the shuffled list, and \code{s} is the sorted one. Kite
     \hline
   \end{tabular}
   \caption{Benchmarking with Quicksort}
+\label{tbl:bench-sort}
 \end{table}
 
 Here Kite + Node.js performs on par with Haskell, but scales worse. Python is incredibly fast at sorting lists of this size.
 
-In general, the code Kite emits is very inefficient and we will discuss later in the report.
+In general, the code Kite emits is very inefficient and we will discuss potential and actual optimizations later in the report.
 
 
 \subsection{Optimization}
-
-We have implemented two optimizations. A target independent size reduction of the emitted code and a target specific optimization with respect to running time.
+We have implemented two types of optimization. A target independent size reduction of the emitted code and a target specific optimization with respect to running time.
 
 \subsubsection{Size reduction}
 As our optimization pass removes unused function declarations from the parse tree, it is possible to achieve a substantial reduction of the emitted code.
 
-A very simple program that concatenates the strings `Hello,' and ` World!' and prints them, is unoptimized emitted to 12.5kB of JavaScript, and optimized to 3.5kB. Thus optimization yields a size reduction of 72\%. This is the result of removing dead code. The reason for most of the code in such a small program being dead is the Foundation library. As string concatenation is the only operation performed, most of the functions in Foundation are redundant, and therefor removed.
-
+A very simple program that concatenates the strings \code{"Hello,"} and \code{" World!"} and prints them, is unoptimized emitted to 12.5kB of JavaScript, and optimized to 3.5kB. Thus optimization yields a size reduction of 72\%. This is the result of removing dead code. The reason for most of the code in such a small program being dead is the Foundation library. As string concatenation is the only operation performed, most of the functions in Foundation are redundant, and therefore removed.
 
 A slightly larger program that sums the even Fibonacci numbers less than 4 million (problem 2 of the online collection of mathematical problems Project Euler\footnote{http://projecteuler.net/}) the compiler emits 12.9kB and 6.8kB of JavaScript without and with optimization, respectively. The program makes use of list comprehensions, which is just syntactic sugar for flatten and map, which then again uses a cascade of functions from the Foundation. Thus, it is expected that a lot of the code from the library is used. But a reduction of 47\% is still noteworthy, and imagining the use of functions from other Kite-libraries for more specific purposes, this optimization might be useful.
 
-
 \begin{table}[H]
   \centering
-  \begin{tabulary}{0.9\textwidth}{|L| L |L| C | L | }
-    \hline
-    Program & Size without optimization & Size with optimization & Percent reduction & Comment \\
+  \begin{tabulary}{1.0\textwidth}{LCCCL}
+    \textbf{Program} & \textbf{Size without optimization} & \textbf{Size with optimization} & \textbf{Percent reduction} & \textbf{Comment} \\
     \hline
     Hello.kite       & 12.5 kB & 3.5 kB & 72 \% & A program that concatenates two strings prints the result \\
-    & & & & \\
+    & & & & \\ \hline
     Euler1 .kite       & 12.7 kB & 6.6 kB & 48 \% & A program that sums all numbers smaller than 1000 divisible by 3 or 5 \\
-    & & & & \\
+    & & & & \\ \hline
     Euler2 .kite       & 12.9 kB & 6.9 kB & 47 \% & A program that sums all even Fibonacci numbers less than four million \\
-    & & & & \\
+    & & & & \\ \hline
     Mandeltest.kite       & 15.1 kB & 8.3 kB & 45 \% & A program that plots the Mandelbrot fractal as animated ASCII art in the console\\
-    \hline
   \end{tabulary}
   \caption{Above is a summation of the different Kite-programs we have made and optimized.}
 \end{table}
 
-
 \subsubsection{Target specific optimizations}
-
-This optimization uses the built-in boolean and mathematical functions of JavaScript, as they are assumed to be faster and we eliminate some of the overhead of partial application.
+This optimization uses the built-in boolean and mathematical functions of JavaScript directly, instead of the curried version, and thus we eliminate some of the overhead of partial application.
 
 Below are the results of running the Pythagoras-benchmark with and without our optimizations:
-
 \begin{table}[h]
   \centering
   \begin{tabular}{|l|c|c|c|c|}

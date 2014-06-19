@@ -4,18 +4,18 @@
 %%% End:
 
 \subsection{Preprocessor}
-The preprocessor in Kite is almost identical to the \code{C} language preprocessor. We use a library called \code{cpphs}~\cite{wallace04}, which is a port of the \code{C} version, and provides an embeddable Haskell library. This is the reason for the \code{\#include "file.kite"} syntax. Preprocessing is the first step of the compilation, and generates a single source code file which is a recursive concatenation of all included source files referenced from the main file.
+The preprocessor in Kite is almost identical to the \code{C} language preprocessor. We use a library called \code{cpphs}~\cite{wallace04}, which is a port of the \code{C} version, and provides an embeddable Haskell library. This is the reason for the \code{\#include "file.kite"} syntax. Preprocessing is the initial step of the compilation, and generates a single source code file which is a recursive concatenation of all included source files referenced from the main file.
 
 
 \subsection{Lexer}
 \label{sec:impl-lexer}
 The lexer converts the raw input source to a list of tokens, a process known as tokenization. There are multiple types of tokens that represent different kinds of lexical elements. A \emph{lexeme} is the textual value that the lexer sees and maps to a token. Some tokens can have multiple possible lexemes, for instance in the case of identifiers and numeric constants. In those cases, the lexeme is saved together with the token for further evaluation (by the parser).
 
-Kite's lexer is implemented using the lexical generator, Alex~\cite{dornan01}. Alex is a tool for generating lexical analyzers in Haskell, given a description of the tokens to be recognized in the form of regular expressions~\cite[p. 4]{dornan01}. The description of the analyzer consists of \emph{macro definitions} and \emph{rules}. A macro definition is either a regular expression bound to an identifier describing a particular sequence of characters, denoted by a \code{\$} prefix, or it is a combination of the former, prefixed by \code{@}. These macros are combined to make up the rules, which define the actual definitions for tokens. Macros and rules are separated by the symbol \code{:-} and the preceding \code{kite} is just for documentation~\cite[p. 7]{dornan01}. Further the description file defines the Haskell data structures used to represent the tokens, enclosed in \code{\{ \}}.
+Kite's lexer is implemented using the lexical generator, Alex~\cite{dornan01}. Alex is a tool for generating lexical analyzers in Haskell, given a description of the tokens to be recognized in the form of regular expressions~\cite[p. 4]{dornan01}. The description of the analyzer consists of \emph{macro definitions} and \emph{rules}. A macro definition is either a regular expression bound to an identifier describing a particular sequence of characters, denoted by a \code{\$} prefix, or it is a combination of the former, prefixed by \code{@}. These macros are combined to make up the rules, which define the actual definitions for tokens. Macros and rules are separated by the symbol \code{:-} and the preceding \code{kite} is just for documentation~\cite[p. 7]{dornan01}. Further the description file defines the Haskell data structures used to represent the tokens, enclosed in '\code{\{ \}}'.
 
-Figure~\ref{fig:lexer} shows an excerpt from the description file. The macro definitions describes common patterns such as a sequence of digits (\code{\$digit}), lowercase characters (\code{\$downcase}), alpha numeric sequences (\code{\$alphaNum}) etc. Also defined are reserved keywords (\code{\@keywords}) and the void type (\code{@void}). Another interesting macro is the \code{@comment} macro, which matches two dashes followed by anything (implicitly anything but a newline).
+Figure~\ref{fig:lexer} shows an excerpt from the description file (\code{Lexer.x}). The macro definitions describes common patterns such as a sequence of digits (\code{\$digit}), lowercase characters (\code{\$downcase}), alpha numeric sequences (\code{\$alphaNum}) etc. Also defined are reserved keywords (\code{\@keywords}) and the void type (\code{@void}). Another interesting macro is the \code{@comment} macro, which matches two dashes followed by anything (implicitly anything but a newline).
 
-The macros are then used in the rules to define tokens. A rule consist of a combination of macros followed by a Haskell code block that produce the token data structure. The code block must be a function accepting a position data structure and the matched lexeme. The position node is used to keep track of tokens where found in the source file to be able to give useful error messages. The lexeme is sometimes coerced to another value matching the one required by the respective token structure. The \code{@void} rule defines the \code{Void} type which is the only token possible from that rule, and therefore it does not use the provided lexeme.
+The macros are then used in the rules to define tokens. A rule consist of a combination of macros followed by a Haskell code block that produce the token data structure. The code block must be a function accepting a position data structure and the matched lexeme. The position node is used to keep track of tokens where found in the source file to be able to give useful error messages. The lexeme is sometimes coerced to another value matching the one required by the respective token structure. The \code{@void} rule defines the \code{Void} type which is the only token possible from that rule, and therefore it ignores the provided lexeme.
 
 Note that the (\code{@comment}) rule defines no code block but just a \code{;} which means that the pattern is matched, consumed and ignored, which is exactly what we want for comments.
 
@@ -59,9 +59,7 @@ Kite uses 12 different tokens briefly described in table~\ref{tbl:lexical_tokens
 \begin{table}[H]
   \centering
   \begin{tabular}{lll}
-    \hline
-    Token      & Description                            & Sample lexemes    \\ \hline
-
+    \textbf{Token} & \textbf{Description} & \textbf{Sample lexemes}    \\ \hline
     Symbol     & Single character symbols & \code{;, !} \\ \hline
     Identifier & Identifiers for referencable variables & \code{map, x', \_foobar} \\ \hline
     Type       & Capitalized identifier, denoting a type construct & \code{Bool, Int, Void} \\ \hline
@@ -81,49 +79,48 @@ Kite uses 12 different tokens briefly described in table~\ref{tbl:lexical_tokens
 
 
 \subsection{Parser}
-The parser is implemented with the LALR-parser (\textbf{L}ook \textbf{A}head, \textbf{L}eft-to-Right, \textbf{R}ightmost derivation) generator Happy~\cite{marlow01}, which is a parser generator system for Haskell, similar to the tool yacc~\footnote{Yacc: Yet Another Compiler-Compiler: \url{http://dinosaur.compilertools.net/yacc}} for C. It takes a file containing a specification of a grammar and produces a Haskell module containing a parser for the grammar. The grammar file (\code{Parser.y}), is similar in format to the lexical analysis description file described in section~\ref{sec:impl-lexer}. It uses Backus-Naur Form (BNF) notation to define a context-free grammar specifying the legal syntax of the Kite language. A BNF grammar consists of a set of derivation rules, also known as production rules, which describe all legal combinations of the tokens read by the lexer. A production rule has the following format:
+The parser is implemented with the LALR-parser (\textbf{L}ook \textbf{A}head, \textbf{L}eft-to-Right, \textbf{R}ightmost derivation) generator Happy~\cite{marlow01}, which is a parser generator system for Haskell, similar to the tool Yacc\footnote{Yacc: Yet Another Compiler-Compiler: \url{http://dinosaur.compilertools.net/yacc}} for C. It takes a file containing a specification of a grammar and produces a Haskell module containing a parser for the grammar. The grammar file (\code{Parser.y}), is similar in format to the lexical analysis description file described in section~\ref{sec:impl-lexer}. It uses Backus-Naur Form (BNF) notation to define a context-free grammar specifying the legal syntax of the Kite language. A BNF grammar consists of a set of derivation rules, also known as production rules, which describe all legal combinations of the tokens read by the lexer. A production rule has the following format:
 
 \begin{lstlisting}
 Name :: { Type }
       : Expression_1 { Haskell code }
-      | Expression_2 { Haskell code }
       ...
       | Expression_n { Haskell code }
 \end{lstlisting}
 
-The \code{Type} specifies the type of Haskell data constructor that the rule will produce and is optional but useful for debugging purposes and readability. A rule can have multiple different legal expressions, separated by \code{|}, which are defined as a sequence of symbols. A symbol can be either a \emph{terminal} or another production rule. A terminal is an expression that cannot be further expanded, thus terminating the recursion of that branch. For instance, consider the production rule for the bind syntax (the bind node is named \code{PBind} in the Haskell code).
+The \code{Type} specifies the type of Haskell data constructor that the rule will produce and is optional, but useful for debugging purposes and readability. A rule can have multiple different legal expressions, separated by \code{|}, which are defined as a sequence of symbols. A symbol can be either a \emph{terminal} or another production rule. A terminal is an expression that cannot be further expanded, thus terminating the recursion of that branch. For instance, consider the production rule for the bind syntax (the bind node is named \code{PBind} in the Haskell code).
 
 \begin{lstlisting}
 Bind :: { Expr }
-        : id '=' Expr                  { PBind $1 $3 }
-        | '{' operator '}' '=' Expr    { PBind $2 $5 }
+      : id '=' Expr                  { PBind $1 $3 }
+      | '{' operator '}' '=' Expr    { PBind $2 $5 }
 \end{lstlisting}
 
-The \code{Bind} rule produces a node of type \code{Expr}. In the first choice we see the \code{id} terminal that is equivalent to the \code{Identifier} token from the lexer. Other terminals are \code{'='}, \code{'\{'} and \code{'\}'}. The right-hand side of the rules are the code snippets that defines what Happy will generate when a rule is matched, where \code{\$n} means that the nth symbol of the BNF notated grammar, will be inserted. In the first rule this means that a \code{PBind} will be created with the \code{id} as the first argument and the \code{Expr} rules as the second.
+The \code{Bind} rule produces a node of type \code{Expr}. In the first choice we see the \code{id} terminal that is equivalent to the \code{Identifier} token from the lexer. Other terminals are \code{'='}, \code{'\{'} and \code{'\}'}. The right-hand side of the rules are the code snippets that defines what Happy will generate when a rule is matched, where \code{\$n} means that the $n$th symbol of the BNF notated grammar, will be inserted. In the first rule this means that a \code{PBind} will be created with the \code{id} as the first argument and the \code{Expr} rule as the second.
 
 Production rules can be recursively defined, so that an expression can contain the rule itself. Consider, for instance, the grammar for defining lists:
 
 \begin{lstlisting}
 Exprs :: { [Expr] }
-        : {- nothing -}    { [] }
-        | Expr             { [$1] }
-        | Expr ',' Exprs   { $1 : $3 }
+       : {- nothing -}    { [] }
+       | Expr             { [$1] }
+       | Expr ',' Exprs   { $1 : $3 }
 
-List   :: { Expr }
-        : '[' Exprs ']'           { PList $2 }
+List  :: { Expr }
+       : '[' Exprs ']'    { PList $2 }
 \end{lstlisting}
 
-The \code{Exprs} rule defines a comma-separated list of \code{Expr} rules. The \code{\{- nothing -\}} defined the empty match, equivalent to the $\epsilon$ common mathematical notation.
+The \code{Exprs} rule defines a comma-separated list of \code{Expr} rules. The \code{\{- nothing -\}} defined the empty match, equivalent to the common mathematical notation, $\epsilon$.
 
-The first rule in the grammar defines the entry point of the parser and thus the resulting type that the generated parser will produce. In the case of Kite, the entry rule is \code{Program} and produced the type \code{[Decl]}.
+The first rule in the grammar defines the entry point of the parser and thus the resulting type that the generated parser will produce. In the case of Kite, the entry rule is \code{Program} that produces the type \code{[Decl]}.
 
 \paragraph{Syntactic sugar}
-Some matches are first transformed into temporary syntactic sugaring structures, before being inserted into the parse tree. This is described further in section~\ref{sec:imp-sugar}.
+Some matches are first transformed into temporary syntactic sugar structures, before being inserted into the parse tree. This is described further in section~\ref{sec:imp-sugar}.
 
-Happy generates more than 2,000 lines of quite unreadable Haskell code, which is used in the compilation of the compiler. This is not useful for debugging, but fortunately Happy can produce an information file by setting the \code{--info} flag when run, which will generates a \code{.info}-file. This file contains very useful information about shift-reduce and reduce-reduce conflicts, which has been quite helpful throughout the development.
+Happy generates more than 2,000 lines of quite unreadable Haskell code, which is used in the compilation of the compiler. This is not useful for debugging, but fortunately Happy can produce an information file by setting the \code{--info} flag when run, which will generate a \code{.info}-file. This file contains very useful information about shift-reduce and reduce-reduce conflicts, which has been quite helpful throughout the development.
 
 \paragraph{Shift-reduce parsing}
-Happy generates a shift-reduce parser. This means that, when it reads a symbol, it can either reduce the symbol, thus ``ending'' a rule and producing a result, or it can shift the symbol and look for more symbols to match before reducing. This is the point of a Look-Ahead parser, since it can look at the next symbol to be consumed before deciding what to do. Happy generates LALR(1), which means that it looks 1 symbol ahead.
+Happy generates a shift-reduce parser. This means that, when it reads a symbol, it will either reduce the symbol, thus ``ending'' a rule and producing a result, or it can shift the symbol and look for more symbols to match before reducing. This is the point of a Look-Ahead parser, since it can look at the next symbol to be consumed before deciding what to do. Happy generates LALR(1), which means that it looks 1 symbol ahead.
 
 A common hurdle when implementing shift-reduce context-free grammars (and indeed parsers in general), is conflicts or ambiguities in the grammar. There are two types of conflict, namely \emph{shift/reduce} and \emph{reduce/reduce} conflicts. A reduce/reduce conflict occurs if there are two or more rules that apply to the same sequence of symbols~\cite[sec. 5.6]{bison13}.
 
@@ -134,32 +131,32 @@ Foo : 'a'
 Bar : 'a'
 \end{lstlisting}
 
-When seeing a \code{'a'} the parser cannot decide whether to reduce to \code{Foo} or \code{Bar}.
+When seeing an \code{'a'} the parser cannot decide whether to reduce to \code{Foo} or \code{Bar}.
 
-A shift-reduce conflict happens when the parser has the option to either reduce to a rule or shift the symbol and continue. This is much less critical because the obvious choice is always to shift. Consider the following example of $a$.
+A shift-reduce conflict happens when the parser has the option to either reduce a rule or shift the symbol and continue. This is much less critical because the desired choice is almost always to shift. Consider the following example of $a$.
 
 \begin{lstlisting}
 Foo : 'a' 'b'
 Bar : 'a'
 \end{lstlisting}
 
-Here the parser, when seeing an \code{'a'} as the current symbol and \code{'b'} as the look-ahead symbol, it can either reduce the \code{Bar} rule or shift the \code{'a'} and continue parsing the \code{'b'}.
+Here the parser, when seeing an \code{'a'} as the current symbol and \code{'b'} as the look-ahead symbol, can either reduce the \code{Bar} rule or shift the \code{'a'} and continue parsing the \code{'b'}.
 
 
 \subsection{Syntactic sugar}
 \label{sec:imp-sugar}
-Because of the simplistic nature of the Kite AST, it would be terse to write programs that directly translates to AST nodes. The \code{Desugar} module allows Kite programs to be written in a succinct manner and further enables a powerful feature known as \emph{list comprehensions}. It makes the language ``sweeter'' for human use; things can be expressed more clearly, more concisely, or in an alternative style that some may prefer~\cite{wiki-sugar14}. The process of converting sugared syntax to standard form is called \emph{desugaring} of code.
+Because of the simplistic nature of the Kite AST, it would be terse to write programs that directly translate to AST nodes. The \code{Desugar} module allows Kite programs to be written in a succinct manner and further enables a powerful feature known as \emph{list comprehension}. It makes the language ``sweeter'' for human use; things can be expressed more clearly, more concisely, or in an alternative style that some may prefer~\cite{wiki-sugar14}. The process of converting sugared syntax to standard form is called \emph{desugaring} of code.
 
 We have decided to integrate desugaring directly in the parser because this avoids the need for an intermediate AST representation to be desugared after parsing. The \code{Desugar} module defines functions to desugar specific cases of sugar, that are used in the Haskell code snippets. For instance in the rule for function application, \code{Apply}:
 
 \begin{lstlisting}
-Apply   :: { Expr }
-        : Expr '(' Exprs ')'    { mkCalls \$1 \$3 }
-        | Expr '`' Expr Expr    { PApply (PApply \$3 \$1) \$4 }
-        | ...
+Apply :: { Expr }
+      : Expr '(' Exprs ')'    { mkCalls $1 $3 }
+      | Expr '`' Expr Expr    { PApply (PApply $3 $1) $4 }
+      | ...
 \end{lstlisting}
 
-Here the function \code{mkCalls}, defined in the \code{Desugar} module, converts multiple arguments to a function, to a series of applications. Next we give a more detailed description of all the syntactic sugar supported in Kite. Most of the desugaring is straight forward and the details of their use is described in section~\ref{sec:kite-design-sugar}, but we will explain the most interesting parts next.
+Here the function \code{mkCalls}, defined in the \code{Desugar} module, converts multiple arguments to a function, to a series of applications. Most of the desugaring is straight forward and the details of their use is described in section~\ref{sec:kite-design-sugar}, but we will explain the most interesting parts.
 
 \paragraph{Strings}
 As the representation of strings outputted from the lexer is a Haskell \code{String} type (which is a type synonym for \code{[Char]}), we simply map the \code{PChar} constructor over each letter and construct a \code{PList} containing the resulting list. This way, a string ends with having the type \code{PList PChar} in the AST.
@@ -172,7 +169,7 @@ mkCalls f [] = PApply f PVoid
 mkCalls f (a:as) = foldl PApply (PApply f a) as
 \end{haskell}
 
-Where \code{(a:as)} is the destructured~\footnote{Destructuring means breaking up a data structure into its parts by using pattern matching. Kite features a simple implementation of this in it's \code{match} expressions} list of arguments, we reduce the list by folding with a \code{PApply} data constructor.
+Where \code{(a:as)} is the destructured list of arguments, we reduce the list by folding with a \code{PApply} data constructor.
 
 \paragraph{List comprehensions}
 As list comprehensions are composed of an output expression, draws and guards, the desugaring is implemented as follows (for an example of a list comprehension, and its desugared version, see section~\ref{sec:ex-listcomp}):
@@ -180,7 +177,7 @@ As list comprehensions are composed of an output expression, draws and guards, t
 \begin{enumerate}
 \item The identifiers from the draws are extracted as these will be used as arguments to the various functions.
 
-\item A \code{flatMap}~\footnote{\code{flatMap} takes as arguments a lambda-expression and a list, maps the function over the list, and \code{flatten}s the result} function is generated for each of the draws, taking the identifier of the current draw and the list-expression as defined on the right-hand side of the \code{<-} (e.g. \code{[1, 2, 3]} in \code{x <- [1, 2, 3]}) as arguments. The body of the lambda expression is either a nested \code{flatMap} or the final if-expression as generated from the guards:
+\item A \code{flatMap}\footnote{\code{flatMap} takes as arguments a lambda-expression and a list, maps the function over the list, and \code{flatten}s the result} function is generated for each of the draws, taking the identifier of the current draw and the list-expression as defined on the right-hand side of the \code{<-} (e.g. \code{[1, 2, 3]} in \code{x <- [1, 2, 3]}) as arguments. The body of the lambda expression is either a nested \code{flatMap} or the final if-expression as generated from the guards:
 
 \item The guards are inserted as individual functions which take all the extracted identifiers as arguments. These lambda-expressions are then conjoined in the condition of the \code{if}-expression.
 
@@ -189,10 +186,10 @@ As list comprehensions are composed of an output expression, draws and guards, t
 
 
 \subsection{Analyzer}
-After the front-end of the compiler is finished parsing the program, the analyzer will traverse the AST, gathering information and verifying its validity in various ways. Below we will describe the different types of analysis that our compiler implements.
+After the front-end of the compiler has finished parsing the program, the analyzer will traverse the AST, gathering information and verifying its validity in various ways. Below we will describe the different types of analysis that our compiler implements.
 
 \subsubsection{Type checking}
-Kite uses static type checking to verify that types align at compile-time. There are numerous techniques for validating that types align and the program will not crash due to type errors. If a language forces annotations of all identifers, such as function parameters and bound variables, it is almost trivial to verify if types align since all information needed is provided by the programmer and the compiler will only have to match annotated types with literal values. Languages like \code{ML} and \code{Haskell} does not require any types to be speficied by the programmer, but it will still be able to statically check that types match. It does this by \emph{inferring} types of expressions, that is, the type of an expression can be determined simply by examining it recursively. Consider the identity function 
+Kite uses static type checking to verify that types align at compile-time. There are numerous techniques for validating that types align and the program will not crash due to type errors. If a language forces annotations of all identifers, such as function parameters and bound variables, it is almost trivial to verify if types align since all information needed is provided by the programmer and the compiler will only have to match annotated types with literal values. Languages like \code{ML} and \code{Haskell} does not require any types to be speficied by the programmer, but it will still be able to statically check that types match. It does this by \emph{inferring} types of expressions, that is, the type of an expression can be determined simply by examining it recursively. Consider the identity function
 
 \begin{kite}
 id = |x| -> { x }
@@ -202,9 +199,9 @@ What is the type of \code{id}? We cannot assign any concrete types like \code{In
 
 This is fundamentally what \emph{type inference} does, though it becomes more difficult to grasp when formalised and performed on complex types. In the following we will explain how type checking works in Kite.
 
-First we present some notation. We will use greek letters to indicate type variables, and latin letters to indicate identifiers. We define $:$ to mean ``has type'', such that for the above example we would write $id: \alpha \to \alpha$. When deriving types for subexpression we use $\vdash$ to mean ``implies that''. For instance $x = 1 \vdash x : Int$ is read as ``given the expression $x = 1$ we can derive that $x$ has type $Int$''. The $\to$ defines domain and codomain of a function and is a right-associative operator. Recall that all functions in Kite (and in the following) take one single argument and returns one single value. For an implementation we use the $\mapsto$ operator, and to define a lambda we use $\lambda$. We use the shorthand notation for the list type, namely $[\alpha]$ meaning ``list of $\alpha$''. The pair type is notated $(\alpha, \beta)$ meaning a pair containing to values of type $\alpha$ and $\beta$.
+First we present some notation. We will use greek letters to indicate type variables, and latin letters to indicate identifiers. We define $:$ to mean ``has type'', such that for the above example we would write $id: \alpha \to \alpha$. When deriving types for subexpression we use $\vdash$ to mean ``implies that''. For instance $x = 1 \vdash x : Int$ is read as ``given the expression $x = 1$ we can derive that $x$ has type $Int$''. The $\to$ defines domain and codomain of a function and is a right-associative operator. Recall that all functions in Kite (and in the following) take one single argument and returns one single value. For an implementation we use the $\mapsto$ operator, and to define a lambda expression we use $\lambda$. We use the shorthand notation for the list type, namely $[\alpha]$ meaning ``list of $\alpha$''. The pair type is notated $(\alpha, \beta)$ meaning a pair containing to values of type $\alpha$ and $\beta$.
 
-We have implemented type inference with the Damas-Hindley-Milner algorithm. They presented an algorithm, named ``Algorithm W''\cite[sec. 6]{milner82} that, given an expression will infer the \emph{principal} of that expression. A principal type is the most general type of an expression. Consider again the \code{id} function; $id:Int \to Int$ is valid but is not as general as $id: \alpha \to \alpha$ because it will not allow application to e.g. \code{Bool} and \code{Char} values.
+We have implemented type inference with the Damas-Hindley-Milner algorithm. They presented an algorithm, named ``Algorithm W''\cite[sec. 6]{milner82} that, given an expression will infer the \emph{principal} of that expression. A principal type is the most general type possible of an expression. Consider again the \code{id} function; $id:Int \to Int$ is valid but is not as general as $id: \alpha \to \alpha$ because it will not allow application to e.g. \code{Bool} and \code{Char} values.
 
 To give a sense of what the algorithm will infer we present a few examples. Let the following be predefined
 \begin{align*}
@@ -223,13 +220,13 @@ The algorithm can now infer the types of the following expressions
 Using the last example above, the intuition behind the algorithm is as follows
 \begin{enumerate}
 \item $e = \fn{f, n}{\ldots} \vdash e: (\alpha \to \beta \to \gamma)$ \\
-  $e$ is being assigned a lambda expression with two parameters but we do not know anything about their types
+  $e$ is being assigned a lambda expression with two parameters but we do not know anything about their types, so we assign them unique type variables.
 \item $e = \fn{f, n}{f(\ldots)} \vdash f: \delta \to \gamma$ \\
   $f$ is being applied to a single (yet unknown) value, thus we can infer that it is a function
 \item $e = \fn{f, n}{f(add(n, 1))} \vdash n : Int$ \\
   We see that $f$ is applied to $add(n, 1)$ and since $1: Int$ and $add:\alpha \to \alpha \to a$ then $\alpha = Int$ and thus $n:Int$ (this is called type unification, explained below).
 \item $e = \fn{f, n}{f(add(n, 1))} \vdash e : (Int \to \gamma) \to Int \to \gamma$ \\
-  There are no more expressions to infer so we end up with the final, most general type for $e$
+  There are no more expressions to infer so we end up with the final, principal type for $e$
 \end{enumerate}
 
 \paragraph{Substitutions}
@@ -238,7 +235,7 @@ A \emph{substituion} is a set $\sigma$ of mappings from type variables to terms.
 Two substitutions $\sigma$ and $\sigma'$ can be composed to make a unified substitution $\sigma''$ such that $\forall x \in (\sigma \cup \sigma') | x \in \sigma''$, or in other words $\sigma'' = \sigma \cup \sigma'$
 
 \paragraph{Type unification}
-Given two type terms $t$ and $u$, the unification algorithm will either produce a substitution that \emph{unifies} the two types, i.e. some $\sigma$ such that $t\sigma = u$ or it will fail, indicating that no such substitution exists. If unification returns a substitution it will be the \emph{most general unifier} meaning the substitution that will provide the most general type when applied to a term.
+Given two type terms $t$ and $u$, the unification algorithm will either produce a substitution that \emph{unifies} the two types, i.e. some $\sigma$ such that $t\sigma = u$ or it will fail, indicating that no such substitution exists. If unification returns a substitution it will be the \emph{most general unifier} meaning the substitution that will provide the most general type when applied to the terms.
 
 In practice the unification algorithm recursively unifies composite types. The actual Haskell implementation is very close to the following:
 
@@ -249,7 +246,7 @@ unify(t, u) = \begin{cases}
   \{ u \mapsto t \}                       & \mbox{if } u \mbox{ is variable}                     \\
   unify(t', u')                           & \mbox{if } t = [t'] \mbox{ and } u = [u']            \\
   unify(ta, ua) \cup unify(tb, ub)        & \mbox{if } t = (ta, tb) \mbox{ and } u = (ua, ub)    \\
-  unify(tp, tr) \cup unify(up, ur)        & \mbox{if } t = tp \to tr \mbox{ and } u = up \to ur \\
+  unify(tp, up) \cup unify(tr, ur)        & \mbox{if } t = tp \to tr \mbox{ and } u = up \to ur \\
   \text{failure: types are not unifiable} & \mbox{otherwise}
 \end{cases}
 \end{align*}
@@ -270,18 +267,18 @@ unify(\alpha \to Int, Bool \to Char)          & = \text{failure}                
 \paragraph{Putting it together}
 We have now presented a type unification algorithm and defined substitutions. We still need a system that combines these concepts and brings us a complete type-checking system.
 
-The type-checking module \code{Kite.TypeCheck} implements an \code{infer} function that takes an expressions and either returns its principal type or throws an error. The \code{infer} function evaluates in the \code{TC} monad\footnote{Monads are a functional way of, among other things, simulating state and managing errors and side effecting computations while remaining pure. We will omit details about this concept in the report.} that provides an environment for persisting inferred types and keeping track of other stateful properties such as the number of type variables created.
+The type-checking module \code{Kite.TypeCheck} implements an \code{infer} function that takes an expression and either returns its principal type or throws an error. The \code{infer} function evaluates in the \code{TC} monad\footnote{Monads are a functional way of, among other things, simulating state and managing errors and side effecting computations while remaining pure. We will omit details about this concept in the report.} that provides an environment for persisting inferred types and keeping track of other stateful properties such as the number of type variables created.
 
-The type-checker is passed a list of top-level declarations and type annotations. It infers each declaration's type and validates whether it unifies with the annotated type if one has been provided. If it successfully finds a principle type it is saved in the top of the \emph{symbol stack}. The symbol stack is a stack of maps that provide mappings from identifiers to types. When inferring the type of a lambda expression, a new \emph{stack frame} is pushed to the stack, thus beginning a new lexical scope. When all expressions in the lambda have been processed the frame is popped from the stack, thus leaving the scope as it was.
+The type-checker is passed a list of top-level declarations and type annotations. It infers each declaration's type and validates whether it unifies with the annotated type, if one has been provided. If it successfully finds a principle type it is saved in the top of the \emph{symbol stack}. The symbol stack is a stack of maps that provide mappings from identifiers to types. When inferring the type of a lambda expression, a new \emph{stack frame} is pushed to the stack, thus beginning a new lexical scope. When all expressions in the lambda block have been processed the frame is popped from the stack, thus leaving the scope as it was.
 
-Each time a new identifier is introduced the algorithm generates a \emph{fresh} type variable for it, meaning a type variable with an identifier that has not been used before. It does this by continuously keeping track of of how many type variables have been introduces and postfixing the identifier with this value.
+Each time a new identifier is introduced the algorithm generates a \emph{fresh} type variable for it, meaning a type variable with an identifier that has not been used before. It does this by continuously keeping track of how many type variables have been introduces and postfixing the identifier with this value.
 
 \code{infer} recursively traverses the AST node for which it is inferring a type while passing around a map of inferred locally scoped type variables. There is a case for each type of AST node, but we will not cover each of them in-depth, but explain the case for \code{Apply}.
 \begin{figure}
 \begin{lstlisting}[mathescape=true]
 infer env (Apply expr arg) = do
-  $\sigma_{arg}$, $\tau_{arg}$ = infer env arg
   $\sigma_{fn}$, $\tau_{fn}$ = infer env expr
+  $\sigma_{arg}$, $\tau_{arg}$ = infer env arg
 
   $\tau_{fresh}$ = freshTypeVar()
 
@@ -293,9 +290,9 @@ infer env (Apply expr arg) = do
 \label{fig:infer-apply}
 \end{figure}
 
-Figure \ref{fig:infer-apply} shows how the algorithm first infers the type of the function to be applied (line 2) and the argument it will be applied to (line 3). It then generates a fresh type variable (line 5), and unifies the inferred type of the function with a newly constructed lambda expression that has the fresh type as return type (line 7). Unless the recursive calls to \code{infer} or unification fails it returns (line 9) the composed substitutions and the type of the lambda which is an instance of the substitutions from the unification.
+Figure \ref{fig:infer-apply} shows how the algorithm first infers the type of the function to be applied (line 2) and the argument it will be applied to (line 3). It then generates a fresh type variable (line 5), and unifies the inferred type of the function with a newly constructed lambda expression that has the fresh type as return type (line 7). Unless the recursive calls to \code{infer} or unification fails, it returns (line 9) the composed substitutions and the type of the lambda which is an instance of the substitutions from the unification.
 
-This is fundamentally how the type-checker works, but there are a few noteworthy things to add. When we are retrieving a previously inferred type of a lambda expression we will \emph{freshen} its type, meaning that we replace all type variables in its type with fresh ones. If we do not do this, two applications of the same function can result in the same type variable being inferred thus restricting the two inferred types to being the same type.
+This is fundamentally how the type-checker works, but there are a few noteworthy things to add. When we are retrieving a previously inferred type of a lambda expression we will \emph{freshen} its type, meaning that we replace all type variables in its type with fresh ones. If we omit this, two applications of the same function can result in the same type variable being inferred thus restricting the two inferred types to being the same type.
 
 Finally we use implicit recursive definitions when binding an identifier to a lambda expressions. This allows recursively defined functions but prevents bindings like \code{foo = 1 + foo}.
 
@@ -306,18 +303,18 @@ Subtyping is not possible (or difficult at the least), due to the fact that the 
 
 \subsection{Optimizer}
 \label{sec:impl-optimizer}
-The Kite-compiler's optimizer is currently only a simple dead-code elimination algorithm. The algorithm is given a starting declaration (usually the \code{main} declaration) and recursively traverses the AST, beginning with the expressions defined in the starting node. When an identifier node is detected (except in a bind node) it's name is saved and the recursion continues. The part of the AST which has been traversed, is the derivation tree that will be executed when running the program, thus containing all referenced identifiers. The full list of declarations is now filtered by only persisting the ones that were detected during traversal, since we can be certain that they will never be referenced.
+The optimizer of the Kite compiler is currently only a simple dead-code elimination algorithm. The algorithm is given a starting declaration (usually the \code{main} declaration) and recursively traverses the AST, beginning with the expressions defined in the starting node. When an identifier node is detected (except in a bind node) its name is saved and the recursion continues. The part of the AST which has been traversed, is the derivation tree that will be executed when running the program, thus containing all referenced identifiers. The full list of declarations is now filtered by only persisting the ones that were detected during traversal, since we can be certain that they are the only ones that can ever be referenced.
 
-In its current state, the algorithm only eliminates unused top-level declarations, thus leaving unused locally scoped variables in the code. The algorithm can however be extended to eliminate local variables by transforming the AST during traversal. With a stack of used identifiers, we could, when entering a new local scope (a lambda or match case), push a new frame to the stack, add accessed variables found in the current scope, and when leaving the scope, filter out the variables that were not accessed.
+In its current state, the algorithm only eliminates unused top-level declarations, thus leaving unused locally scoped variables in the code. The algorithm can however be extended to eliminate local variables by transforming the AST during traversal. With a stack of used identifiers, we could, when entering a new local scope (a lambda or match case), push a new frame to the stack, add accessed variables found in the current scope, and when leaving the scope, filter out the variables that were not referenced.
 
 \subsubsection{Target specific optimization}
-Optimizations can be done either on the intermediate AST as above or after and during emitted target code. Kite does some simple optimizations for the JavaScript target by expanding calls to common binary arithmetic operations (such as \code{+} and \code{*}). Consider the expression \code{a = 1 + 1}. Without optimizatio the emitted code looks like \code{var a = KT\_PLUS(1)(1)} which  requires two function calls to be evaluated. The optimized version is simply \code{var a = 1 + 1}.
+Optimizations can be done either on the intermediate AST as above, or while emitting target code. Kite does some simple optimizations for the JavaScript target by expanding calls to common binary arithmetic operations (such as \code{+} and \code{*}). Consider the expression \code{a = 1 + 1}. Without optimization the emitted code looks like \code{var a = KT\_PLUS(1)(1)} which  requires two function calls to be evaluated. The optimized version is simply \code{var a = 1 + 1}.
 
-In cases such as the above we could in fact optimize further by directly  calculating the resulting value as it's a constant expression.
+In cases such as the above, we could in fact optimize further by directly calculating the resulting value as it's a constant expression.
 
 
-\subsection{Code generation}
-The implementation of code generation (codegen) focuses on the programming language, JavaScript (JS), as the initial aim of LLVM code generation was not met. More on this will be discussed in~\nameref{sec:discussion}.
+\subsection{Code generation} TODO: review
+The implementation of code generation focuses on the programming language, JavaScript (JS), as the initial aim of LLVM code generation was not met. This will be discussed more thoroughly in section~\ref{sec:discussion}.
 
 The code generation module will run recursively through the AST and emit JS code for each AST node.
 
@@ -325,35 +322,34 @@ Next, we will look at some examples of emitted code from a given AST node.
 
 The \code{PLambda} node, which is a function declaration, will be emitted to the following JS:
 \begin{haskell}
-  emit (PLambda param body) = printf "(function(%s) {%s})" param (emit body)
+emit (PLambda param body) = printf "(function(%s) {%s})" param (emit body)
 \end{haskell}
 
 Where the emitter takes a \code{PLambda} node with given parameters and body. The codegen module will then emit a JS function with the given parameters and go through the body.
 
 The \code{PBlock} node, which is usually the body of a \code{PLambda}, is emitted as follows:
 \begin{haskell}
-  emit (PBlock exprs) =
-  emitAll ";" exprs
+emit (PBlock exprs) = emitAll ";" exprs
 \end{haskell}
 
 The \code{PBlock} takes a list of expressions, and emits the expressions with a \code{;} separating them.
 
 The \code{PBind} node, which binds an ID to a given expression, is emitted as follows:
 \begin{haskell}
-  emit (PBind ide expr) =
+emit (PBind ide expr) =
   printf "var %s = %s; %s" (safeId ide) (emit expr) (safeId ide)
 \end{haskell}
 Where an ID is set as a JS variable \code{var} and assigned to an expression.
 
 The JS codegen module will also embed \code{kt\_runtime.js} (see \ref{kt-runtime}), which is Kite's JS runtime environment. The runtime includes various JS functions, which can be used directly in Kite. As an example, basic I/O is included in \code{kt\_runtime.js}. This includes print and command-line arguments:
 \begin{lstlisting}[language=Javascript]
-  var print = function (str) {
-     console.log(_print(str));
- };
+var print = function (str) {
+  console.log(_print(str));
+};
 
-  var KT_arguments = function (none) {
-    return process.argv;
-  };
+var KT_arguments = function () {
+ return process.argv;
+};
 \end{lstlisting}
 
 JS emitted from Kite-code will allow for function calls to \code{kt\_runtime.js}.

@@ -6,25 +6,25 @@
 \subsection{Known limitations}
 
 \subsubsection{Code generation}
-We have implemented JavaScript as the single target for code generation, because our initial aim for using LLVM proved more difficult and time consuming than expected. We decided to focus more on language design and usability than lower-level optimization. We did however do considerable research into code generation using LLVM. Next we will present some potential solutions to the problems we faced with LLVM.
+We have implemented JavaScript as the single target for code generation, because our initial aim for using LLVM proved more difficult and time consuming than expected. We decided to focus more on language design and usability than lower-level optimization. We did, however, do considerable research into code generation using LLVM. Next we will present some potential solutions to the problems we faced with LLVM.
 
-It's important to distinguish between the LLVM language and the LLVM framework. The framework's purpose is to ease generation of the language, and to implement many optimizations to generated LLVM code. In the following we will mainly be discussing the LLVM language.
+It is important to distinguish between the LLVM language (IR) and the LLVM framework. The framework's purpose is to ease generation of the language, and to implement many optimizations to generated LLVM code. In the following we will mainly be discussing the LLVM language.
 
 \paragraph{Polymorphism}
-Since LLVM is a statically and strongly typed language it is strictly required to specify types for all values\footnote{There are exceptions to this, for instance using the \code{VariantValue} and \code{VariantMatcher} and their related classes, but we will not cover this.}. This would require us to annotate the AST with inferred types so we can emit correctly typed LLVM code. This introduces an interesting problem because of the nature of polymorphic types. Consider for instance the following Kite code
+Since LLVM IR is a statically and strongly typed language it is strictly required to specify types for all values\footnote{There are exceptions to this, for instance using the \code{VariantValue} and \code{VariantMatcher} and their related classes, but we will not cover this.}. This would require us to annotate the AST with inferred types so we can emit correctly typed LLVM code. This introduces an interesting problem because of the nature of polymorphic types. Consider, for instance, the following Kite code
 
 \begin{kite}
 id :: a -> a
 id = |x| -> { x }
 
 print (id (42))
-print (id (``Hello''))
+print (id ("Hello"))
 \end{kite}
 
 \code{id} has type \code{a -> a} and is applied to both an \code{Int} value \emph{and} a \code{[Char]} value. We cannot emit a single definition of the function because we need to account for both applied types. One solution would be to extract all applications of the function and generate one for each of the types used.
 
 \paragraph{Partial application}
-Another problem with LLVM code generation has to do with curried functions and partial application. LLVM does not support partial application natively out-of-the-box. It wouldn't make a lot of sense for it to do so given its lower-level nature. We had some thoughts about this and came up with a solution in which arguments are saved in an LLVM \code{Vector} type and when the maximum number of arguments have been supplied it will call the final function. It is very verbose and is not optimized, but could still be used as inspiration for further development. The code is presented in figure \ref{fig:llvm-partial}. Briefly explained the code defines an \code{add} function that is split into two (would be done by the compiler). It then applies the function to the value \code{35}, saves a pointer to the resulting function and applies it to a value of \code{30}.
+Another problem with LLVM code generation has to do with curried functions and partial application. LLVM does not support partial application natively out-of-the-box. It wouldn't make a lot of sense for it to do so given its lower-level nature. We had some thoughts about this and came up with a solution in which arguments are saved in an LLVM \code{Vector} type and when the maximum number of arguments have been supplied it will call the final function. It is very verbose and is not optimized, but could still be used as inspiration for further development. The code is presented in figure~\ref{fig:llvm-partial}. Briefly explained, the code defines an \code{add} function that is split into two (would be done by the compiler). It then applies the function to the value \code{35}, saves a pointer to the resulting function and applies it to a value of \code{30}.
 
 \begin{figure}[p]
 \begin{lstlisting}[language=llvm]
@@ -86,12 +86,13 @@ ADTs can also take type parameters, which is used in the fundamental \code{List}
 \begin{haskell}
 data List a = Nil | Cons a (List a)
 \end{haskell}
+TODO: cons example
 
 This defines \code{List} as either \code{Nil} (commonly known as the empty list) or a \code{Cons} of an element of type \code{a} and another \code{List} also of type \code{a}. This definition of the list type is a great example of the power of ADTs. \code{Cons} can be thought of as prepending an element to another list.
 
-Because Kite has no notion of ADTs and lists are implemented as arrays of values like other imperative language, pattern matching is difficult because we cannot destruct a list to its elements in a tree structure. With ADTs it is simpler because data structures are inherently trees and can be traversed to match a pattern to an expression and provide bindings from the pattern variables corresponding to the matched expression.
+Because Kite has no notion of ADTs and lists are implemented as arrays of values like imperative languages, pattern matching is difficult because we cannot destruct a list to its elements in a tree structure. With ADTs it is simpler because data structures are inherently trees and can be traversed to match a pattern to an expression and provide bindings from the pattern variables corresponding to the matched expression.
 
-A pattern is a tree with variable names as leaves. The non-variable parts of the pattern must agree with the expression tree in terms of the labelling of nodes, the number of children and the ordering of the subtrees\cite[p. 514]{wilhelm95} for a match to be successful. This can be visualized as in figure~\ref{fig:pattern-match}.
+A pattern is a tree with variable names or literals as leaves. The non-variable parts of the pattern must agree with the expression tree in terms of the labeling of nodes, the number of children and the ordering of the subtrees\cite[p. 514]{wilhelm95} for a match to be successful. This can be visualized as in figure~\ref{fig:pattern-match}.
 
 \begin{figure}[H]
   \centering
@@ -156,23 +157,23 @@ It can be seen how the variables in the pattern are bound to the corresponding n
 \subsubsection{Order of execution}
 During type-checking and code generation we traverse the AST in the same order as it is defined in the source files. This is not the optimal way of emitting and analyzing code because declarations and bound identifiers cannot be accessed before the are declared. There are no limitations in terms of what can be expressed, but programs can be syntactically more readable and easier to code if the order of declaration is irrelevant.
 
-For instance when type-checking, instead of starting with the first declaration and analyzing them in order we could start in the entry block (typically the \code{main} function) and look up declarations as needed. If they have already been inferred we would use that type, and if not we would infer its type and save it in the symbol table exactly as done currently, thus making consequent lookups successful. If we cannot look the symbol up or find a declarations with the same, we have a reference error (as we do now if the lookup fails).
+For instance when type-checking, instead of starting with the first declaration and analyzing them in order we could start in the entry block (typically the \code{main} function) and look up declarations as needed. If they have already been inferred we would use that type, and if not we would infer its type and save it in the symbol table exactly as done currently, thus making consequent lookups successful. If we cannot look up the symbol or find a declaration with the same name, we have a reference error (as we do know if the lookup fails).
 
 Note however that there is a substantial difference between top-level declarations and expressions in lambda blocks in this matter. Because the order of locally scoped bindings \emph{does} matter since they are essentially \code{let~\ldots~in} expressions, we cannot disregard their order, at the least it would make some code very unreadable.
 
 \subsubsection{Sharing properties}
-We cannot reasonably support subtyping, and it is arguably not a desirable feature, but we could provide other mechanism for defining shared properties of types. One such mechanism is the concept of \emph{type classes}, which is a way to define a class of functions which a type can implement, thus becoming an instance of that type class. Types can then use the type class to \emph{constrain} a type it requires. Type classes are similar to the interfaces of object-oriented languages. A major benefit in the case of Kite would be a \code{Number} type class that declares arithmetic operations, which would be used in cases where a function is indifferent as to whether a number is a \code{Float} or and \code{Int}.
+We cannot reasonably support subtyping, and it is arguably not a desirable feature, but we could provide other mechanism for defining shared properties of types. One such mechanism is the concept of \emph{type classes}, which is a way to define a class of functions which a type can implement, thus becoming an instance of that type class. Types can then use the type class to \emph{constrain} a type it requires. Type classes are similar to the interfaces of object-oriented languages. A major benefit in the case of Kite would be a \code{Number} type class that declares arithmetic operations, which would be used in cases where a function is indifferent as to whether a number is a \code{Float} or an \code{Int}.
 
 \subsection{Further development}
 
 \subsubsection{I/O}
-Currently Kite's only way of getting user input into a program is by passing an argument when run, and the only way to communicate back to the user is by printing to the shell. For actual use Kite would need the possibility to read and write files and read peripheral device input during run-time.
+Currently Kite's only way of getting user input into a program is by passing an argument when run, and the only way to communicate back to the user is by printing to the shell. For actual use Kite would need the possibility to read and write files and read peripheral devices' input during run-time.
 
 \subsubsection{Optimizations}
 \label{sec:disc-optimization}
 
 \paragraph{Tail call}
-As seen in our first benchmark \ref{sec:math-benchmark}, Kite is scaling badly with the function \code{map}, as the call stack grows linearly with the length of the lists. \code{map} uses a tail-recursive call, which allows for tail call elimination: As the application of the argument-function\footnote{By `argument-function' we refer to the function given as an argument to \code{map} along with a list} to each of the elements of the list is independent from the others, it is not strictly necessary to add a new stack frame to the call stack.
+As seen in our first benchmark~\ref{sec:math-benchmark}, Kite is scaling badly with the function \code{map}, as the call stack grows linearly with the length of the lists. \code{map} could be implemented tail-recursively, which allows for tail call elimination: As the application of the argument-function\footnote{By `argument-function' we refer to the function given as an argument to \code{map} along with a list} to each of the elements of the list is independent from the others, it is not strictly necessary to add a new stack frame to the call stack.
 
 \paragraph{Uncurrying of functions}
 Despite currying is a very powerful concept, it is not very efficient when emitted. It creates more function calls than strictly necessary. A potential optimization could be to uncurry functions which are called, but never partially applied. This eliminates some unnecessary function calls, as functions in JavaScript takes multiple parameters. This will also hold for other target output languages where functions take multiple parameters, such as LLVM.
