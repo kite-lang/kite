@@ -3,7 +3,7 @@
 %%% TeX-master: "../report"
 %%% End:
 
-We have successfully implemented a working compiler for a language that we have named Kite. Through this process we have gained considerable knowledge of modern compiler infrastructure and have had to overcome the difficulties that come with such a project.
+We have successfully implemented a working compiler for a language that we have named Kite. Through this process we have gained considerable knowledge of modern compiler infrastructure and have had to overcome the difficulties that arises with such a project.
 
 Our work was initially focused on deciding what semantic features and capabilities we wanted our language to support. We decided on a statically and strongly typed language in the functional paradigm with a relatively comprehensive standard library.
 
@@ -11,10 +11,10 @@ We then came up with a rough draft of what the syntax would look like. With the 
 
 Parser and lexer generators proved an immense help when building the front end of the compiler, and we discovered algorithms such as Hindley-Milner type inference that enabled us to implement an effective analyzer.
 
-During development it became clear that other components were needed to arrive at a reasonable final product. One such component was a desugaring module that permitted us to define a flexible syntax while keeping the internal structures simple to work with.
+During development it became clear that other components were needed in order to arrive at a reasonable final product. One such component was a desugaring module that permitted us to define a flexible syntax while keeping the internal structures simple to work with.
 
-Initially we had aimed at using LLVM as our code generation back end, but this proved a more complex task than expected. Instead we settled on using JavaScript as our target language, which worked out the way we imagined.
+Initially, we aimed at using LLVM as the target for our code generation back end, but this proved a more complex task than expected. Instead we settled on using JavaScript as our target language, which worked out the way we imagined.
 
-By implementing the compiler in the Haskell language we have achieved a solid understanding of functional programming principles and have learned what makes them powerful, and why they will arguably play an immense role in the future of programming.
+By implementing the compiler in the Haskell language, we have achieved a solid understanding of functional programming principles and have learned what makes them powerful, and why they will arguably play an immense role in the future of programming.
 
 As for the future of Kite, it still lacks some fundamental features before we would consider it a practical language. We do however find it to be a useful and fun language with enough capabilities to regard is as a real programming language.
