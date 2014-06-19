@@ -1,4 +1,4 @@
-kite examples/kunit/Runner.kite | node
+kite tests/kunit/Runner.kite && ./main
 --- Foundation ---
 Testing: Functional
   OK    id should return the identity value for simple structures
@@ -7,6 +7,7 @@ Testing: Functional
   OK    (.) should compose functions
   OK    (.) should compose multiple functions
   OK    flip should flip function parameters
+  OK    function should return expression
 Testing: Boolean
   OK    not should invert boolean values
   OK    (&&) should conjoin booleans
@@ -71,5 +72,5 @@ Testing: Numeric
 Testing: Misc
   OK    until should apply a function to itself until a condition is met
   OK    while should apply a function to itself while a condition is met
- 
-63 of 63 tests passed
+
+64 of 64 tests passed
