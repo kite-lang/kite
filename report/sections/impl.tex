@@ -313,35 +313,51 @@ Optimizations can be done either on the intermediate AST as above, or while emit
 In cases such as the above, we could in fact optimize further by directly calculating the resulting value as it's a constant expression.
 
 
-\subsection{Code generation} TODO: review
-The implementation of code generation focuses on the programming language, JavaScript (JS), as the initial aim of LLVM code generation was not met. This will be discussed more thoroughly in section~\ref{sec:discussion}.
+\subsection{Code generation}
+The implementation of code generation focuses on the target language JavaScript, as the initial aim of LLVM was not met. This will be discussed more thoroughly in section~\ref{sec:discussion}.
 
-The code generation module will run recursively through the AST and emit JS code for each AST node.
+The code generation module will run recursively through the AST and emit JavaScript code for each node. This is done with the \code{emit} function, which has the type signature of \code{Expr -> Source}.
 
-Next, we will look at some examples of emitted code from a given AST node.
+Lets look at some examples of different types of expressions.
 
-The \code{PLambda} node, which is a function declaration, will be emitted to the following JS:
+Given a \code{PLambda} node, which is a function declaration, there will be generated a corresponding function decleration in JavaScript.
+
 \begin{haskell}
 emit (PLambda param body) = printf "(function(%s) {%s})" param (emit body)
 \end{haskell}
 
-Where the emitter takes a \code{PLambda} node with given parameters and body. The codegen module will then emit a JS function with the given parameters and go through the body.
+Where the emitter takes a \code{PLambda} node with its given parameters and body. There will therefore be emitted a JavaScript function with the given parameters and body, where the body, of type \code{PBlock}, recursively emitted. The \code{PBlock} node, which is usually the body of a \code{PLambda}, is emitted as follows:
 
-The \code{PBlock} node, which is usually the body of a \code{PLambda}, is emitted as follows:
 \begin{haskell}
 emit (PBlock exprs) = emitAll ";" exprs
 \end{haskell}
 
-The \code{PBlock} takes a list of expressions, and emits the expressions with a \code{;} separating them.
+The \code{PBlock} is a list of expressions, which is emitted recursively separated with semi-colons (\code{;}).
 
-The \code{PBind} node, which binds an ID to a given expression, is emitted as follows:
+The \code{PBind} node, which binds an identifier to a given expression, is emitted as follows:
 \begin{haskell}
 emit (PBind ide expr) =
   printf "var %s = %s; %s" (safeId ide) (emit expr) (safeId ide)
 \end{haskell}
-Where an ID is set as a JS variable \code{var} and assigned to an expression.
+Here, the identifier is declared as JavaScript variable with the keyword \code{var} and assigned to an expression.
 
-The JS codegen module will also embed \code{kt\_runtime.js} (see \ref{kt-runtime}), which is Kite's JS runtime environment. The runtime includes various JS functions, which can be used directly in Kite. As an example, basic I/O is included in \code{kt\_runtime.js}. This includes print and command-line arguments:
+If we, for instance, have the following (very dumb) function:
+\begin{kite}
+isPrime = |n| -> {
+  primes = [2, 3, 5, 7]
+  n `elem primes
+}
+\end{kite}
+
+The code generator will emit the following, where \code{elem} (from Foundation) is partially applied:
+\begin{lstlisting}[language=Javascript]
+var isPrime = (function(n) {
+  var primes = [2,3,5,7];
+  return elem(n)(primes)
+})
+\end{lstlisting}
+
+The code generator will always embed \code{kt\_runtime.js} (see~\ref{kt-runtime}), which is Kite's JavaScript runtime environment. The runtime includes various native JavaScript functions, which can be used in Kite source code. As an example, basic I/O is included in \code{kt\_runtime.js}. This includes \code{print} and access to command-line arguments:
 \begin{lstlisting}[language=Javascript]
 var print = function (str) {
   console.log(_print(str));
@@ -351,5 +367,3 @@ var KT_arguments = function () {
  return process.argv;
 };
 \end{lstlisting}
-
-JS emitted from Kite-code will allow for function calls to \code{kt\_runtime.js}.
