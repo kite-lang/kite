@@ -1,4 +1,5 @@
-# The Kite Programming Language
+The Kite Programming Language
+=============================
 
 [![Build Status](https://travis-ci.org/altschuler/kite.png?branch=master)](https://travis-ci.org/altschuler/kite)
 
@@ -8,34 +9,43 @@
 
 Kite is language with a strong emphasis on functional development. It is statically and strongly typed.
 
-Wanna know more about the design and other features? See the [wiki](https://github.com/altschuler/kite/wiki)!
+Wanna know more about the design and other features? See the [wiki](https://github.com/altschuler/kite/wiki).
 
 ## Installation
- * Get the source.
+ * Get the source:
 
-        # git clone https://github.com/altschuler/kite.git
+        $ git clone https://github.com/altschuler/kite.git
 
- * Make sure you have `cabal` installed, and then install dependencies.
+ * Make sure you have `cabal` installed, and then install dependencies:
 
-        # cabal install
+        $ cabal install
 
- * Build files with `make`. This will put an executable in `~/.cabal/bin`, which will work for your user, given that you have the directory in your `PATH`.
+ * Build with `make`. This will generate an executable in `dist/build/kite/`.
 
-        # make
+        $ make
+
+ * To install an executable in `~/.cabal/bin`, which will be accessible for your local user:
+
+        $ cabal install
+
+   Make sure that you have the `~/.cabal/bin` directory in your `PATH`.
 
  * Optionally, install globally by putting an executable in `/usr/local/bin` (requires root privileges).
 
-        $ make install
+        # make install
 
 ## Examples
-For a quick example, try running one of the test files by emitting `JavaScript` and piping it to `Node.js`:
+For a quick example, try running one of the examples in `example/`.
 
-    # kite -j examples/Test.kite | node
+    $ kite examples/Test.kite
 
-Read more about the syntax in the [wiki](https://github.com/altschuler/kite/wiki/Syntax) and see example files under the directory [examples](https://github.com/altschuler/kite/tree/master/examples).
+The compiler only targets JavaScript, as of now, so make sure you have [`node`](https://github.com/joyent/node) installed.
 
-## Known issues
- * The type checker is a little buggy. See [issue](https://github.com/altschuler/kite/issues/18).
+The name of the output file defaults to `main`, which executes with `node`.
+
+    $ ./make
+
+Read more about the syntax in the [wiki](https://github.com/altschuler/kite/wiki/Syntax) or look at some of the [examples](https://github.com/altschuler/kite/tree/master/examples).
 
 ## Contribution
 Feel free to submit a pull request or issue! We are open to ideas and all kinds of feedback.
