@@ -49,7 +49,9 @@ Basic arithmetic operators:
 \label{tbl:kite-design-arith-op}
 \end{table}
 
-Basic boolean operators:
+\clearpage
+
+An example of two basic boolean operators:
 \begin{kite}
 1 < 2  ----> True
 1 == 2 ----> False
@@ -160,6 +162,7 @@ The type-checker will validate that an annotated type is at least as general as 
 
 Types can be grouped to denote a higher-order function, for instance the type of map \code{(a -> b) -> [a] -> [b]} means that \code{map} accepts a \emph{function} as its first parameter, a list as its second and it produces a list.
 
+\clearpage
 
 \subsubsection{Syntactic sugar}
 \label{sec:kite-design-sugar}
@@ -301,7 +304,7 @@ The \textbf{if-expression} is not to be confused with an if-statement, as our im
 if booleanExpr then consequenceExpr else alternativeExpr
 \end{kite}
 
-A more advanced form of conditional is \textbf{pattern matching}. It works by matching an expression to a list of cases, which can be either a normal expression or it can be a destructuring\footnote{Destructuring means breaking up a data structure into its parts by using pattern matching. Kite features a simple implementation of this in its \code{match} expressions} of a list or a pair.
+A more advanced form of conditional is \textbf{pattern matching}. It works by matching an expression to a list of cases, which can be either a normal expression or it can be a destruction\footnote{Destructuring means breaking up a data structure into its parts by using pattern matching. Kite features a simple implementation of this in its \code{match} expressions} of a list or a pair.
 
 Below we show the matching of \code{n} on 0, which is an expression, and \code{otherwise}, which is written \code{"\_"}:
 
@@ -325,6 +328,8 @@ reverse = |xs| -> {
   }
 }
 \end{kite}
+
+\newpage
 
 The final case is matching on pairs. The example below shows the implementation of \code{fst} (first) in Foundation (\ref{foundation}):
 \begin{kite}

@@ -349,6 +349,8 @@ isPrime = |n| -> {
 }
 \end{kite}
 
+\newpage
+
 The code generator will emit the following, where \code{elem} (from Foundation) is first partially applied to \code{n}, which then returns a function that is instantly applied to \code{primes}:
 \begin{lstlisting}[language=Javascript]
 var isPrime = (function(n) {
