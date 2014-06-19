@@ -28,11 +28,13 @@ import Kite.Codegen
 import Kite.Optimizer
 import qualified Kite.CodegenJS as GenJS
 
+-- aliases
 lex        = alexScanTokens
 parse      = kiteparser
 analyze    = typeCheck
 foundation = $(embedFile "lib/Foundation.kite")
 
+-- | Handle for compiler given KiteOpts
 runKite KiteOpts {..} = do
   p <- if eval then preprocess input else preprocessFile input
   let p' = if noFoundation

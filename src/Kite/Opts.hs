@@ -10,6 +10,7 @@ _NAME    = "kite"
 _VERSION = "0.5.0"
 _ABOUT   = "Kite compiler"
 
+-- | KiteOpts type construtor
 data KiteOpts = KiteOpts {
   input :: String,
   eval :: Bool,
@@ -23,8 +24,9 @@ data KiteOpts = KiteOpts {
   noOpti :: Bool,
   output :: String,
   noTypeCheck :: Bool
-  } deriving (Show, Data, Typeable)
+} deriving (Show, Data, Typeable)
 
+-- | Declare kite's opts with name, type and help text
 kiteOpts :: KiteOpts
 kiteOpts = KiteOpts {
   input        = "" &= typ "file" &= args,
@@ -45,6 +47,7 @@ kiteOpts = KiteOpts {
   &= helpArg [explicit, name "help", name "h"]
   &= program _NAME
 
+-- | Returns parsed KiteOpts, with help if no args was given
 getOpts :: IO KiteOpts
 getOpts = do
   args <- getArgs
