@@ -318,7 +318,7 @@ The implementation of code generation focuses on the target language JavaScript,
 
 The code generation module will run recursively through the AST and emit JavaScript code for each node. This is done with the \code{emit} function, which has the type signature of \code{Expr -> Source}.
 
-Lets look at some examples of different types of expressions.
+In the following we will look at some examples of different types of expressions:
 
 Given a \code{PLambda} node, which is a function declaration, there will be generated a corresponding function decleration in JavaScript.
 
@@ -326,22 +326,22 @@ Given a \code{PLambda} node, which is a function declaration, there will be gene
 emit (PLambda param body) = printf "(function(%s) {%s})" param (emit body)
 \end{haskell}
 
-Where the emitter takes a \code{PLambda} node with its given parameters and body. There will therefore be emitted a JavaScript function with the given parameters and body, where the body, of type \code{PBlock}, recursively emitted. The \code{PBlock} node, which is usually the body of a \code{PLambda}, is emitted as follows:
+Where the emitter takes a \code{PLambda} node with its given parameters and body. There will therefore be emitted a JavaScript function with the given parameters and body, where the body, of type \code{PBlock}, is recursively emitted. The \code{PBlock} node, which is usually the body of a \code{PLambda}, is emitted as follows:
 
 \begin{haskell}
 emit (PBlock exprs) = emitAll ";" exprs
 \end{haskell}
 
-The \code{PBlock} is a list of expressions, which is emitted recursively separated with semi-colons (\code{;}).
+The \code{PBlock} is a list of expressions, which is emitted recursively and is separated by semi-colons (\code{;}).
 
 The \code{PBind} node, which binds an identifier to a given expression, is emitted as follows:
 \begin{haskell}
 emit (PBind ide expr) =
-  printf "var %s = %s; %s" (safeId ide) (emit expr) (safeId ide)
+  printf "var %s = %s;" (safeId ide) (emit expr)
 \end{haskell}
-Here, the identifier is declared as JavaScript variable with the keyword \code{var} and assigned to an expression.
+Here the identifier is declared as a JavaScript variable with the keyword \code{var} and it has the expression assigned to it.
 
-If we, for instance, have the following (very dumb) function:
+If we, for instance, have the following (quite inaccurate) function:
 \begin{kite}
 isPrime = |n| -> {
   primes = [2, 3, 5, 7]
@@ -349,7 +349,7 @@ isPrime = |n| -> {
 }
 \end{kite}
 
-The code generator will emit the following, where \code{elem} (from Foundation) is partially applied:
+The code generator will emit the following, where \code{elem} (from Foundation) is first partially applied to \code{n}, which then returns a function that is instantly applied to \code{primes}:
 \begin{lstlisting}[language=Javascript]
 var isPrime = (function(n) {
   var primes = [2,3,5,7];
