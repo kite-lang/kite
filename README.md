@@ -4,7 +4,7 @@ The Kite Programming Language
 [![Build Status](https://travis-ci.org/altschuler/kite.png?branch=master)](https://travis-ci.org/altschuler/kite)
 
 <p align="center">
-  <img width="100" src="https://rawgit.com/altschuler/kite/master/logo/logo.svg" alt="Kite"/>
+  <img width="100" src="https://rawgit.com/altschuler/kite/master/logo/logo.svg" alt="Kite logo"/>
 </p>
 
 Kite is language with a strong emphasis on functional development. It is statically and strongly typed.
@@ -34,6 +34,18 @@ Wanna know more about the design and other features? See the [wiki](https://gith
 
         # make install
 
+## Tests
+There are two test-suites:
+
+ * One in Haskell, which tests each component of the compiler:
+
+        $ make test
+
+ * And one written in Kite, testing itself:
+
+        $ kite tests/kunit/Runner.kite
+        $ ./main
+
 ## Examples
 For a quick example, try running one of the examples in `example/`.
 
@@ -43,7 +55,7 @@ The compiler only targets JavaScript, as of now, so make sure you have [`node`](
 
 The name of the output file defaults to `main`, which executes with `node`.
 
-    $ ./make
+    $ ./main
 
 Read more about the syntax in the [wiki](https://github.com/altschuler/kite/wiki/Syntax) or look at some of the [examples](https://github.com/altschuler/kite/tree/master/examples).
 
