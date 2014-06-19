@@ -70,8 +70,28 @@ Basic boolean operators:
 \label{tbl:kite-disign-bool-op}
 \end{table}
 
+\subsubsection{Function application}
+\label{sec:kite-design-func-app}
+The most general form of application is as follows:
+\begin{kite}
+func(arg1, ..., argN)
+\end{kite}
 
-\subsubsection{Function declaration} TODO: infix function decl.
+Where the function \code{func}, having an arity of $n$, is applied to \emph{n} arguments.
+
+A concrete example hereof is the application of \code{union}, which has an arity of 2, to two lists:
+\begin{kite}
+union([1,2],[2,3]) ----> [1,2,3]
+\end{kite}
+
+Besides this form of application, it is also possible to use infix operators. The application of these is described in section \ref{sec:kite-design-sugar} and the declaration of these is described in the following section.
+
+Furthermore, Kite also allows for partial application, which is described in section \ref{sec:kite-design-partial-app}.
+
+
+
+
+\subsubsection{Function declaration}
 \label{sec:func-decl}
 Every function in Kite is declared as an anonymous function:
 
@@ -89,7 +109,7 @@ There are no named functions in Kite, but lambda expressions can be bound to ide
 
 \begin{kite}
 name :: ArgType -> ... -> ReturnType
-name = |arg1, ...| -> { ... }
+name = |arg1, ..., argN| -> { ... }
 \end{kite}
 
 Example of a valid function declaration in Kite, taking one parameter of the type \code{Int} and returning an \code{Int}:
@@ -101,7 +121,23 @@ foo = |a| -> {
 }
 \end{kite}
 
-A runnable program must always include the \code{main} function of type \code{Void -> a}, which will be used as the entry point for execution:
+
+Another type of function declaration is the declaration of \emph{infix operators}. This is generally done as follows:
+\begin{kite}
+{name} :: ArgType1 -> ArgType2 -> ReturnType
+{name} = | arg1 , arg2| -> { ... }
+\end{kite}
+
+And a specific example is our implementation of the conjunction of boolean expressions:
+
+\begin{kite}
+{&&} :: Bool -> Bool -> Bool
+{&&} = |l, r| -> {
+  if l then r else False
+}
+\end{kite}
+
+Finally, a runnable program must \emph{always} include the \code{main} function of type \code{Void -> a}, which will be used as the entry point for execution:
 
 \begin{kite}
 main = |Void| -> { ... }
@@ -128,10 +164,6 @@ length = |xs| -> {
 The type-checker will validate that an annotated type is at least as general as the inferred type. This means that a type annotation of \code{a} will match anything, and \code{a -> a} will match \code{Int -> Int} but not \code{Int -> Bool}
 
 Types can be grouped to denote a higher-order function, for instance the type of map \code{(a -> b) -> [a] -> [b]} means that \code{map} accepts a \emph{function} as its first parameter, a list as its second and it produces a list.
-
-
-\subsection{Function application}
-TODO: partial app
 
 
 \subsubsection{Syntactic sugar}
@@ -341,7 +373,8 @@ uncurry = |f| -> {
 We have chosen to include these two functions from~\nameref{foundation} in this section as they reflect an essential part of Kite and functional programming languages in general.
 
 \subsubsection{Partial application}
-An example of partial application is the function \code{increment}, which partially applies addition:
+\label{sec:kite-design-partial-app}
+An example of partial application is the function \code{increment}, which partially applies addition to an infix operator:
 
 \begin{kite}
 increment :: Int -> Int
@@ -358,6 +391,14 @@ It should be noted that the addition operator, \code{+}, has type \code{a
   -> a -> a}. Thus, partial application yields \code{a -> a} and since
 it is partially applied with an integer, the type of \code{increment}
 becomes \code{Int -> Int}
+
+Another example is partial application of functions in the more general form, as mentioned in section \ref{sec:kite-design-func-app}. A function taking $n$ parameters can be partially applied to $k$ arguments, where $n > k > 0$
+
+Here the syntax is as follows:
+\begin{kite}
+func(arg1, ..., argK)
+\end{kite}
+Which yields a function taking $n - k$ arguments.
 
 \subsubsection{Error handling}
 Kite supports termination of execution using the function \code{panic}. Using \code{panic} will stop the execution. It has the type signature \code{String -> a}, thus being allowed anywhere.
