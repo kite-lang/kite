@@ -3,6 +3,44 @@
 %%% TeX-master: "../report"
 %%% End:
 
+\subsection{Installation}
+\label{installation}
+Get the source:
+
+\code{\$ git clone https://github.com/altschuler/kite.git}
+
+Make sure you have \code{cabal} installed, and then install dependencies:
+
+\code{\$ cabal install}
+
+Build with \code{make}. This will generate an executable in \code{dist/build/kite/}.
+
+\code{\$ make}
+
+To install an executable in \code{\textasciitilde/.cabal/bin}, which will be accessible for your local user:
+
+\code{\$ cabal install}
+
+Make sure that you have the \code{~/.cabal/bin} directory in your \code{PATH}.
+
+Optionally, install globally by putting an executable in \code{/usr/local/bin} (requires root privileges):
+
+\code{\# make install}
+
+For a quick test, try running the KUnit test-suite:
+
+\code{\$ kite tests/kunit/Runner.kite}
+
+The compiler only targets JavaScript, as of now, so make sure you have Node.js installed.
+
+The name of the output file defaults to \code{main}, which executes with \code{node}.
+
+\code{\$ ./main}
+
+You can also run the Haskell test-suite by running:
+
+\code{\$ make test}
+
 \subsection{Kite-mode}
 \label{kite-mode}
 \lstinputlisting[language=Lisp]{../utils/kite-mode.el}
