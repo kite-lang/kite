@@ -74,22 +74,19 @@ Basic boolean operators:
 \label{sec:kite-design-func-app}
 The most general form of application is as follows:
 \begin{kite}
-func(arg1, ..., argN)
+func (arg1, ..., argN)
 \end{kite}
 
 Where the function \code{func}, having an arity of $n$, is applied to \emph{n} arguments.
 
 A concrete example hereof is the application of \code{union}, which has an arity of 2, to two lists:
 \begin{kite}
-union([1,2],[2,3]) ----> [1,2,3]
+union ([1,2],[2,3]) ----> [1,2,3]
 \end{kite}
 
-Besides this form of application, it is also possible to use infix operators. The application of these is described in section \ref{sec:kite-design-sugar} and the declaration of these is described in the following section.
+Besides this form of application, it is also possible to use infix operators. The application of these is described in section~\ref{sec:kite-design-sugar} and the declaration of these is described in the following section.
 
-Furthermore, Kite also allows for partial application, which is described in section \ref{sec:kite-design-partial-app}.
-
-
-
+Furthermore, Kite also allows for partial application, which is described in section~\ref{sec:kite-design-partial-app}.
 
 \subsubsection{Function declaration}
 \label{sec:func-decl}
@@ -121,15 +118,13 @@ foo = |a| -> {
 }
 \end{kite}
 
-
 Another type of function declaration is the declaration of \emph{infix operators}. This is generally done as follows:
 \begin{kite}
 {name} :: ArgType1 -> ArgType2 -> ReturnType
-{name} = | arg1 , arg2| -> { ... }
+{name} = |arg1 , arg2| -> { ... }
 \end{kite}
 
 And a specific example is our implementation of the conjunction of boolean expressions:
-
 \begin{kite}
 {&&} :: Bool -> Bool -> Bool
 {&&} = |l, r| -> {
