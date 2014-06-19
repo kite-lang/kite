@@ -86,9 +86,8 @@ ADTs can also take type parameters, which is used in the fundamental \code{List}
 \begin{haskell}
 data List a = Nil | Cons a (List a)
 \end{haskell}
-TODO: cons example
 
-This defines \code{List} as either \code{Nil} (commonly known as the empty list) or a \code{Cons} of an element of type \code{a} and another \code{List} also of type \code{a}. This definition of the list type is a great example of the power of ADTs. \code{Cons} can be thought of as prepending an element to another list.
+This defines \code{List} as either \code{Nil} (commonly known as the empty list) or a \code{Cons} of an element of type \code{a} and another \code{List} also of type \code{a}. This definition of the list type is a great example of the power of ADTs. \code{Cons} can be thought of as prepending an element to another list. The list \code{[1, 2, 3]} is thus actually represented as \code{Cons 1 (Cons 2 (Cons 3 Nil))}.
 
 Because Kite has no notion of ADTs and lists are implemented as arrays of values like imperative languages, pattern matching is difficult because we cannot destruct a list to its elements in a tree structure. With ADTs it is simpler because data structures are inherently trees and can be traversed to match a pattern to an expression and provide bindings from the pattern variables corresponding to the matched expression.
 

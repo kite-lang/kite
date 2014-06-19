@@ -38,7 +38,7 @@ Most lexers are quite simple, as they simply make tokens by matching the input w
 \subsection{Parser}
 The parser takes the list of tokens from the lexer, and based on a language grammar, it builds a corresponding data structure, namely the parse tree. In the process it checks that the input is syntactically correct. Therefore, this process is also called syntactic analysis.
 
-In the cases known to us (Yacc, Happy, ANTLR), parser-generators make use of \emph{Context-Free Grammars} (CFG), and thus we have to define our desired syntax as a CFG. TODO: parsec
+Many parser generators (Yacc, Happy, ANTLR) use \emph{Context-Free Grammars} (CFG), to describe the languages they will parse, and since Happy is one of these, we have to define our syntax as a CFG. Another approach uses very simple parser functions to gradually build up complexity. This is known as a \emph{parser combinator} of which \code{Parsec}\footnote{\url{https://hackage.haskell.org/package/parsec}} is an example.
 
 The parser should rule out code containing syntactical errors, especially typos, which are likely to occur without a proper IDE\footnote{IDE is short for Integrated Development Environment, which, among other features, often has good auto-completion, thus making typos much less likely.}.
 

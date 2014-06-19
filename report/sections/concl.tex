@@ -3,10 +3,18 @@
 %%% TeX-master: "../report"
 %%% End:
 
-We have fulfilled our initial goal of gaining a substantial comprehension of compilers and functional languages in general. This was achieved through comprehensive planning, several iterations of designing and finally implementing the Kite programming language.
+We have successfully implemented a working compiler for a language that we have named Kite. Through this process we have gained considerable knowledge of modern compiler infrastructure and have had to overcome the difficulties that come with such a project.
 
-In conclusion, we are glad we achieved a much better understanding of compilers and in functional languages. In regards of compilers, these are an essential part of computers, and as aspiring software engineers, we ought to be familiar with the different aspects of computing. As of functional languages, we believe these will play a larger rule in the future, mainly due to the inherent ease of maintainability and concurrency. Concurrency is an important aspect of the future as the clock frequency of CPUs are unlikely to increase with silicon based chips, but the transistor and core count is fortunately still increasing.
+Our work was initially focused on deciding what semantic features and capabilities we wanted our language to support. We decided on a statically and strongly typed language in the functional paradigm with a relatively comprehensive standard library.
 
-Looking forward, Kite still lacks a few features before being a fully fledged, practically useful language. Namely, the construction of custom data types, a backend emitting LLVM and fully functional pattern matching. We have also looked at how this could potentially be solved through further development.
+We then came up with a rough draft of what the syntax would look like. With the fundamental language design established, we began planning the internal architecture of the complete system. We identified the main components such as the lexer, parser, analyzer and the code generator.
 
-TODO: @simon
+Parser and lexer generators proved an immense help when building the front end of the compiler, and we discovered algorithms such as Hindley-Milner type inference that enabled us to implement an effective analyzer.
+
+During development it became clear that other components were needed to arrive at a reasonable final product. One such component was a desugaring module that permitted us to define a flexible syntax while keeping the internal structures simple to work with.
+
+Initially we had aimed at using LLVM as our code generation back end, but this proved a more complex task than expected. Instead we settled on using JavaScript as our target language, which worked out the way we imagined.
+
+By implementing the compiler in the Haskell language we have achieved a solid understanding of functional programming principles and have learned what makes them powerful, and why they will arguably play an immense role in the future of programming.
+
+As for the future of Kite, it still lacks some fundamental features before we would consider it a practical language. We do however find it to be a useful and fun language with enough capabilities to regard is as a real programming language.
