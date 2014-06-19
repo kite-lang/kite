@@ -226,13 +226,23 @@ Note the distinction between strings using double-quotes ("...") and characters 
 \label{sec:ex-listcomp}
 \textbf{List comprehensions} are syntactic sugar for manipulating lists. An example of a list comprehension is:
 
-TODO: Mentiod output expr, draws 'n' grdz
-
 \begin{kite}
 list = [ x*y | x <- range(3,5), y <- range(4,6) | (x+y) >= 10, y > 4]
 \end{kite}
 
-Where the desugared version of the given example, will look as follows:
+List comprehensions are composed of three elements: An \emph{output expression}, one or more \emph{draws} and optionally one or more \emph{guards}.
+
+First, elements are drawn from the draws, which in the above example are \code{x <- range(3,5)} and \code{y <- range(4,6)}, yielding 9 potential elements to the output expression:
+
+\begin{center}
+\code{[[3,4],[3,5],[3,6],[4,4],[4,5],[4,6],[5,4],[5,5],[5,6]]}
+\end{center}
+
+These potential combinations are then filtered by the guards. The element \code{[3,3]} will not pass the guards as $3+3$ is not larger than or equal to 10, nor is 3 larger than 4. The element \code{[5,5]} will on the other hand pass the guards.
+
+Finally, all the combinations that pass the guards are subjected to the output expression. The element \code{[5,5]} will thus become \code{25} in the resulting list.
+
+The desugared version of the given example will look as follows:
 
 \begin{kite}
 list =
