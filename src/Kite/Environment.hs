@@ -27,15 +27,19 @@ instance Error TypeError where
   noMsg = UnknownError
   strMsg = TypeError
 
+-- | Prints a stack of traces to stderr.
 printTrace :: [String] -> TC ()
 printTrace stack = mapM_ (\m -> trace m $ return ()) (take 10 stack)
 
+-- | Utility function for throwing a `TypeError`.
 throwTE :: String -> TC a
 throwTE = throwError . TypeError
 
+-- | Utility function for throwing a `ReferenceError`.
 throwRE :: String -> TC a
 throwRE = throwError . ReferenceError
 
+-- | Utility function for throwing an `ArityError`.
 throwAE :: String -> Int -> Int -> TC a
 throwAE ide exp got = throwError . ArityError $ printf
                       "Function '%s' got too %s arguments. Expected %d, got %d."
@@ -44,10 +48,14 @@ throwAE ide exp got = throwError . ArityError $ printf
 -----------------------------
 -- Environment state types --
 -----------------------------
+-- | Some type synonyms used to increase readability throughout
+-- type-checking.
 type Name = String
 type Frame = Map.Map Name Type
 type Stack = [Frame]
 
+-- | The environment containing the state of the type-checker as it
+-- analyses the AST.
 data Environment = Environment { sym :: Stack,
                                  types :: Frame,
                                  symCount :: Int,
@@ -56,6 +64,8 @@ data Environment = Environment { sym :: Stack,
                                  onlyFree :: Bool,
                                  returns :: [[Type]] }
 
+-- | A Show instance of Environment making the environment readable
+-- for debugging.
 instance Show Environment where
   show env =
     let syms = Map.toList $ head . sym $ env
@@ -64,15 +74,22 @@ instance Show Environment where
         symstr = foldl (\acc (n, v) -> printf "%s%s%s%s\n" acc n (take (1 + len - length n) spaces) (show v)) "" syms
     in "Top symbol frame\n" ++ symstr
 
+-- | A type scheme that represents a type and a set of type variables
+-- that are bound in the type.
 data Scheme = Scheme [String] Type
               deriving (Show)
 
-newtype TypeEnvironment = TypeEnvironment (Map.Map String Scheme)
+-- | An environment representing used to keep track of the inferred
+-- types of type variables. It is passed along in the `infer`
+-- function.
+newtype TypeEnvironment = TypeEnvironment (Map.Map Name Scheme)
                         deriving (Show)
 
--- the monad in which all the state is kept and errors are thrown
+-- | The monad in which all the state is kept and errors are thrown
+-- while type-checking.
 type TC a = ErrorT TypeError (State Environment) a
 
+-- | Runs a function in the `TC` monad with an initial `Environment`
 runTC f = runState (runErrorT f) Environment { sym = [initSymbols],
                                                types = Map.empty,
                                                symCount = Map.size initSymbols,
@@ -83,16 +100,23 @@ runTC f = runState (runErrorT f) Environment { sym = [initSymbols],
 ------------------
 -- Substitution --
 ------------------
+-- | A substitution of type variables to type terms. Computed in the
+-- `unify`.
 type Substitution = Map.Map Name Type
 
+-- | Shorthand for an empty subsitution
 nullSubst = Map.empty
 
+-- | Composes (unions) two substitutions
 composeSubst s1 s2 = Map.map (apply s1) s2 `Map.union` s1
+
+-- | Infix alias of `composeSubst`
 (<+>) = composeSubst
 
 ------------------------------
 -- Environment manipulation --
 ------------------------------
+-- | Methods used to manipulate the stack of the `Environment`
 pushTrace x = do
   env <- get
   put env{evalTrace = x : evalTrace env}
@@ -124,6 +148,9 @@ mkConsSignature n = let t = PTypeVar ("t" ++ n) in PLambdaType t (PLambdaType (P
 mkArithSignature n = let t = PTypeVar ("t" ++ n) in PLambdaType t (PLambdaType t t)
 mkEqualitySignature n = let t = PTypeVar ("t" ++ n) in PLambdaType t (PLambdaType t PBoolType)
 
+-- | The built-in and predefined functions with accompanying
+-- types. These will be included in the initial `Environment` when
+-- running the type-checker using `runTC`
 initSymbols =
   let arithOps = ["+", "-", "*", "/", "%", "^"]
       arithSigs = map (\(op, n) -> (op, mkArithSignature (show n))) (zip arithOps [0 .. length arithOps])
@@ -146,6 +173,10 @@ initSymbols =
 -----------------
 -- Types class --
 -----------------
+-- | The `Types` class is used to enable application of substitution
+-- into types, lists of types, type schemes, etc with the `apply`
+-- function. It also defines `ftv` which is used to extract all free
+-- types in a type.
 class Types a where
   ftv :: a -> Set.Set String
   apply :: Substitution -> a -> a
@@ -180,16 +211,14 @@ instance Types Scheme where
 remove :: TypeEnvironment -> String -> TypeEnvironment
 remove (TypeEnvironment env) ide = TypeEnvironment (Map.delete ide env)
 
--- generalize :: TypeEnvironment -> Type -> Scheme
--- generalize env t = Scheme (Set.toList (ftv t Set.\\ ftv env)) t
-
+-- | Instantiate a type scheme
 instantiate :: Scheme -> TC Type
 instantiate (Scheme vars t) = do
   freshVars <- mapM (\_ -> freshTypeVar "t") vars
   let s = Map.fromList (zip vars freshVars)
   return (apply s t)
 
--- generate a fresh type variable
+-- | Generate a fresh type variable with a unique name
 freshTypeVar :: String -> TC Type
 freshTypeVar ide = do
   env <- get
@@ -197,6 +226,7 @@ freshTypeVar ide = do
   put env{symCount =  succ count}
   return $ PTypeVar (ide ++ show count)
 
+-- | Remove a symbol and its type from the `Environment`
 removeSym :: String -> TC ()
 removeSym ide = do
   env <- get
@@ -204,6 +234,7 @@ removeSym ide = do
       newF = Map.delete ide x
   put env{sym = newF:xs}
 
+-- | Insert a symbol and its type into the `Environment`
 insertSym :: String -> Type -> TC ()
 insertSym ide val = do
   env <- get
@@ -211,11 +242,13 @@ insertSym ide val = do
       newF = Map.insert ide val x
   put env{sym = newF:xs}
 
+-- | Insert a type annotation with its accompanying identifier
 insertType :: String -> Type -> TC ()
 insertType ide val = do
   env <- get
   put env{types = Map.insert ide val (types env)}
 
+-- | Lookup a type in the `Environment`
 lookupType :: String -> TC (Maybe Type)
 lookupType ide = do
   env <- get

@@ -7,6 +7,7 @@ import Control.Monad.Error
 
 import Kite.Syntax
 
+-- | The optimizer error type.
 data OptiError = OptiError String
                | UnknownError
                deriving (Show, Eq)
@@ -15,16 +16,20 @@ instance Error OptiError where
   noMsg = UnknownError
   strMsg = OptiError
 
+-- | Utility function for throwing an `OptiError`.
 throwOE :: String -> Opti a
 throwOE = throwError . OptiError
 
+-- | Type synonyms to increase readability.
 type Name = String
 
 data Needs = Needs { fns :: [String] }
 
+-- | The state that the optimizer uses to keep track of referenced identifiers.
 data OptiState = OptiState { decls :: [Decl], scope :: [[Name]], checked :: [Name] }
 type Opti a = ErrorT OptiError (State OptiState) a
 
+-- | Built-in names, used to prevent removal of them.
 builtInNames :: [Name]
 builtInNames = ["print", "put", "sin", "cos", "tan", "sleep", "panic", "clear",
                 "arguments", ":", "==", "<=", "+", "-", "*", "/", "%", "^", "random"]
@@ -32,6 +37,7 @@ builtInNames = ["print", "put", "sin", "cos", "tan", "sleep", "panic", "clear",
 builtIns :: [Decl]
 builtIns = map (`PDecl` PVoid) builtInNames
 
+-- | Lookup a declaration in the optimizer state by its identifier.
 findDecl :: Name -> Opti (Maybe Expr)
 findDecl name = do
   st <- get
@@ -43,6 +49,8 @@ findDecl name = do
     Just (PDecl _ expr) -> return (Just expr)
     _ -> return Nothing
 
+-- | Main function for performing optimization. Takes a list of
+-- declarations and returns a list with only the used ones.
 optimize :: [Decl] -> [Decl]
 optimize ds = do
   let used = evalState (runErrorT optimize') OptiState { decls = ds ++ builtIns,

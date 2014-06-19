@@ -17,6 +17,9 @@ import Text.Printf
 ---------------
 -- Interface --
 ---------------
+-- | The main function for performing type-check. Takes a debugging
+-- flag, and a list of `Declaration`s that will be type checked one by
+-- one.
 typeCheck :: Bool -> [Decl] -> Either (TypeError, [String]) Environment
 typeCheck debug decls = do
   let (r, env) = runTC $ typeCheckDecls decls
@@ -28,6 +31,8 @@ typeCheck debug decls = do
     Right _ -> Right env
     Left err -> Left (err, stack)
 
+-- | Type check a list of `Declaration`s by folding the list and
+-- preserving the state.
 typeCheckDecls :: [Decl] -> TC ()
 typeCheckDecls decls = do
   forM_ decls (\decl -> case decl of
@@ -78,14 +83,22 @@ isLambdaType _ = False
 --------------------
 -- Type inference --
 --------------------
+-- | Infer the type of an expression. Takes a type environment for
+-- type variables and runs in the `TC` monad so it can lookup types.
+-- Returns a substitution derived from the inference that can be
+-- applied to other types, and the inferred type.
 infer :: TypeEnvironment -> Expr -> TC (Substitution, Type)
 
+-- | Basic primitive types
+-- Equivalent to the TAUT of HM
 infer _ (PInteger _) = return (nullSubst, PIntegerType)
 infer _ (PFloat _) = return (nullSubst, PFloatType)
 infer _ (PChar _) = return (nullSubst, PCharType)
 infer _ (PBool _) = return (nullSubst, PBoolType)
 infer _ (PVoid) = return (nullSubst, PVoidType)
 
+-- | A block returns the type of the last expression in the block and
+-- the composition of the substituions from inferring the expressions.
 infer env (PBlock exprs) = do
   pushSymFrame
   pushReturnFrame
@@ -106,6 +119,8 @@ infer env (PBlock exprs) = do
 
   return (s, apply s t)
 
+-- | Look up an identifier in the environment. Fails if none is found.
+-- Equivalent to the INST of HM
 infer (TypeEnvironment env) (PIdentifier ide) = do
   pushTrace ("Identifier " ++ ide)
 
@@ -132,6 +147,7 @@ infer (TypeEnvironment env) (PIdentifier ide) = do
                   then findit xs
                   else val
 
+-- | Infer and unify each expression in a list
 infer env (PList elems) = do
   pushTrace $ "List: " ++ show elems
 
@@ -144,6 +160,7 @@ infer env (PList elems) = do
   popTrace
   return (sElems, PListType (apply sElems tElems))
 
+-- | Infer each of the two expressions of a `Pair`
 infer env pair@(PPair a b) = do
   pushTrace $ "Pair: " ++ show pair
 
@@ -153,6 +170,9 @@ infer env pair@(PPair a b) = do
   popTrace
   return (sa <+> sb, PPairType (apply sa ta) (apply sb tb))
 
+-- | Infers the type of expression to be matched and unifies with the
+-- types of patterns to match agains. Also unifies the consequence
+-- types and return the final unified type of the consequences.
 infer env (PMatch expr patterns) = do
   pushTrace $ "Match: " ++ show expr
 
@@ -204,6 +224,8 @@ infer env (PMatch expr patterns) = do
   popTrace
   return (sPat <+> sElems <+> sExpr, apply (sElems <+> sPat) tConseq)
 
+-- | Infer and unify the types of consequent and alternative. Unifies
+-- the type of condition with the Bool type.
 infer env (PIf cond conseq alt) = do
   pushTrace $ "If: " ++ show cond
   (s0, tyCond) <- infer env cond
@@ -222,7 +244,9 @@ infer env (PIf cond conseq alt) = do
 
   return (s0 <+> s1 <+> s2 <+> s3 <+> s4, apply s4 tyConseq)
 
--- TODO: check return type(?)
+-- | Infers the type of a lambda expression and introduces a new scope
+-- when inferring the body.
+-- Equivalent to the ABS of HM
 infer env (PLambda param body) = do
   pushTrace $ "Lambda: " ++ param ++ " -> ?"
 
@@ -236,6 +260,8 @@ infer env (PLambda param body) = do
 
   return (s1, PLambdaType (apply s1 tParam) t1)
 
+-- | Infers the resulting type of a function application.
+-- Equivalent to the APP of HM
 infer env (PApply expr arg) = do
   case expr of
     PIdentifier ide -> pushTrace $ "Apply: '" ++ ide ++ "'"
@@ -255,6 +281,8 @@ infer env (PApply expr arg) = do
 
   return (s3 <+> sFn <+> sArg, apply s3 fresh)
 
+-- | Infers the type of an expression and binds that type to an
+-- identifiers by inserting it in the type environment.
 infer (TypeEnvironment env) (PBind ide expr) = do
   pushTrace $ "Bind: " ++ ide
 
@@ -276,6 +304,8 @@ infer (TypeEnvironment env) (PBind ide expr) = do
 
   return (s1, apply s1 t1)
 
+-- | Infer the type of a return expression and inserts the return type
+-- in the current return stack.
 infer env (PReturn expr) = do
   (s, t) <- infer env expr
   env' <- get
@@ -288,33 +318,39 @@ infer env (PReturn expr) = do
 ----------------------
 -- Type unification --
 ----------------------
+-- | Unify two types and return a substitution that is the most
+-- general unifier. That is, a subsitution that makes the two types
+-- equivalent.
 unify :: Type -> Type -> String -> TC Substitution
 
--- primitive base cases
+-- | Primitive base cases.
 unify a b _ | a == b = return nullSubst
 
--- free type with any type
+-- | Free type with any type, binds the type var in a substitution
 unify ta (PTypeVar ide) _ = varBind ide ta
 unify (PTypeVar ide) tb _ = varBind ide tb
 
--- list
+-- | Unify the underlying types of two lists
 unify (PListType ta) (PListType tb) err = unify ta tb err
 
--- pair
+-- | Unifies the a and b types of two pairs respectively.
 unify (PPairType ta tb) (PPairType ta' tb') err = do
   sa <- unify ta ta' err
   sb <- unify tb tb' err
   return (sa <+> sb)
 
--- functions
+-- | Unifies the types of two lambdas parameters and return types
 unify (PLambdaType paramA ra) (PLambdaType paramB rb) err = do
   sParam <- unify paramB paramA err
   s2 <- unify (apply sParam ra) (apply sParam rb) err
   return (sParam <+> s2)
 
--- if nothing matched it's an error
+-- | If none of the above matched it's an error and types cannot be
+-- unified.
 unify ta tb err = throwTE $ printf err (show ta) (show tb)
 
+-- | Create a singleton substitution and perform the occurs check that
+-- checks whether a polymorphic type (a type scheme) includes itself.
 varBind :: Name -> Type -> TC Substitution
 varBind ide t | t == PTypeVar ide = return nullSubst
               | ide `Set.member` ftv t = throwTE $ "Occurs in type: " ++ ide ++ " vs. " ++ show t
