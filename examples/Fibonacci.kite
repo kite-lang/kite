@@ -1,11 +1,10 @@
 fibo = |a, b, n| -> {
-    match n {
+  match n {
     0 -> a,
-    _ -> fibo(b, (a + b), (n - 1))
-    }
+    _ -> fibo (b, (a + b), (n - 1))
+  }
 }
 
-main = ->
-{
-        print(fibo(0,1,20))
+main = -> {
+  print $ fibo (0,1,20)
 }
