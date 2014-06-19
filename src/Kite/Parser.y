@@ -149,7 +149,6 @@ Bind :: { Expr }
 Block :: { Expr }
            : '{' BlockExprs '}'   { mkBlock $2 }
 
--- TODO: WHAT THE FUCK!?
 BlockExpr :: { Expr }
           : Expr { $1 }
 
