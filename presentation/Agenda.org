@@ -1,0 +1,19 @@
+* Intro
+** Functional
+** Very High-Level
+
+* Demos
+** Type check
+*** Make it fail
+*** Make it infer something complex
+
+** Expressive syntax
+*** Partial app
+*** Pattern matching
+*** Infix ops
+
+** List comprehension
+** Desugar
+** Larger program
+
+* Conclusion
