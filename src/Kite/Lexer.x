@@ -12,7 +12,7 @@ $alphaNum		= [$alpha $digit]
 $symbols		= [\(\)\{\}\[\]\;\,\:\_]
 $operatorSymbols        = [\+\-\/\*\%\=\|\&\<\>\!\~\`\#\.\:\^\$]
 
-@keywords		= return | if | then | else | match
+@keywords		= return | if | then | else | match | type
 @operators		= [$operatorSymbols]+
 @string                 = \" (. # \")* \"
 @char                   = \' (\\?. # \') \'

@@ -21,6 +21,7 @@ data Draw = PDraw String Expr
 -- | Type constructor for function type decleration
 data Decl = PDecl String Expr
           | PTypeDecl String Type
+          | PTypeAliasDecl String Type
           deriving (Show, Eq)
 
 -- | Type constructor for an expression
@@ -52,6 +53,7 @@ data Type = PListType Type
           | PCharType
           | PTypeArg Type Expr -- PIdentifier!
           | PTypeVar String
+          | PAliasType String
           | PVoidType
           deriving (Eq)
 
@@ -65,6 +67,7 @@ free PIntegerType = []
 free PVoidType    = []
 free PFloatType   = []
 free PCharType    = []
+free (PAliasType _) = []
 
 free (PListType t)         = free t
 free (PPairType ta tb)     = free ta `union` free tb
@@ -97,6 +100,8 @@ prettyType tmap (PLambdaType tp tr) =
 
 prettyType _ (PTypeArg t ide) =
   printf "%s: %s" (show ide) (show t)
+
+prettyType _ (PAliasType ide) = ide
 
 -- | Make Type instance of the Show type class
 instance Show Type where

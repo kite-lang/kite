@@ -1,23 +1,36 @@
-bouncer :: [(a, b) -> Bool] -> (a, b) -> [Char]
+
+type Name = String
+type Age = Int
+type Gender = Bool
+
+type Person = (Name, (Age, Gender))
+
+name = fst
+age = fst . snd
+gender = snd . snd
+
+bouncer :: [Person -> Bool] -> Person -> String
 bouncer = |rules, person| -> {
-  fst (person) ++  if and $ map (($ person), rules)
+  name (person) ++  if and $ map (($ person), rules)
                      then " is welcome"
                      else " must leave"
 }
 
-rules :: [([Char], Int) -> Bool]
+rules :: [Person -> Bool]
 rules = [
-  (>=18) . snd,
-  (=='B') . head . fst
+  (>=18) . age,
+  gender
 ]
 
-entrance :: ([Char], Int) -> [Char]
+entrance :: Person -> String
 entrance = bouncer (rules)
 
 main = -> {
-  alice = ("Alice", 22)
-  bob = ("Bob", 15)
+  alice = ("Alice", (22, True))
+  bob = ("Bob", (18, False))
+  eve = ("Eve", (15, True))
 
   print $ entrance (alice)
   print $ entrance (bob)
+  print $ entrance (eve)
 }

@@ -64,6 +64,7 @@ type Stack = [Frame]
 -- analyses the AST.
 data Environment = Environment { sym :: Stack,
                                  types :: Frame,
+                                 typeAlias :: Frame,
                                  symCount :: Int,
                                  evalTrace :: [String],
                                  -- TODO: hack to infer pattern matches
@@ -98,6 +99,7 @@ type TC a = ErrorT TypeError (State Environment) a
 -- | Runs a function in the `TC` monad with an initial `Environment`
 runTC f = runState (runErrorT f) Environment { sym = [initSymbols],
                                                types = Map.empty,
+                                               typeAlias = Map.empty,
                                                symCount = Map.size initSymbols,
                                                evalTrace = [],
                                                onlyFree = False,
@@ -259,3 +261,15 @@ lookupType :: String -> TC (Maybe Type)
 lookupType ide = do
   env <- get
   return $ Map.lookup ide (types env)
+
+-- | Insert a type alias with its accompanying identifier
+insertTypeAlias :: String -> Type -> TC ()
+insertTypeAlias ide val = do
+  env <- get
+  put env{typeAlias = Map.insert ide val (typeAlias env)}
+
+-- | Lookup a type alias in the `Environment`
+lookupTypeAlias :: String -> TC (Maybe Type)
+lookupTypeAlias ide = do
+  env <- get
+  return $ Map.lookup ide (typeAlias env)

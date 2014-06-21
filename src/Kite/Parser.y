@@ -19,11 +19,8 @@ import Text.Printf
         bool               { TBool _ $$ }
         void               { TVoid _ }
 
-        intTy              { TType _ "Int" }
-        floatTy            { TType _ "Float" }
-        charTy             { TType _ "Char" }
-        boolTy             { TType _ "Bool" }
         id                 { TIdentifier _ $$ }
+        typeId             { TType _ $$ }
 
         '='                { TOperator _ "=" }
         '->'               { TOperator _ "->" }
@@ -41,6 +38,7 @@ import Text.Printf
         else               { TKeyword _ "else" }
         yolo               { TKeyword _ "yolo" }
         match              { TKeyword _ "match" }
+        type               { TKeyword _ "type" }
 
         '('                { TSymbol _ '(' }
         ')'                { TSymbol _ ')' }
@@ -70,6 +68,7 @@ Decl   :: { Decl }
         | '{' operator '}' '=' Expr   { PDecl $2 $5 }
         | id '::' Type                { PTypeDecl $1 $3 }
         | '{' operator '}' '::' Type  { PTypeDecl $2 $5 }
+        | type typeId '=' Type        { PTypeAliasDecl $2 $4 }
 
 Decls  :: { [Decl] }
         : {- nothing -}    { [] }
@@ -165,12 +164,9 @@ Pair   :: { Expr }
 Pair    : '(' Expr ',' Expr ')'   { PPair $2 $4 }
 
 Type   :: { Type }
-        : boolTy             { PBoolType }
-        | intTy              { PIntegerType }
-        | floatTy            { PFloatType }
-        | charTy             { PCharType }
-        | '(' Type ',' Type ')' { PPairType $2 $4 }
+        : '(' Type ',' Type ')' { PPairType $2 $4 }
         | '[' Type ']'       { PListType $2 }
+        | typeId             { PAliasType $1 }
         | id                 { PTypeVar $1 }
         | Type '->' Type     { PLambdaType $1 $3 }
         | '(' Type ')'       { $2 }

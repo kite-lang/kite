@@ -53,8 +53,11 @@ typeCheckDecls decls = do
                     typeDecl <- lookupType ide
 
                     case typeDecl of
-                      Just ty -> unify ty t
-                                 ("Type declaration does not match inferred (%s and %s) of function " ++ ide)
+                      Just ty -> do
+                        ety <- expandAlias ty
+                        et <- expandAlias t
+                        unify ety et
+                          ("Type declaration does not match inferred (%s and %s) of function " ++ ide)
                       Nothing -> return nullSubst
 
                     removeSym ide
@@ -63,8 +66,39 @@ typeCheckDecls decls = do
                     popTrace
 
                   PTypeDecl ide ty -> insertType ide ty
+
+                  PTypeAliasDecl ide ty -> insertTypeAlias ide ty
               )
   return ()
+
+expandAlias :: Type -> TC Type
+
+expandAlias (PAliasType "Bool") = return PBoolType
+expandAlias (PAliasType "Int") = return PIntegerType
+expandAlias (PAliasType "Float") = return PFloatType
+expandAlias (PAliasType "Char") = return PCharType
+
+expandAlias (PAliasType ide) = do
+  t <- lookupTypeAlias ide
+  case t of
+    Just ty -> expandAlias ty
+    Nothing -> throwTE ("Unknown type alias '" ++ ide ++ "'")
+
+expandAlias (PPairType a b) = do
+  ea <- expandAlias a
+  eb <- expandAlias b
+  return $ PPairType ea eb
+
+expandAlias (PListType t) = do
+  et <- expandAlias t
+  return $ PListType et
+  
+expandAlias (PLambdaType p r) = do
+  ep <- expandAlias p
+  er <- expandAlias r
+  return $ PLambdaType ep er
+
+expandAlias ty = return ty
 
 -- | Freshen a type by substituing all type vars with fresh one
 -- this ensures that callers of the function will not be assigned the same
@@ -351,7 +385,8 @@ unify (PLambdaType paramA ra) (PLambdaType paramB rb) err = do
 
 -- | If none of the above matched it's an error and types cannot be
 -- unified.
-unify ta tb err = throwTE $ printf err (show ta) (show tb)
+unify ta tb err = do
+  throwTE $ printf err (show ta) (show tb)
 
 -- | Create a singleton substitution and perform the occurs check that
 -- checks whether a polymorphic type (a type scheme) includes itself.

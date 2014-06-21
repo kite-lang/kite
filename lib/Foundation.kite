@@ -1,4 +1,7 @@
--- Constants
+-- Type aliases
+type String = [Char]
+
+--- Constants
 pi = 3.14159265359
 
 --- Functional
