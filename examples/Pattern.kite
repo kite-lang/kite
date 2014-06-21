@@ -1,0 +1,19 @@
+length' :: [a] -> Int
+length' = |xs| -> {
+  if xs == []
+    then 0
+    else 1 + length' $ tail (xs)
+}
+
+length'' :: [a] -> Int
+length'' = |xs| -> {
+  match xs {
+    [] -> 0,
+    x,xs -> 1 + length'' (xs)
+  }
+}
+
+main = -> {
+  xs = [1, 2, 3]
+  print $ length'' (xs)
+}
