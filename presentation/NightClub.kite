@@ -1,34 +1,44 @@
+-- The People
 
 type Name = String
 type Age = Int
-type Gender = Bool
-
+type Gender = Int
 type Person = (Name, (Age, Gender))
 
+female = 1
+male = 2
+
+age :: Person -> Name
 name = fst
+
+age :: Person -> Age
 age = fst . snd
+
+gender :: Person -> Gender
 gender = snd . snd
+
+-- The Club
 
 bouncer :: [Person -> Bool] -> Person -> String
 bouncer = |rules, person| -> {
-  name (person) ++  if and $ map (($ person), rules)
-                     then " is welcome"
-                     else " must leave"
+  name (person) ++ if and $ map (($ person), rules)
+                      then " is welcome"
+                      else " must leave"
 }
 
 rules :: [Person -> Bool]
 rules = [
   (>=18) . age,
-  gender
+  (==female) . gender
 ]
 
 entrance :: Person -> String
 entrance = bouncer (rules)
 
 main = -> {
-  alice = ("Alice", (22, True))
-  bob = ("Bob", (18, False))
-  eve = ("Eve", (15, True))
+  alice = ("Alice", (22, female))
+  bob = ("Bob", (18, male))
+  eve = ("Eve", (15, female))
 
   print $ entrance (alice)
   print $ entrance (bob)
