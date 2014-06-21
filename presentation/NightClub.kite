@@ -1,0 +1,20 @@
+bouncer = |rules, person| -> {
+  fst (person) ++  if and $ map (($ person), rules)
+                     then " is welcome"
+                     else " must leave"
+}
+
+rules = [
+  (>=18) . snd,
+  (=='B') . head . fst
+]
+
+entrance = bouncer (rules)
+
+main = -> {
+  alice = ("Alice", 22)
+  bob = ("Bob", 15)
+
+  print $ entrance (alice)
+  print $ entrance (bob)
+}
