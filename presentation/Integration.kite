@@ -1,10 +1,10 @@
 integrate = |f, a, b| ->
 {
-        res = (b-a) / 1000 -- resolution
+        res = (b-a) / 1000f -- resolution
         ans = sum $ [ res * f(x) | x <- rangeStep(a,b,res) ]
 }
 
 main = ->
 {
-        print(integrate( (**1) , 0, 3))
+        print(integrate(sin , 0f, pi/2f))
 }
