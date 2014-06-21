@@ -1,14 +1,17 @@
+rules :: [(a, b) -> Bool] -> (a, b) -> [Char]
 bouncer = |rules, person| -> {
   fst (person) ++  if and $ map (($ person), rules)
                      then " is welcome"
                      else " must leave"
 }
 
+rules :: [([Char], Int) -> Bool]
 rules = [
   (>=18) . snd,
   (=='B') . head . fst
 ]
 
+entrance :: ([Char], Int) -> [Char]
 entrance = bouncer (rules)
 
 main = -> {
