@@ -1,0 +1,10 @@
+integrate = |f, a, b| ->
+{
+        res = (b-a) / 1000
+        ans = sum $ [ res * f(x) | x <- rangeStep(a,b,res) ]
+}
+
+main = ->
+{
+        print(integrate( |x| ->{ x**2}, 0, 3))
+}
