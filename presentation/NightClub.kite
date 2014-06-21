@@ -8,7 +8,7 @@ type Person = (Name, (Age, Gender))
 female = 1
 male = 2
 
-age :: Person -> Name
+name :: Person -> Name
 name = fst
 
 age :: Person -> Age
@@ -21,7 +21,7 @@ gender = snd . snd
 
 bouncer :: [Person -> Bool] -> Person -> String
 bouncer = |rules, person| -> {
-  name (person) ++ if and $ map (($ person), rules)
+  name (person) ++ if or $ map (($ person), rules)
                       then " is welcome"
                       else " must leave"
 }
@@ -38,9 +38,11 @@ entrance = bouncer (rules)
 main = -> {
   alice = ("Alice", (22, female))
   bob = ("Bob", (18, male))
+  charles = ("Charles", (17, male))
   eve = ("Eve", (15, female))
 
   print $ entrance (alice)
   print $ entrance (bob)
+  print $ entrance (charles)
   print $ entrance (eve)
 }
