@@ -38,6 +38,8 @@ typeCheckDecls decls = do
   forM_ decls (\decl -> case decl of
                   PDecl ide expr -> do
 
+                    pushTrace ("Declaration '" ++ ide ++ "'")
+
                     syms <- liftM (last . sym) get
                     when (isJust $ Map.lookup ide syms)
                       (throwRE $ printf "Reassigning top level declaration '%s'" ide)
@@ -57,6 +59,8 @@ typeCheckDecls decls = do
 
                     removeSym ide
                     insertSym ide (apply s t)
+
+                    popTrace
 
                   PTypeDecl ide ty -> insertType ide ty
               )

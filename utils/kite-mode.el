@@ -16,9 +16,9 @@
     (define-key map (kbd "C-c C-p C-r")
       (lambda (start end) (interactive "r") (kite-compile-region start end "-p")))
     (define-key map (kbd "C-c C-j")
-      (lambda () (interactive) (kite-compile-current-buffer " --target=javascript | node ")))
+      (lambda () (interactive) (kite-compile-current-buffer " && ./main")))
     (define-key map (kbd "C-c C-d C-j")
-      (lambda () (interactive) (kite-compile-current-buffer " -d --target=javascript | node ")))
+      (lambda () (interactive) (kite-compile-current-buffer " -d && ./main")))
     map)
 
   "Keymap for Kite major mode.")
@@ -33,24 +33,23 @@
   :type 'string
   :group 'kite)
 
-(defun kite-compile-current-buffer (&rest args)
+(defun kite-compile-current-buffer (extra)
   "Compile current buffer and show output in buffer named `kite-compiled-buffer-name'."
   (interactive)
   (save-excursion
-    (apply #'kite-compile-region (point-min) (point-max) args)))
+    (kite-compile-region extra)))
 
-(defun kite-compile-region (start end &rest args)
+(defun kite-compile-region (extra)
   "Compile current region and show output in buffer named `kite-compiled-buffer-name'."
   (interactive "r")
 
   (get-buffer-create kite-compiled-buffer-name)
 
   (let ((result (shell-command-to-string
-                 (format "%s -e %s %s"
-                         (concatenate 'string kite-command " ")
-                         (shell-quote-argument (buffer-substring start end))
-                         (mapconcat 'identity args " "))
-))
+                 (format "%s %s %s"
+                         kite-command
+                         (buffer-file-name)
+                         extra)))
         (buffer (get-buffer kite-compiled-buffer-name)))
     (display-buffer buffer)
     (with-current-buffer buffer

@@ -11,6 +11,8 @@ module Kite.Driver (
 
 import Prelude hiding (lex)
 
+import System.Exit
+
 import System.Posix.Files
 import Data.List
 import Control.Monad
@@ -45,9 +47,6 @@ runKite KiteOpts {..} = do
 
   let tokens = lex p'
   let decls = parse tokens
-  let optimized = if noOpti
-                  then decls
-                  else optimize decls
 
   when lexOutput (prettyPrint tokens)
   when desugar (putStrLn (prettyDecls decls))
@@ -56,12 +55,16 @@ runKite KiteOpts {..} = do
   typeCheckPassed <-
     if noTypeCheck
     then return True
-    else case typeCheck debug optimized of
+    else case typeCheck debug decls of
       Right _ -> return True
       Left (err, stack) -> do
-        let stackTrace = ppShow $ take 10 stack
-        putStrLn (show err ++ "\nStacktrace:\n" ++ stackTrace)
-        return False
+        let stackTrace = concatMap ((++"\n") . ppShow) stack
+        putStrLn (show err ++ "\n\nStacktrace:\n" ++ stackTrace)
+        exitWith (ExitFailure 1)
+
+  let optimized = if noOpti
+                  then decls
+                  else optimize decls
 
   out <- case target of
         JavaScript -> GenJS.codegen eval optimized

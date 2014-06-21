@@ -21,7 +21,13 @@ data TypeError = TypeError String
                | ReferenceError String
                | ArityError String
                | UnknownError
-               deriving (Show, Eq)
+               deriving (Eq)
+
+instance Show TypeError where
+  show (TypeError str) = "Type error: " ++ str
+  show (ReferenceError str) = "Reference error: " ++ str
+  show (ArityError str) = "Arity error: " ++ str
+  show UnknownError = "Unknown error"
 
 instance Error TypeError where
   noMsg = UnknownError
