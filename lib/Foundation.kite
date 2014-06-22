@@ -256,7 +256,7 @@ any = |p| -> {
 flatten :: [[a]] -> [a]
 flatten = fold1 ((++))
 
-flatMap :: ([a] -> [b]) -> [[a]] -> [b]
+flatMap :: (a -> [b]) -> [a] -> [b]
 flatMap = |f| -> {
   flatten . map (f)
 }
