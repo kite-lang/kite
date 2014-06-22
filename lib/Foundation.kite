@@ -336,13 +336,6 @@ range = |from, to| -> {
 --   inner
 -- }
 
-{**} :: Int -> Int -> Int
-{**} = |n, exp| -> {
-  if exp == 0
-    then 1
-    else n * n ** (exp - 1)
-}
-
 powMod :: Int -> Int -> Int -> Int
 powMod = |b, e, m| -> {
     if e == 0

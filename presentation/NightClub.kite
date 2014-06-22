@@ -2,11 +2,12 @@
 
 type Name = String
 type Age = Int
-type Gender = Int
+type Gender = String
+female = "Gender_Female"
+male = "Gender_Male"
+
 type Person = (Name, (Age, Gender))
 
-female = 1
-male = 2
 
 name :: Person -> Name
 name = fst
@@ -16,6 +17,7 @@ age = fst . snd
 
 gender :: Person -> Gender
 gender = snd . snd
+
 
 -- The Club
 

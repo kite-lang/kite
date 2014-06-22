@@ -71,6 +71,9 @@ data Environment = Environment { sym :: Stack,
                                  onlyFree :: Bool,
                                  returns :: [[Type]] }
 
+
+hidden = ["%", "^", "+", "-", "*", "/","#", "$", "&&", "**", "++", ".", "/=", "<", "<>", ">", ">=", "abs", "all", "and", "any", "asPair", "curry", "drop", "elem", "empty", "even", "filter", "flatMap", "flatten", "flip", "fold", "fold1", "fst", "head", "id", "init", "intersect", "last", "length", "map", "max", "maximum", "min", "minimum", "negate", "negatef", "not", "odd", "or", "pi", "powMod", "product", "range", "rangeStep", "reverse", "snd", "sort", "sortBy", "sum", "tail", "take", "uncurry", "union", "until", "while", "zip", "zipWith", "||", "<=", "==", ":", "**", "print", "show", "random", "put", "sin", "cos", "tan", "sqrt", "sleep", "panic", "clear", "arguments"]
+
 -- | A Show instance of Environment making the environment readable
 -- for debugging.
 instance Show Environment where
@@ -78,7 +81,7 @@ instance Show Environment where
     let syms = Map.toList $ head . sym $ env
         len = maximum (map (length . fst) syms)
         spaces = repeat ' '
-        symstr = foldl (\acc (n, v) -> printf "%s%s%s%s\n" acc n (take (1 + len - length n) spaces) (show v)) "" syms
+        symstr = foldl (\acc (n, v) -> printf "%s%s%s%s\n" acc n (take (1 + len - length n) spaces) (show v)) "" (filter ((`notElem` hidden) . fst) syms)
     in "Top symbol frame\n" ++ symstr
 
 -- | A type scheme that represents a type and a set of type variables
@@ -165,6 +168,7 @@ initSymbols =
   in Map.fromList (arithSigs `union` [("<=", mkEqualitySignature "5"),
                                       ("==", mkEqualitySignature "6"),
                                       (":", mkConsSignature "7"),
+                                      ("**", PLambdaType PIntegerType (PLambdaType PIntegerType PIntegerType)),
                                       ("print", PLambdaType (PTypeVar "8") PVoidType),
                                       ("show", PLambdaType (PTypeVar "9") (PListType PCharType)),
                                       ("random", PLambdaType PIntegerType (PLambdaType PIntegerType PIntegerType) ),
