@@ -1,0 +1,9 @@
+length' = |xs| -> {
+  if xs == []
+    then 0
+    else 1 + length' $ tail (xs)
+}
+
+main = -> {
+  print $ length' ([1,2,3])
+}
