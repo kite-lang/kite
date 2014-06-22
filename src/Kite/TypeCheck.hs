@@ -52,16 +52,17 @@ typeCheckDecls decls = do
 
                     typeDecl <- lookupType ide
 
-                    case typeDecl of
+                    ety <- case typeDecl of
                       Just ty -> do
                         ety <- expandAlias ty
                         et <- expandAlias t
                         unify ety et
                           ("Type declaration does not match inferred (%s and %s) of function " ++ ide)
-                      Nothing -> return nullSubst
+                        return ety
+                      Nothing -> return t
 
                     removeSym ide
-                    insertSym ide (apply s t)
+                    insertSym ide (apply s ety)
 
                     popTrace
 
@@ -92,7 +93,7 @@ expandAlias (PPairType a b) = do
 expandAlias (PListType t) = do
   et <- expandAlias t
   return $ PListType et
-  
+
 expandAlias (PLambdaType p r) = do
   ep <- expandAlias p
   er <- expandAlias r

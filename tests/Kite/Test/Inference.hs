@@ -30,7 +30,8 @@ data TypeCheckError = TypeE | RefE | ArE | UnE deriving(Show, Eq)
 
 nullEnvironment :: Environment
 nullEnvironment = Environment { sym = [Map.empty],
-                                symCount = 0 }
+                                symCount = 0,
+                                types = Map.empty }
 
 parse prog = do
   let tokens = lex prog
