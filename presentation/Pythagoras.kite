@@ -2,7 +2,7 @@ main = -> {
   n = 50
 
   pythagorians = [ (c,(b,a))
-                 | c <- range(1,n), b <- range(1,c), a <- range(1,b)
+                 | c <- [1 .. n], b <- [1 .. c], a <- [1 .. b]
                  | ((a**2) + (b**2)) == (c**2) ]
 
   print(pythagorians)

@@ -28,6 +28,7 @@ import Text.Printf
         '|'                { TOperator _ "|" }
         '`'                { TOperator _ "`" }
         '::'               { TOperator _ "::" }
+        '..'               { TOperator _ ".." }
 
         operator           { TOperator _ $$ }
 
@@ -113,6 +114,7 @@ Expr   :: { Expr }
         | Lambda           { $1 }
         | Apply            { $1 }
         | ListComp         { $1 }
+        | Range            { $1 }
         | If               { $1 }
         | Term             { $1 }
         | '(' Expr ')'     { $2 }
@@ -125,6 +127,10 @@ Exprs :: { [Expr] }
 
 Return :: { Expr }
         : return Expr      { PReturn $2 }
+
+Range :: { Expr }
+       : '[' Expr '..' Expr ']'           { mkRange $2 $4 }
+       | '[' Expr ',' Expr '..' Expr ']'  { mkRangeStep $2 $4 $6 }
 
 Apply   :: { Expr }
         : Expr '(' Exprs ')'    { mkCalls $1 $3 }

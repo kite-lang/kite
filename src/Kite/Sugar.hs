@@ -14,6 +14,14 @@ mkPartialLeftInfixCall op = PApply (PIdentifier op)
 -- | Desugar String to list of Chars
 mkCharList str = PList (map PChar str)
 
+
+-- | Desugar range notation
+mkRangeStep from step to =
+  let step' = PApply (PApply (PIdentifier "-") step) from
+  in PApply (PApply (PApply (PIdentifier "rangeStep") from) to) step'
+
+mkRange from to = PApply (PApply (PIdentifier "range") from) to
+
 -- | Desugar multiple arguments to partial application
 mkCalls f [] = PApply f PVoid
 mkCalls f (a:as) = foldl PApply (PApply f a) as
